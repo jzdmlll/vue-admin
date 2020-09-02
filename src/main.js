@@ -4,7 +4,7 @@ import Cookies from 'js-cookie'
 
 import 'normalize.css/normalize.css' // a modern alternative to CSS resets
 
-import Ant from 'ant-design-vue'
+import { Table } from 'ant-design-vue'
 import 'ant-design-vue/dist/antd.css'
 
 import Element from 'element-ui'
@@ -38,7 +38,7 @@ import * as filters from './filters' // global filters
 Vue.use(Element, {
   size: Cookies.get('size') || 'medium' // set element-ui default size
 })
-Vue.use(Ant, {
+Vue.use(Table, {
   size: Cookies.get('size') || 'medium'
 })
 

@@ -25,18 +25,19 @@ async function parseMenu(id) {
           if (p.type === 'menu') {
             console.log(p)
             const son_route = {
-              hidden: true,
+              hidden: false,
               path: p.route,
               // component: () => import('@/pages'+p.route),
               component: function component(resolve) {
                 require(['@/pages' + p.route + '.vue'], resolve)
               },
-              name: p.route.replace(/\//g, '_'),
+              name: p.name.replace(/\//g, '_'),
               meta: { title: p.name, affix: true }
             }
             route.children.push(son_route)
           }
         }
+        console.log(route)
       }
       routes.push(route)
     }

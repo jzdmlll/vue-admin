@@ -11,8 +11,14 @@
       <el-table-column prop="name" label="角色名称"></el-table-column>
       <el-table-column label="操作" align="center" width="180">
 			<template slot-scope="scope">
-      <el-button type="text" size="small" @click="deleteHandler(scope.row.id)">移除</el-button>
-      <el-button type="text" size="small" @click="toAuthorization(scope.row)">授权</el-button>
+      <el-tooltip class="item" effect="dark" content="修改角色" placement="bottom-start">
+        <el-button icon="el-icon-edit" type="success" size="mini" @click="toEdit(scope.row)"></el-button>
+      </el-tooltip>
+      <el-tooltip class="item" effect="dark" content="删除角色" placement="bottom-start">
+        <el-button icon="el-icon-delete" type="danger" size="mini" @click="deleteHandler(scope.row.id)"></el-button>
+      </el-tooltip>
+      <el-tooltip class="item" effect="dark" content="给角色授权" placement="bottom-start">
+        <el-button icon="el-icon-key" type="primary" size="mini" @click="toAuthorization(scope.row)"></el-button></el-tooltip>
 			</template>
       </el-table-column>
 		</el-table>
@@ -51,6 +57,7 @@
 <script>
 import request from '@/utils/request'
 import qs from 'querystring'
+import '@/styles/auto-style.css'
 
 export default {
   data() {
@@ -138,6 +145,11 @@ export default {
     toAuthorization(record){
       this.role = record;
       this.authorization_visible = true;
+    },
+    toEdit(record) {
+      this.title = '修改角色'
+      this.visible = true
+      this.form = record
     }
   }
 }

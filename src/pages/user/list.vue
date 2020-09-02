@@ -3,24 +3,36 @@
   <div class="user_list">
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
 		<el-tooltip class="item" effect="dark" content="添加新用户" placement="bottom-start">
-      <el-button type="primary" size="small" @click="toAdd">添加</el-button>
+      <el-button type="primary" icon="el-icon-plus" size="mini" @click="toAdd" ></el-button>
 		</el-tooltip>
-
     </div>
 	<div style="padding:1em;margin-bottom:1em;background:#fff">
-		<el-table :data="users" size="small" v-loading="loading">
+		<el-table :data="users" v-loading="loading" size="small">
       <el-table-column prop="username" label="用户名"></el-table-column>
-      <el-table-column prop="gender" label="性别"></el-table-column>
-      <el-table-column prop="qq" label="QQ"></el-table-column>
-      <el-table-column prop="telephone" label="手机号"></el-table-column>
-      <el-table-column prop="status" label="状态"></el-table-column>
+      <el-table-column prop="id" label="用户编号"></el-table-column>
+      <el-table-column prop="roles" label="所属角色">
+        <template slot-scope="scope">
+          <el-tag
+            v-for="role in scope.row.roles"
+            :key="role"
+            :type="role.name === '管理员' ? 'success':'info'"
+          >
+            {{ role.name }}
+          </el-tag>
+        </template>
+      </el-table-column>
       <el-table-column label="操作" align="center" width="180">
-			<template slot-scope="scope">
-        <el-button type="text" size="small" @click="deleteHandler(scope.row.id)">移除</el-button>
-        <el-button type="text" size="small" @click="toDetails(scope.row.id)">详情</el-button>
-        <el-button type="text" size="small" @click="toEdit(scope.row)">修改</el-button>
-        <el-button type="text" size="small" @click="toSetRole(scope.row)">设置</el-button>
-			</template>
+      <template slot-scope="scope">
+        <el-tooltip class="item" effect="dark" content="修改用户信息" placement="bottom-start">
+          <el-button icon="el-icon-edit" type="success" size="mini" @click="toEdit(scope.row)"></el-button>
+        </el-tooltip>
+        <el-tooltip class="item" effect="dark" content="删除用户" placement="bottom-start">
+          <el-button icon="el-icon-delete" type="danger" size="mini" @click="deleteHandler(scope.row.id)"></el-button>
+        </el-tooltip>
+        <el-tooltip class="item" effect="dark" content="给用户设置角色" placement="bottom-start">
+          <el-button icon="el-icon-setting" type="primary" size="mini" @click="toSetRole(scope.row)"></el-button>
+        </el-tooltip>
+      </template>
       </el-table-column>
 		</el-table>
 	</div>
@@ -64,6 +76,8 @@
 <script>
 import request from '@/utils/request'
 import qs from 'querystring'
+import '@/styles/auto-style.css'
+
 export default {
   data() {
     return {

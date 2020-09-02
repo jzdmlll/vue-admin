@@ -3,12 +3,13 @@
   <div class="privilege_list">
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
       <el-tooltip class="item" effect="dark" content="添加权限" placement="bottom-start">
-        <el-button type="primary" size="small" @click="toAdd">添加</el-button>
+        <el-button type="primary" icon="el-icon-plus" size="mini" @click="toAdd" ></el-button>
       </el-tooltip>
     </div>
     <div style="padding:1em;margin-bottom:1em;background:#fff">
       <el-table
         :data="privileges"
+        v-loading="loading"
         size="small"
         :lazy="true"
         row-key="id"
@@ -17,10 +18,14 @@
         <el-table-column prop="name" label="名称"></el-table-column>
         <el-table-column prop="route" label="路径"></el-table-column>
         <el-table-column prop="type" label="类型"></el-table-column>
-        <el-table-column label="操作" align="center" width="120" fixed='right'>
+        <el-table-column label="操作" align="center" width="180">
           <template slot-scope="scope">
-            <el-button type="text" size="small" @click="deleteHandler(scope.row.id)">移除</el-button>
-            <el-button type="text" size="small" @click="toEdit(scope.row)">修改</el-button>
+            <el-tooltip class="item" effect="dark" content="删除权限" placement="bottom-start">
+              <el-button type="danger" icon="el-icon-delete" size="mini" @click="deleteHandler(scope.row.id)"></el-button>
+            </el-tooltip>
+            <el-tooltip class="item" effect="dark" content="修改权限" placement="bottom-start">
+              <el-button type="success" icon="el-icon-edit" size="mini" @click="toEdit(scope.row)"></el-button>
+            </el-tooltip>
           </template>
         </el-table-column>
       </el-table>
@@ -36,6 +41,7 @@
         </el-form-item>
         <el-form-item label="类型" label-width="80px">
           <el-select v-model="form.type" clearable placeholder="请选择">
+            <el-option label="父级" value="parent"></el-option>
             <el-option label="菜单" value="menu"></el-option>
             <el-option label="方法" value="method"></el-option>
           </el-select>
@@ -60,6 +66,7 @@
 <script>
 import request from '@/utils/request'
 import qs from 'querystring'
+import '@/styles/auto-style.css'
 
 export default {
   data() {
@@ -67,7 +74,8 @@ export default {
       form: {},
       visible: false,
       title: '',
-      privileges: []
+      privileges: [],
+      loading: true
     }
   },
   created() {
@@ -109,7 +117,8 @@ export default {
           response.data.forEach(item => {
             item.hasChildren = !Boolean(item.parentId)
           })
-          this.privileges = response.data;
+          this.privileges = response.data
+          this.loading = false
         })
     },
     deleteHandler(id) {
@@ -133,41 +142,3 @@ export default {
   }
 }
 </script>
-<style>
-  .el-dialog__header {
-    background: #97c7bd
-  }
-
-  .el-form-item__label {
-    background-color: #ecf5ff;
-    height: 32px;
-    padding: 0 5px;
-    line-height: 30px;
-    font-size: 12px;
-    color: #409eff;
-    border: 1px solid #d9ecff;
-    border-radius: 4px;
-    box-sizing: border-box;
-    white-space: nowrap;
-    text-align: center;
-    line-height: 32px !important;
-  }
-
-  .el-form-item__content {
-    height: 32px;
-    line-height: 32px !important;
-    margin-left: 90px !important
-  }
-
-  .el-dialog__body, .el-dialog__footer {
-    background: #f5f5f5
-  }
-
-  @media screen and (max-width: 767px) {
-    .el-dialog {
-      width: 90%;
-      margin: 100px 5% 0 5%
-    }
-
-  }
-</style>

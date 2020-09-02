@@ -1,9 +1,46 @@
 <template>
-  <div class="login-container">
+  <body>
+    <img :src="bgUrl" alt="" class="wave">
+    <div class="login-container">
+      <div class="img">
+        <img :src="img3Url" alt="">
+      </div>
+      <div class="login-box">
+        <el-form ref="loginForm" :model="loginForm" :rules="loginRules" autocomplete="on" label-position="left">
+
+        <img :src="avatarUrl" alt="" class="avatar">
+          <h2>新自信智能管理平台</h2>
+          <div class="input-group">
+            <div class="icon">
+              <i class="el-icon-user"></i>
+            </div>
+            <div>
+              <h5>用户名</h5>
+              <input v-model="loginForm.username" name="username" type="text" class="input">
+            </div>
+          </div>
+          <div class="input-group">
+            <div class="icon">
+              <i class="el-icon-lock"></i>
+            </div>
+            <div>
+              <h5>密码</h5>
+              <input v-model="loginForm.password" type="password" name="password" class="input">
+            </div>
+          </div>
+          <a href="#">Forgot Password?</a>
+          <el-button :loading="loading" class="btn" @click.native.prevent="handleLogin">登 陆</el-button>
+
+        </el-form>
+      </div>
+    </div>
+    <a target="_blank" class="copyright">&copy;新钢自动化信息技术有限公司</a>
+  </body>
+  <!--<div class="login-container">
     <el-form ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form" autocomplete="on" label-position="left">
 
       <div class="title-container">
-        <h3 class="title">失物招领管理平台</h3>
+        <h3 class="title">新自信系统管理平台</h3>
       </div>
 
       <el-form-item prop="username">
@@ -56,12 +93,14 @@
       <br>
       <social-sign />
     </el-dialog>
-  </div>
+  </div>-->
 </template>
 
 <script>
 import { validUsername } from '@/utils/validate'
 import SocialSign from './components/SocialSignin'
+import '@/styles/login-style.css'
+import '@/assets/js/login.js'
 
 export default {
   name: 'Login',
@@ -83,7 +122,6 @@ export default {
     }
     return {
       loginForm: {
-        
       },
       loginRules: {
         username: [{ required: true, trigger: 'blur', validator: validateUsername }],
@@ -94,7 +132,10 @@ export default {
       loading: false,
       showDialog: false,
       redirect: undefined,
-      otherQuery: {}
+      otherQuery: {},
+      bgUrl: require('@/assets/images/bg.png'),
+      avatarUrl: require('@/assets/images/avatar.svg'),
+      img3Url: require('@/assets/images/img-3.svg')
     }
   },
   watch: {
@@ -113,11 +154,19 @@ export default {
     // window.addEventListener('storage', this.afterQRScan)
   },
   mounted() {
-    if (this.loginForm.username === '') {
-      this.$refs.username.focus()
-    } else if (this.loginForm.password === '') {
-      this.$refs.password.focus()
-    }
+    const inputs = document.querySelectorAll('.input')
+
+    inputs.forEach(input => {
+      input.addEventListener('focus', () => {
+        input.parentNode.parentNode.classList.add('focus')
+      })
+
+      input.addEventListener('blur', () => {
+        if (input.value === '') {
+          input.parentNode.parentNode.classList.remove('focus')
+        }
+      })
+    })
   },
   destroyed() {
     // window.removeEventListener('storage', this.afterQRScan)
@@ -193,129 +242,79 @@ export default {
 }
 </script>
 
-<style lang="scss">
-/* 修复input 背景不协调 和光标变色 */
-/* Detail see https://github.com/PanJiaChen/vue-element-admin/pull/927 */
+<style lang="scss" scope>
+  @keyframes init {
+    0% {opacity:0;margin-left:10%;}
 
-$bg:#283443;
-$light_gray:#fff;
-$cursor: #fff;
-
-@supports (-webkit-mask: none) and (not (cater-color: $cursor)) {
-  .login-container .el-input input {
-    color: $cursor;
+    100% {opacity: 1;margin-left:0px;}
   }
-}
-
-/* reset element-ui css */
-.login-container {
-  .el-input {
-    display: inline-block;
-    height: 47px;
-    width: 85%;
-
-    input {
-      background: transparent;
-      border: 0px;
-      -webkit-appearance: none;
-      border-radius: 0px;
-      padding: 12px 5px 12px 15px;
-      color: $light_gray;
-      height: 47px;
-      caret-color: $cursor;
-
-      &:-webkit-autofill {
-        box-shadow: 0 0 0px 1000px $bg inset !important;
-        -webkit-text-fill-color: $cursor !important;
-      }
-    }
+  @keyframes img-init {
+    0% {opacity:0;top:-100%}
+    50% {opacity:0;top:-10%}
+    100% {opacity:1;top:0}
   }
-
-  .el-form-item {
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(0, 0, 0, 0.1);
-    border-radius: 5px;
-    color: #454545;
+  @keyframes form-init {
+    0% {opacity:0;bottom:-10%}
+    50% {opacity:0;bottom:-10%}
+    100% {opacity:1;bottom:0}
   }
-}
-</style>
-
-<style lang="scss" scoped>
-$bg:#2d3a4b;
-$dark_gray:#889aa4;
-$light_gray:#eee;
-/deep/.el-form-item__content{
-	height:49.38px;
-	line-height:40px!important;
-	margin-left:0px!important
-}
-.login-container {
-  min-height: 100%;
-  width: 100%;
-  background-color: $bg;
-  overflow: hidden;
-
-  .login-form {
-    position: relative;
-    width: 520px;
-    max-width: 100%;
-    padding: 160px 35px 0;
-    margin: 0 auto;
+  @keyframes word-init {
+    0% {opacity:0;}
+    40% {opacity:0;width:0;}
+    100% {opacity:1;width:100%}
+  }
+  body{
     overflow: hidden;
+    animation:init 0.5s;
+    -moz-animation:init 0.5s; /* Firefox */
+    -webkit-animation:init 0.5s; /* Safari and Chrome */
+    -o-animation:init 0.5s; /* Opera */
+
   }
-
-  .tips {
-    font-size: 14px;
-    color: #fff;
-    margin-bottom: 10px;
-
-    span {
-      &:first-of-type {
-        margin-right: 16px;
-      }
-    }
-  }
-
-  .svg-container {
-    padding: 6px 5px 6px 15px;
-    color: $dark_gray;
-    vertical-align: middle;
-    width: 30px;
-    display: inline-block;
-  }
-
-  .title-container {
+  .img img{
     position: relative;
-
-    .title {
-      font-size: 26px;
-      color: $light_gray;
-      margin: 0px auto 40px auto;
-      text-align: center;
-      font-weight: bold;
-    }
+    animation:img-init 1s ease;
+    -moz-animation:img-init 1s ease; /* Firefox */
+    -webkit-animation:img-init 1s ease; /* Safari and Chrome */
+    -o-animation:img-init 1s ease; /* Opera */
+    transition: all .5s;
+    -moz-transition: all .5s;	/* Firefox 4 */
+    -webkit-transition: all .5s;	/* Safari 和 Chrome */
+    -o-transition: all .5s;	/* Opera */
+  }
+  .avatar {
+    transition: all .5s;
+    -moz-transition: all .5s;	/* Firefox 4 */
+    -webkit-transition: all .5s;	/* Safari 和 Chrome */
+    -o-transition: all .5s;	/* Opera */
+  }
+  .avatar:hover {
+    transform: rotate(90deg);
+    -webkit-transform: rotate(90deg);
+    -webkit-transform-origin: 95% 40%;
+    transform-origin: top;
+    -webkit-transition: all 0.3s ease-in-out;
+    transition: all 0.3s ease-in-out;
+  }
+  .img img:hover {
+    transform: scale(1.1);
+  }
+  .login-box form {
+    position: relative;
+    animation:form-init 1s ease;
+    -moz-animation:form-init 1s ease; /* Firefox */
+    -webkit-animation:form-init 1s ease; /* Safari and Chrome */
+    -o-animation:form-init 1s ease; /* Opera */
+  }
+  .login-box form h2{ font-size: 1.5em;height: 42px;white-space:nowrap;}
+  .login-box form .btn{left: 50%;transform: translate(-50%);}
+  .login-box form h2,.login-box form .btn{
+    position: relative;
+    overflow:hidden;
+    animation:word-init 1.5s ease;
+    -moz-animation:word-init 1.5s ease; /* Firefox */
+    -webkit-animation:word-init 1.5s ease; /* Safari and Chrome */
+    -o-animation:word-init 1.5s ease; /* Opera */
   }
 
-  .show-pwd {
-    position: absolute;
-    right: 10px;
-    top: 7px;
-    font-size: 16px;
-    color: $dark_gray;
-    cursor: pointer;
-    user-select: none;
-  }
-
-  .thirdparty-button {
-    position: absolute;
-    right: 0;
-    bottom: 6px;
-  }
-
-  @media only screen and (max-width: 470px) {
-    .thirdparty-button {
-      display: none;
-    }
-  }
-}
 </style>
