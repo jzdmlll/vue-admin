@@ -8,8 +8,8 @@
     </div>
 	<div style="padding:1em;margin-bottom:1em;background:#fff">
 		<el-table :data="users" v-loading="loading" size="small">
+      <el-table-column type="index" prop="" label="序号" width="120"/>
       <el-table-column prop="username" label="用户名"></el-table-column>
-      <el-table-column prop="id" label="用户编号"></el-table-column>
       <el-table-column prop="roles" label="所属角色">
         <template slot-scope="scope">
           <el-tag

@@ -8,6 +8,7 @@
     </div>
 	<div style="padding:1em;margin-bottom:1em;background:#fff">
 		<el-table :data="roles" size="small" v-loading="loading">
+      <el-table-column type="index" prop="" label="序号" width="120"/>
       <el-table-column prop="name" label="角色名称"></el-table-column>
       <el-table-column label="操作" align="center" width="180">
 			<template slot-scope="scope">
