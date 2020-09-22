@@ -3,7 +3,7 @@
   <div class="privilege_list">
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
       <el-tooltip class="item" effect="dark" content="添加权限" placement="bottom-start">
-        <el-button type="primary" icon="el-icon-plus" size="mini" @click="toAdd" />
+        <el-button type="primary" icon="el-icon-plus" size="mini" @click="toAdd">添加权限</el-button>
       </el-tooltip>
     </div>
     <div style="padding:1em;margin-bottom:1em;background:#fff">
@@ -51,6 +51,9 @@
           <el-select v-model="form.parentId" clearable placeholder="请选择">
             <el-option v-for="p in privileges" :key="p.id" :label="p.name" :value="p.id" />
           </el-select>
+        </el-form-item>
+        <el-form-item label="图标" label-width="80px">
+          <el-input v-model="form.icon" autocomplete="off" />
         </el-form-item>
         <el-form-item label="描述" label-width="80px">
           <el-input v-model="form.remark" type="textarea" autocomplete="off" />
@@ -102,7 +105,7 @@ export default {
       request.get('/privilege/findByParentId?id=' + row.id)
         .then(response => {
           response.data.forEach(item => {
-            item.hasChildren = !Boolean(item.parentId)
+            item.hasChildren = !item.parentId
           })
           resolve(response.data)
         })

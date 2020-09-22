@@ -14,6 +14,9 @@ export default {
   li {
     text-align: left;
   }
+  body {
+    overflow: auto!important;
+  }
   .sidebar-logo-link {
     text-align: center;
   }

@@ -3,20 +3,20 @@
   <div class="pro_origin_list">
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
       <el-tooltip class="item" effect="dark" content="新增项目分类" placement="bottom-start">
-        <el-button type="primary" icon="el-icon-plus" size="mini" @click="toAdd" ></el-button>
+        <el-button type="primary" icon="el-icon-plus" size="mini" @click="toAdd">添加项目分类</el-button>
       </el-tooltip>
     </div>
     <div style="padding:1em;margin-bottom:1em;background:#fff">
       <el-table v-loading="loading" :data="projects" size="small">
-        <el-table-column type="index" prop="" label="序号" width="120"/>
+        <el-table-column type="index" prop="" label="序号" width="120" />
         <el-table-column prop="name" label="项目分类名称" />
         <el-table-column label="操作" align="center" width="180">
           <template slot-scope="scope">
             <el-tooltip class="item" effect="dark" content="删除该项目分类" placement="bottom-start">
-              <el-button type="danger" icon="el-icon-delete" size="mini" @click="deleteHandler(scope.row.id)"></el-button>
+              <el-button type="danger" icon="el-icon-delete" size="mini" @click="deleteHandler(scope.row.id)" />
             </el-tooltip>
             <el-tooltip class="item" effect="dark" content="修改该项目分类" placement="bottom-start">
-              <el-button type="success" icon="el-icon-edit" size="mini" @click="editHandler(scope.row)"></el-button>
+              <el-button type="success" icon="el-icon-edit" size="mini" @click="editHandler(scope.row)" />
             </el-tooltip>
           </template>
         </el-table-column>
@@ -24,9 +24,9 @@
     </div>
     <!-- 模态框 -->
     <el-dialog :title="title" :visible.sync="visible">
-      <el-form status-icon ref="form" :model="form">
-        <el-form-item label="项目分类名称" >
-          <el-input v-model="form.name" autocomplete="off"></el-input>
+      <el-form ref="form" status-icon :model="form">
+        <el-form-item label="项目分类名称">
+          <el-input v-model="form.name" autocomplete="off" />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">

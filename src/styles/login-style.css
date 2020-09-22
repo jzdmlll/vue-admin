@@ -105,6 +105,7 @@ form h2{
     font-size: 18px;
     transition: .3s;
     z-index: 99;
+    white-space: nowrap;
 }
 .input-group.focus .icon i{
     color: #38d39f;
@@ -118,7 +119,7 @@ form h2{
 }
 .input{
     position: absolute;
-    width: 100%;
+    width: 269.7px;
     height: 100%;
     top: 0;
     left: 0;
@@ -192,6 +193,9 @@ a:hover{
     .img img{
         width: 360px;
     }
+  .el-message {
+    min-width: 340px
+  }
 }
 @media screen and (max-width: 768px) {
     .wave{
@@ -206,5 +210,8 @@ a:hover{
     }
     .login-box{
         justify-content: center;
+    }
+    .el-message {
+      min-width: 280px
     }
 }

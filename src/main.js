@@ -4,7 +4,7 @@ import Cookies from 'js-cookie'
 
 import 'normalize.css/normalize.css' // a modern alternative to CSS resets
 
-import { Table } from 'ant-design-vue'
+import { Table, Popconfirm, Input, Upload, Icon } from 'ant-design-vue'
 import 'ant-design-vue/dist/antd.css'
 
 import Element from 'element-ui'
@@ -39,6 +39,18 @@ Vue.use(Element, {
   size: Cookies.get('size') || 'medium' // set element-ui default size
 })
 Vue.use(Table, {
+  size: Cookies.get('size') || 'medium'
+})
+Vue.use(Popconfirm, {
+  size: Cookies.get('size') || 'medium'
+})
+Vue.use(Input, {
+  size: Cookies.get('size') || 'medium'
+})
+Vue.use(Upload, {
+  size: Cookies.get('size') || 'medium'
+})
+Vue.use(Icon, {
   size: Cookies.get('size') || 'medium'
 })
 

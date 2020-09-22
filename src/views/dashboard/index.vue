@@ -23,7 +23,8 @@ export default {
     ])
   },
   created() {
-    if (!this.roles.includes('管理员')) {
+    console.log(this.roles[0].name)
+    if (this.roles[0].name !== '管理员') {
       this.currentRole = 'editorDashboard'
     }
   }

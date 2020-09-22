@@ -2,22 +2,22 @@
   <!-- 项目来源管理 -->
   <div class="pro_origin_list">
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
-      <el-tooltip class="item" effect="dark" content="新增项目来源" placement="bottom-start">
-        <el-button type="primary" icon="el-icon-plus" size="mini" @click="toAdd" ></el-button>
+      <el-tooltip class="item" effect="dark" content="添加项目来源" placement="bottom-start">
+        <el-button type="primary" icon="el-icon-plus" size="mini" @click="toAdd">添加项目来源</el-button>
       </el-tooltip>
     </div>
     <div style="padding:1em;margin-bottom:1em;background:#fff">
       <el-table v-loading="loading" :data="projects" size="small">
-        <el-table-column type="index" prop="" label="序号" width="120"/>
+        <el-table-column type="index" prop="" label="序号" width="120" />
         <el-table-column prop="name" label="项目来源名称" />
         <el-table-column prop="code" label="项目来源编码" />
         <el-table-column label="操作" align="center" width="180">
           <template slot-scope="scope">
             <el-tooltip class="item" effect="dark" content="删除该项目来源" placement="bottom-start">
-              <el-button type="danger" icon="el-icon-delete" size="mini" @click="deleteHandler(scope.row.id)"></el-button>
+              <el-button type="danger" icon="el-icon-delete" size="mini" @click="deleteHandler(scope.row.id)" />
             </el-tooltip>
             <el-tooltip class="item" effect="dark" content="修改该项目来源" placement="bottom-start">
-              <el-button type="success" icon="el-icon-edit" size="mini" @click="editHandler(scope.row)"></el-button>
+              <el-button type="success" icon="el-icon-edit" size="mini" @click="editHandler(scope.row)" />
             </el-tooltip>
           </template>
         </el-table-column>
@@ -25,12 +25,12 @@
     </div>
     <!-- 模态框 -->
     <el-dialog :title="title" :visible.sync="visible">
-      <el-form status-icon ref="form" :model="form" :rules="codeRules">
-        <el-form-item label="项目来源名称" >
-          <el-input v-model="form.name" autocomplete="off"></el-input>
+      <el-form ref="form" status-icon :model="form" :rules="codeRules">
+        <el-form-item label="项目来源名称">
+          <el-input v-model="form.name" autocomplete="off" />
         </el-form-item>
         <el-form-item label="项目来源编码" prop="code">
-          <el-input  v-model="form.code" maxlength="1" autocomplete="off" show-word-limit placeholder="1位大写英文字母"></el-input>
+          <el-input v-model="form.code" maxlength="1" autocomplete="off" show-word-limit placeholder="1位大写英文字母" />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -51,7 +51,7 @@ export default {
     return {
       form: { code: '' },
       visible: false,
-      title: '新增项目来源',
+      title: '添加项目来源',
       projects: [],
       loading: true,
       codeRules: {
@@ -91,7 +91,7 @@ export default {
     toAdd() {
       this.visible = true
       this.form = {}
-      this.title = '新增项目来源'
+      this.title = '添加项目来源'
     },
 
     loadProjects() {
@@ -123,19 +123,9 @@ export default {
     },
     editHandler(row) {
       this.visible = true
-      this.title = '修改项目来源'
+      this.title = '编辑项目来源'
       this.form = row
     }
-  /* dateFormat(cjsj) {
-      var date = new Date(cjsj)
-      var Y = date.getFullYear() + '-'
-      var M = (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-'
-      var D = (date.getDate() + 1 < 10 ? '0' + (date.getDate()) : date.getDate()) + ' '
-      var h = (date.getHours() + 1 < 10 ? '0' + (date.getHours()) : date.getHours()) + ':'
-      var m = (date.getMinutes() + 1 < 10 ? '0' + (date.getMinutes()) : date.getMinutes()) + ':'
-      var s = (date.getSeconds() + 1 < 10 ? '0' + (date.getSeconds()) : date.getSeconds())
-      return Y + M + D + h + m + s
-    }*/
   }
 }
 </script>

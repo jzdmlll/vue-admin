@@ -1,5 +1,5 @@
 import { login, logout, getInfo } from '@/api/user'
-import { getToken, setToken, removeToken } from '@/utils/auth'
+import { getToken, setToken, removeToken, getUser, setUser, removeUser } from '@/utils/auth'
 import router, { resetRouter } from '@/router'
 
 const state = {
@@ -53,10 +53,10 @@ const actions = {
         if (!data) {
           reject('Verification failed, please Login again.')
         }
-
+        setUser(data.id)
         const { username: name, avatar: avatar, introduction } = data
         // [{id:1,name:"编辑"},{id:2,name:"管理员"}]
-        const roles = data.roles.map(item => item.name)
+        const roles = data.roles.map(item => item)
         // roles must be a non-empty array
         if (!roles || roles.length <= 0) {
           reject('getInfo: roles must be a non-null array!')
@@ -81,7 +81,7 @@ const actions = {
         commit('SET_ROLES', [])
         removeToken()
         resetRouter()
-
+        removeUser()
         // reset visited views and cached views
         // to fixed https://github.com/PanJiaChen/vue-element-admin/issues/2485
         dispatch('tagsView/delAllViews', null, { root: true })

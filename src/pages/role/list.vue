@@ -2,37 +2,41 @@
   <!-- 角色管理 -->
   <div class="role_list">
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
-		<el-tooltip class="item" effect="dark" content="添加角色" placement="bottom-start">
-      <el-button type="primary" size="small" @click="toAdd">添加</el-button>
-		</el-tooltip>
+      <el-tooltip class="item" effect="dark" content="添加角色" placement="bottom-start">
+        <el-button type="primary" icon="el-icon-plus" size="small" @click="toAdd">添加角色</el-button>
+      </el-tooltip>
     </div>
-	<div style="padding:1em;margin-bottom:1em;background:#fff">
-		<el-table :data="roles" size="small" v-loading="loading">
-      <el-table-column type="index" prop="" label="序号" width="120"/>
-      <el-table-column prop="name" label="角色名称"></el-table-column>
-      <el-table-column label="操作" align="center" width="180">
-			<template slot-scope="scope">
-      <el-tooltip class="item" effect="dark" content="修改角色" placement="bottom-start">
-        <el-button icon="el-icon-edit" type="success" size="mini" @click="toEdit(scope.row)"></el-button>
-      </el-tooltip>
-      <el-tooltip class="item" effect="dark" content="删除角色" placement="bottom-start">
-        <el-button icon="el-icon-delete" type="danger" size="mini" @click="deleteHandler(scope.row.id)"></el-button>
-      </el-tooltip>
-      <el-tooltip class="item" effect="dark" content="给角色授权" placement="bottom-start">
-        <el-button icon="el-icon-key" type="primary" size="mini" @click="toAuthorization(scope.row)"></el-button></el-tooltip>
-			</template>
-      </el-table-column>
-		</el-table>
-	</div>
+    <div style="padding:1em;margin-bottom:1em;background:#fff">
+      <el-table v-loading="loading" :data="roles" size="small">
+        <el-table-column type="index" prop="" label="序号" width="120" />
+        <el-table-column prop="name" label="角色名称" />
+        <el-table-column prop="checkName" label="审核名称" />
+        <el-table-column label="操作" align="center" width="180">
+          <template slot-scope="scope">
+            <el-tooltip class="item" effect="dark" content="修改角色" placement="bottom-start">
+              <el-button icon="el-icon-edit" type="success" size="mini" @click="toEdit(scope.row)" />
+            </el-tooltip>
+            <el-tooltip class="item" effect="dark" content="删除角色" placement="bottom-start">
+              <el-button icon="el-icon-delete" type="danger" size="mini" @click="deleteHandler(scope.row.id)" />
+            </el-tooltip>
+            <el-tooltip class="item" effect="dark" content="给角色授权" placement="bottom-start">
+              <el-button icon="el-icon-key" type="primary" size="mini" @click="toAuthorization(scope.row)" /></el-tooltip>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
     <!-- 模态框 -->
     <el-dialog :title="title" :visible.sync="visible">
       <el-form :model="form">
         <el-form-item label="角色名称" label-width="80px">
-          <el-input v-model="form.name" autocomplete="off"></el-input>
+          <el-input v-model="form.name" autocomplete="off" />
+        </el-form-item>
+        <el-form-item label="审核名称" label-width="80px">
+          <el-input v-model="form.checkName" autocomplete="off" />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
-        <el-button @click="visible = false" size="small">取 消</el-button>
+        <el-button size="small" @click="visible = false">取 消</el-button>
         <el-button type="primary" size="small" @click="saveRoleHandler">确 定</el-button>
       </div>
     </el-dialog>
@@ -41,14 +45,14 @@
     <el-dialog title="授权" :visible.sync="authorization_visible">
       <el-form :model="role">
         <el-form-item label="角色名称" label-width="80px">
-          {{role.name}}
+          {{ role.name }}
         </el-form-item>
-        <el-form-item label="权限" label-width="80px" id="el-form-item">
-          <el-cascader-panel v-model="role.privileges" :options="options" :props="props" clearable></el-cascader-panel>
+        <el-form-item id="el-form-item" label="权限" label-width="80px">
+          <el-cascader-panel v-model="role.privileges" :options="options" :props="props" clearable />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
-        <el-button @click="authorization_visible = false" size="small">取 消</el-button>
+        <el-button size="small" @click="authorization_visible = false">取 消</el-button>
         <el-button type="primary" size="small" @click="authorizationHandler">确 定</el-button>
       </div>
     </el-dialog>
@@ -105,47 +109,47 @@ export default {
         },
         data: qs.stringify(this.form)
       })
-      .then(response=>{
-        this.visible = false;
-        this.$message({message:response.message,type:'success'});
-        this.loadRoles();
-      })
-    },
-    loadPrivileges(){
-      request.get("/privilege/findPrivilegeTree")
-      .then(response=>{
-        this.options = response.data;
-      })
-    },
-    toAdd(){
-      this.visible = true;
-    },
-    loadRoles(){
-      request.get("/role/cascadePrivilegeFindAll")
-      .then(response => {
-        response.data.forEach(item=>{
-          item.privileges = item.privileges.map(p => p.id)
+        .then(response => {
+          this.visible = false
+          this.$message({ message: response.message, type: 'success' })
+          this.loadRoles()
         })
-        this.roles = response.data;
-		this.loading = false
-      })
     },
-    deleteHandler(id){
+    loadPrivileges() {
+      request.get('/privilege/findPrivilegeTree')
+        .then(response => {
+          this.options = response.data
+        })
+    },
+    toAdd() {
+      this.visible = true
+    },
+    loadRoles() {
+      request.get('/role/cascadePrivilegeFindAll')
+        .then(response => {
+          response.data.forEach(item => {
+            item.privileges = item.privileges.map(p => p.id)
+          })
+          this.roles = response.data
+          this.loading = false
+        })
+    },
+    deleteHandler(id) {
       this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        request.get("/role/deleteById?id="+id)
-        .then(response=>{
-          this.$message({ type: 'success', message:response.message });
-          this.loadRoles();
-        })
+        request.get('/role/deleteById?id=' + id)
+          .then(response => {
+            this.$message({ type: 'success', message: response.message })
+            this.loadRoles()
+          })
       })
     },
-    toAuthorization(record){
-      this.role = record;
-      this.authorization_visible = true;
+    toAuthorization(record) {
+      this.role = record
+      this.authorization_visible = true
     },
     toEdit(record) {
       this.title = '修改角色'

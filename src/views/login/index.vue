@@ -8,11 +8,11 @@
       <div class="login-box">
         <el-form ref="loginForm" :model="loginForm" :rules="loginRules" autocomplete="on" label-position="left">
 
-        <img :src="avatarUrl" alt="" class="avatar">
+          <img :src="avatarUrl" alt="" class="avatar">
           <h2>新自信智能管理平台</h2>
           <div class="input-group">
             <div class="icon">
-              <i class="el-icon-user"></i>
+              <i class="el-icon-user" />
             </div>
             <div>
               <h5>用户名</h5>
@@ -21,7 +21,7 @@
           </div>
           <div class="input-group">
             <div class="icon">
-              <i class="el-icon-lock"></i>
+              <i class="el-icon-lock" />
             </div>
             <div>
               <h5>密码</h5>
@@ -36,64 +36,6 @@
     </div>
     <a target="_blank" class="copyright">&copy;新钢自动化信息技术有限公司</a>
   </body>
-  <!--<div class="login-container">
-    <el-form ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form" autocomplete="on" label-position="left">
-
-      <div class="title-container">
-        <h3 class="title">新自信系统管理平台</h3>
-      </div>
-
-      <el-form-item prop="username">
-        <span class="svg-container">
-          <svg-icon icon-class="user" />
-        </span>
-        <el-input
-          ref="username"
-          v-model="loginForm.username"
-          placeholder="Username"
-          name="username"
-          type="text"
-          tabindex="1"
-          autocomplete="on"
-        />
-      </el-form-item>
-
-      <el-tooltip v-model="capsTooltip" content="Caps lock is On" placement="right" manual>
-        <el-form-item prop="password">
-          <span class="svg-container">
-            <svg-icon icon-class="password" />
-          </span>
-          <el-input
-            :key="passwordType"
-            ref="password"
-            v-model="loginForm.password"
-            :type="passwordType"
-            placeholder="Password"
-            name="password"
-            tabindex="2"
-            autocomplete="on"
-            @keyup.native="checkCapslock"
-            @blur="capsTooltip = false"
-            @keyup.enter.native="handleLogin"
-          />
-          <span class="show-pwd" @click="showPwd">
-            <svg-icon :icon-class="passwordType === 'password' ? 'eye' : 'eye-open'" />
-          </span>
-        </el-form-item>
-      </el-tooltip>
-
-      <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;" @click.native.prevent="handleLogin">Login</el-button>
-
-    </el-form>
-
-    <el-dialog title="Or connect with" :visible.sync="showDialog">
-      Can not be simulated on local, so please combine you own business simulation! ! !
-      <br>
-      <br>
-      <br>
-      <social-sign />
-    </el-dialog>
-  </div>-->
 </template>
 
 <script>
@@ -101,6 +43,7 @@ import { validUsername } from '@/utils/validate'
 import SocialSign from './components/SocialSignin'
 import '@/styles/login-style.css'
 import '@/assets/js/login.js'
+import '@/styles/auto-style.css'
 
 export default {
   name: 'Login',

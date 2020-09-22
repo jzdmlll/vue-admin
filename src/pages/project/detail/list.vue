@@ -3,61 +3,42 @@
   <div class="pro_list">
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
       <el-tooltip class="item" effect="dark" content="新增项目" placement="bottom-start">
-        <el-button type="primary" icon="el-icon-plus" size="mini" @click="toAdd" ></el-button>
+        <el-button type="primary" icon="el-icon-plus" size="mini" @click="toAdd">添加项目</el-button>
       </el-tooltip>
     </div>
     <div style="padding:1em;margin-bottom:1em;background:#fff">
       <el-table v-loading="loading" :data="projects" size="small">
-        <el-table-column prop="id" label="项目编号" />
+        <el-table-column type="index" prop="" label="序号" width="120" />
         <el-table-column prop="name" label="项目名称" />
-        <el-table-column label="类型" >
-          <el-select v-model="projects.types" multiple placeholder="请选择" value-key="name">
-            <el-option v-for="item in types" :key="item.id" :label="item.name" :value="item"></el-option>
-          </el-select>
-        </el-table-column>
-        <el-table-column prop="projects.content" label="内容" />
-        <el-table-column prop="projects.remark" label="批注" />
+        <el-table-column prop="content" label="内容" />
+        <el-table-column prop="remark" label="批注" />
         <el-table-column label="操作" align="center" width="180">
           <template slot-scope="scope">
-            <el-button type="text" size="small" @click="deleteHandler(scope.row.id)">移除</el-button>
-            <el-button type="text" size="small" @click="editHandler(scope.row)">修改</el-button>
+            <el-tooltip class="item" effect="dark" content="删除该项目" placement="bottom-start">
+              <el-button type="danger" icon="el-icon-delete" size="mini" @click="deleteHandler(scope.row.id)" />
+            </el-tooltip>
+            <el-tooltip class="item" effect="dark" content="修改该项目" placement="bottom-start">
+              <el-button type="success" icon="el-icon-edit" size="mini" @click="editHandler(scope.row)" />
+            </el-tooltip>
           </template>
         </el-table-column>
       </el-table>
     </div>
     <!-- 模态框 -->
     <el-dialog :title="title" :visible.sync="visible">
-      <el-form :model="form">
-		<el-form-item label="物品名" label-width="80px">
-      <el-select v-model="form.article" placeholder="请选择" value-key="id">
-			<el-option v-for="item in articles" :key="item.id" :label="item.name" :value="item"></el-option>
-      </el-select>
-		</el-form-item>
-		<el-form-item label="状态" label-width="80px">
-    <el-select v-model="form.status" placeholder="请选择" value-key="id">
-			<el-option v-for="item in status" :key="item.id" :label="item.text" :value="item" />
-    </el-select>
+      <el-form ref="form" status-icon :model="form">
+        <el-form-item label="项目名称">
+          <el-input v-model="form.name" autocomplete="off" />
         </el-form-item>
-		<el-form-item label="联系者" label-width="80px">
-          <el-select v-model="form.user" placeholder="请选择" value-key="id">
-			<el-option v-for="item in users" :key="item.id" :label="item.username" :value="item" />
-      </el-select>
-        </el-form-item>
-		<el-form-item label="物品发布者" label-width="80px">
-          <el-select v-model="form.publisher" placeholder="请选择" value-key="id">
-			<el-option v-for="item in users" :key="item.id" :label="item.username" :value="item"></el-option>
-    </el-select>
-        </el-form-item>
-		<el-form-item label="记录创建时间" label-width="80px">
-          <el-date-picker value-format="timestamp" v-model="form.time" type="datetime" placeholder="选择日期时间" default-time="12:00:00"></el-date-picker>
+        <el-form-item label="项目内容" prop="code">
+          <el-input v-model="form.content" type="textarea" />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button size="small" @click="visible = false">取 消</el-button>
-        <el-button type="primary" size="small" @click="saveRecordHandler">确 定</el-button>
+        <el-button type="primary" size="small" @click="saveRecordHandler('form')">确 定</el-button>
       </div>
     </el-dialog>
-
   </div>
 </template>
 <script>
@@ -67,32 +48,21 @@ import '@/styles/auto-style.css'
 export default {
   data() {
     return {
-      users: [],
-      articles: [],
-      status: [{ id: 0, text: '待归还' }, { id: 1, text: '归还中' }, { id: 2, text: '归还成功' }],
-      form: { article: { name: '' }},
       visible: false,
-      authorization_visible: false,
       title: '添加记录',
-      projects: [], // 记录列表
-      props: { multiple: true, value: 'id', label: 'name', emitPath: false },
-      options: [],
-      loading: false
+      projects: [],
+      loading: true,
+      form: {}
     }
   },
   created() {
-    // this.loadProjects()
-
+    this.loadProjects()
   },
   methods: {
 
     saveRecordHandler() {
-      this.form.articleId = this.form.article.id
-      this.form.userId = this.form.user.id
-      this.form.publishId = this.form.publisher.id
-      this.form.status = this.form.status.id
       request.request({
-        url: '/record/saveOrUpdate',
+        url: '/project/detail/saveOrUpdate',
         method: 'post',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
@@ -102,23 +72,20 @@ export default {
         .then(response => {
           this.visible = false
           this.$message({ message: response.message, type: 'success' })
-          this.loadRecords()
+          this.loadProjects()
         })
     },
 
     toAdd() {
       this.visible = true
-      this.findAllUser()
-      this.findAllArticle()
-      this.form = { article: { name: '' }}
-      this.title = '新增记录'
+      this.form = {}
+      this.title = '添加项目'
     },
 
     loadProjects() {
-      request.get('/project/cascadeFindAll')
+      request.get('/project/detail/findByAll')
         .then(response => {
           this.projects = response.data
-
           this.loading = false
         })
     },
@@ -128,42 +95,13 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        request.get('/record/deleteById?id=' + id)
-          .then(response => {
-            this.$message({ type: 'success', message: response.message })
-            this.loadRecords()
-          })
+
       })
     },
     editHandler(row) {
-      this.findAllUser()
-      this.findAllArticle()
       this.visible = true
       this.title = '修改记录'
       this.form = row
-      this.form.status = this.form.status === 0 ? { id: 0, text: '归还中' } : { id: 1, text: '归还成功' }
-    },
-    findAllUser() {
-      request.get('/user/findAll')
-        .then(response => {
-          this.users = response.data
-        })
-    },
-    findAllArticle() {
-      request.get('/article/findAll')
-        .then(response => {
-          this.articles = response.data
-        })
-    },
-    dateFormat(cjsj) {
-      var date = new Date(cjsj)
-      var Y = date.getFullYear() + '-'
-      var M = (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-'
-      var D = (date.getDate() + 1 < 10 ? '0' + (date.getDate()) : date.getDate()) + ' '
-      var h = (date.getHours() + 1 < 10 ? '0' + (date.getHours()) : date.getHours()) + ':'
-      var m = (date.getMinutes() + 1 < 10 ? '0' + (date.getMinutes()) : date.getMinutes()) + ':'
-      var s = (date.getSeconds() + 1 < 10 ? '0' + (date.getSeconds()) : date.getSeconds())
-      return Y + M + D + h + m + s
     }
   }
 }

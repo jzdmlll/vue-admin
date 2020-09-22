@@ -1,15 +1,15 @@
 <template>
-  <!-- 用户管理 -->
-  <div class="user_list">
+  <!-- 设备类型管理 -->
+  <div class="device_list">
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
-      <el-tooltip class="item" effect="dark" content="添加新用户" placement="bottom-start">
-        <el-button type="primary" icon="el-icon-plus" size="mini" @click="toAdd">添加新用户</el-button>
+      <el-tooltip class="item" effect="dark" content="添加设备类型" placement="bottom-start">
+        <el-button type="primary" size="small" icon="el-icon-plus" @click="toAdd">添加设备类型</el-button>
       </el-tooltip>
     </div>
     <div style="padding:1em;margin-bottom:1em;background:#fff">
       <el-table v-loading="loading" :data="users" size="small">
         <el-table-column type="index" prop="" label="序号" width="120" />
-        <el-table-column prop="username" label="用户名" />
+        <el-table-column prop="username" label="设备类型名" />
         <el-table-column prop="roles" label="所属角色">
           <template slot-scope="scope">
             <el-tag
@@ -23,13 +23,13 @@
         </el-table-column>
         <el-table-column label="操作" align="center" width="180">
           <template slot-scope="scope">
-            <el-tooltip class="item" effect="dark" content="修改用户信息" placement="bottom-start">
+            <el-tooltip class="item" effect="dark" content="修改设备类型信息" placement="bottom-start">
               <el-button icon="el-icon-edit" type="success" size="mini" @click="toEdit(scope.row)" />
             </el-tooltip>
-            <el-tooltip class="item" effect="dark" content="删除用户" placement="bottom-start">
+            <el-tooltip class="item" effect="dark" content="删除设备类型" placement="bottom-start">
               <el-button icon="el-icon-delete" type="danger" size="mini" @click="deleteHandler(scope.row.id)" />
             </el-tooltip>
-            <el-tooltip class="item" effect="dark" content="给用户设置角色" placement="bottom-start">
+            <el-tooltip class="item" effect="dark" content="给设备类型设置角色" placement="bottom-start">
               <el-button icon="el-icon-setting" type="primary" size="mini" @click="toSetRole(scope.row)" />
             </el-tooltip>
           </template>
@@ -39,7 +39,7 @@
     <!-- 模态框 -->
     <el-dialog :title="title" :visible.sync="visible">
       <el-form :model="form">
-        <el-form-item label="用户名" label-width="80px">
+        <el-form-item label="设备类型名" label-width="80px">
           <el-input v-model="form.username" autocomplete="off" />
         </el-form-item>
         <el-form-item label="密码" label-width="80px">
@@ -55,7 +55,7 @@
     <!-- 角色模态框 -->
     <el-dialog title="设置角色" :visible.sync="role_visible">
       <el-form :model="user">
-        <el-form-item label="用户名" label-width="80px">
+        <el-form-item label="设备类型名" label-width="80px">
           {{ user.username }}
         </el-form-item>
         <el-form-item label="角色" label-width="80px">
@@ -84,7 +84,7 @@ export default {
       form: {},
       visible: false,
       role_visible: false,
-      title: '添加用户',
+      title: '添加设备类型',
       user: {},
       users: [],
       roles: [],
@@ -120,7 +120,7 @@ export default {
         })
     },
     toAdd() {
-      this.title = '添加用户'
+      this.title = '添加设备类型'
       this.form = {}
       this.visible = true
     },
@@ -131,7 +131,7 @@ export default {
         })
     },
     deleteHandler(id) {
-      this.$confirm('此操作将永久删除该用户, 是否继续?', '提示', {
+      this.$confirm('此操作将永久删除该设备类型, 是否继续?', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
@@ -144,7 +144,7 @@ export default {
       })
     },
     toEdit(record) {
-      this.title = '修改用户'
+      this.title = '修改设备类型'
       this.form = record
       this.visible = true
     },

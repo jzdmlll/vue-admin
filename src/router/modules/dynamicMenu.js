@@ -14,22 +14,25 @@ async function parseMenu(id) {
   const routes = []
   for (const privilege of privileges) {
     if (privilege.type === 'parent') {
-      const route = {
-        path: privilege.route,
-        component: Layout,
-        meta: { title: privilege.name, icon: privilege.icon, affix: true },
-        children: []
-      }
       if (privilege.children && privilege.children.length > 0) {
+        const route = {
+          path: privilege.route,
+          component: Layout,
+          meta: { title: privilege.name, icon: privilege.icon, affix: true },
+          children: []
+        }
         for (const p of privilege.children) {
           if (p.type === 'menu') {
-            console.log(p)
+            let page = p.route
+            if (privilege.name === '审核管理') {
+              page = '/proCheck/list'
+            }
             const son_route = {
               hidden: false,
               path: p.route,
               // component: () => import('@/pages'+p.route),
               component: function component(resolve) {
-                require(['@/pages' + p.route + '.vue'], resolve)
+                require(['@/pages' + page + '.vue'], resolve)
               },
               name: p.name.replace(/\//g, '_'),
               meta: { title: p.name, affix: true }
@@ -37,9 +40,8 @@ async function parseMenu(id) {
             route.children.push(son_route)
           }
         }
-        console.log(route)
+        routes.push(route)
       }
-      routes.push(route)
     }
   }
   routes.push({ path: '*', redirect: '/404', hidden: true })

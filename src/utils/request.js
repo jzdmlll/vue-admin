@@ -1,8 +1,9 @@
 import axios from 'axios'
 import { Message } from 'element-ui'
 import store from '@/store'
-import { getToken } from '@/utils/auth'
+import { getToken, setToken, removeToken } from '@/utils/auth'
 import router from '@/router'
+import qs from 'querystring'
 
 // create an axios instance
 const service = axios.create({
@@ -10,6 +11,8 @@ const service = axios.create({
   // withCredentials: true, // send cookies when cross-domain requests
   timeout: 30000 // request timeout
 })
+
+const token = ''
 
 // request interceptor
 service.interceptors.request.use(
@@ -48,20 +51,24 @@ service.interceptors.response.use(
     const res = response.data
 
     // if the custom code is not 20000, it is judged as an error.
-    if ( res.status !== 200) {
+    if (res.status === 200) {
+      console.log(response.headers.refresh)
+      if (response.headers.refresh === 'true') {
+        refleshToken()
+      }
+      return res
+    } else {
       // 消息弹框
       Message({
         message: res.message,
         type: 'error',
         duration: 5 * 1000
       })
-    if (res.status === 401){
-        logout();
+      if (res.status === 402) {
+        logout()
       }
       // 返回承诺失败对象
       return Promise.reject(new Error(res.message || 'Error'))
-    } else {
-      return res
     }
   },
   error => {
@@ -74,9 +81,35 @@ service.interceptors.response.use(
     return Promise.reject(error)
   }
 )
-//退出
+// 退出
 async function logout() {
+  removeToken()
   await store.dispatch('user/logout')
   router.push('/login')
+}
+async function refleshToken(response) {
+  await getRefreshToken()
+}
+function getRefreshToken() {
+  return new Promise((resolve, reject) => {
+    axios.post(
+      process.env.VUE_APP_BASE_API + 'user/refreshToken',
+      qs.stringify({ 'token': getToken() }),
+      {
+        headers: {
+          'X-Token': getToken()
+        }
+      })
+      .then((res) => {
+        if (res.data.status == 200) {
+          setToken(res.data.data.token)
+          resolve(res)
+        } else {
+          logout()
+        }
+      }).catch((err) => {
+        reject(err)
+      })
+  })
 }
 export default service
