@@ -4,6 +4,12 @@
     辅：#72DCAD
     辅：#8EDCB9
  */
+.my-transition {
+  transition: all 0.3s;
+  -moz-transition: all 0.3s;	/* Firefox 4 */
+  -webkit-transition: all 0.3s;	/* Safari 和 Chrome */
+  -o-transition: all 0.3s;	/* Opera */
+}
 .el-step.is-simple:not(:last-of-type) .el-step__title {
   max-width: 100%;
 }

@@ -1,5 +1,6 @@
 <template>
   <!-- 审核管理 -->
+
   <div class="check_list">
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
       <el-button :style="hasSelected?{display: 'inline-block'}:{display: 'none'}" type="primary" size="small" @click="toCheck(key=1)">通过</el-button>
@@ -98,7 +99,8 @@ export default {
       select: [{ status: 0, name: '未审核' }, { status: 1, name: '通过' }, { status: 2, name: '拒绝' }],
       form: { status: [] },
       projects: [],
-      selectedRowKeys: []
+      selectedRowKeys: [],
+      inquiryIds: []
     }
   },
   computed: {
@@ -119,10 +121,11 @@ export default {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         },
-        data: qs.stringify({ status: key, ids: this.selectedRowKeys })
+        data: qs.stringify({ status: key, ids: this.selectedRowKeys, inquiryIds: this.inquiryIds })
       }).then(response => {
         this.$message({ message: response.message, type: 'success' })
         this.selectedRowKeys = []
+        this.inquiryIds = []
         this.toSearch()
       })
     },
@@ -130,6 +133,11 @@ export default {
       const rows = selectedRows.map(item => {
         if (item.id) {
           return item.id
+        }
+      })
+      this.inquiryIds = selectedRows.map(item => {
+        if (item.id) {
+          return item.contentId
         }
       })
       this.selectedRowKeys = rows

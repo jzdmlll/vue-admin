@@ -20,25 +20,35 @@
         >
           <template
             v-for="col in ['supplier','brand','name','device','model','suModel','params',
-                           'suParams','number','unit','suPrice','suTotalPrice','suRemark','suWarranties']"
+                           'suParams','number','unit','suPrice','suTotalPrice','suRemark','suWarranties','suDelivery','warranty']"
             :slot="col"
             slot-scope="text, record, index"
           >
             <el-tooltip class="item" effect="dark" :content="text+''" placement="bottom-start">
               <div :key="col">
                 <a-input
-                  v-if="record.editable"
+                  v-if="record.editable && (col != 'suDelivery' && col != 'warranty')"
                   style="margin: -5px 0"
                   :value="text"
                   @change="e => handleChange(e.target.value, record, col)"
                 />
+                <el-date-picker
+                  v-if="record.editable && (col === 'suDelivery' || col === 'warranty')"
+                  v-model.number="record[col]"
+                  value-format="timestamp"
+                  type="date"
+                  @change="e => handleChange(e.target.value, record, col)"
+                />
+                <template v-if="!record.editable && (col === 'suDelivery' || col === 'warranty')">
+                  {{ dateFormat(parseInt(text)) }}
+                </template>
                 <template v-else>
                   {{ text }}
                 </template>
               </div>
             </el-tooltip>
           </template>
-          <template
+          <!--<template
             v-for="col in ['suDelivery','warranty']"
             :slot="col"
             slot-scope="text, record, index"
@@ -55,7 +65,7 @@
                 {{ dateFormat(parseInt(text)) }}
               </template>
             </div>
-          </template>
+          </template>-->
           <template slot="operation" slot-scope="text, record, index">
             <div class="editable-row-operations">
               <span v-if="record.editable">
@@ -81,7 +91,7 @@
     <!-- 模态框 -->
     <el-dialog title="添加询价" :visible.sync="visible">
       <el-steps :active="active" simple style="background: #d8f1e3;margin-bottom: 8px;padding: 13px 4%;height: 36px">
-        <el-step title="填写询价内容" icon="el-icon-edit" /> 
+        <el-step title="填写询价内容" icon="el-icon-edit" />
         <el-step title="上传询价文件" icon="el-icon-upload" />
         <el-step title="选择审核流程" icon="el-icon-upload" />
       </el-steps>
