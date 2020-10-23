@@ -5,6 +5,9 @@
       <el-tooltip class="item" effect="dark" content="添加询价" placement="bottom-start">
         <el-button type="primary" icon="el-icon-plus" size="small" @click="toAdd">添加询价</el-button>
       </el-tooltip>
+      <el-tooltip class="item" effect="dark" content="批量导入询价" placement="bottom-start">
+        <el-button type="primary" size="small" @click="batchImport"><a-icon type="import" style="font-size: 12px;margin-right: 5px"/>批量导入</el-button>
+      </el-tooltip>
     </div>
     <div style="padding:1em;margin-bottom:1em;background:#fff">
       <a-table :columns="columns" :data-source="projects" :scroll="{ x: 786 }" @expand="expandChange">
@@ -13,10 +16,11 @@
           slot-scope="scope"
           class="childTable"
           :class="scope.detailList.length > 0 ? { noData: false}:{noData: true}"
-          :scroll="{x: 1800}"
+          :scroll="{x: 1450}"
           :columns="innerColumns"
           :data-source="scope.detailList"
           :pagination="false"
+          :loading="childLoading[scope.id]"
         >
           <template
             v-for="col in ['supplier','brand','name','device','model','suModel','params',
@@ -42,34 +46,19 @@
                 <template v-if="!record.editable && (col === 'suDelivery' || col === 'warranty')">
                   {{ dateFormat(parseInt(text)) }}
                 </template>
-                <template v-else>
+                <template v-if="!record.editable && (col !== 'suDelivery' && col !== 'warranty')">
                   {{ text }}
                 </template>
               </div>
             </el-tooltip>
           </template>
-          <!--<template
-            v-for="col in ['suDelivery','warranty']"
-            :slot="col"
-            slot-scope="text, record, index"
-          >
-            <div :key="col">
-              <el-date-picker
-                v-if="record.editable"
-                v-model.number="record[col]"
-                value-format="timestamp"
-                type="date"
-                @change="e => handleChange(e.target.value, record, col)"
-              />
-              <template v-else>
-                {{ dateFormat(parseInt(text)) }}
-              </template>
-            </div>
-          </template>-->
           <template slot="operation" slot-scope="text, record, index">
-            <div class="editable-row-operations">
-              <span v-if="record.editable">
-                <el-tooltip class="item" effect="dark" content="编辑该条询价" placement="bottom-start">
+            <div class="editable-row-operations" style="text-align: center">
+              <span v-if="record.editable" >
+                <el-tooltip class="item" effect="dark" content="编辑" placement="bottom-start">
+                  <el-button type="primary" icon="el-icon-upload" size="mini" @click="toEdit(record)" />
+                </el-tooltip>
+                <el-tooltip class="item" effect="dark" content="行内编辑" placement="bottom-start">
                   <el-button type="success" size="mini" style="padding: 7px 10px;" @click="save(record)">保存</el-button>
                 </el-tooltip>
                 <a-popconfirm title="确定取消修改吗?" @confirm="() => cancel(record)">
@@ -79,7 +68,10 @@
                 </a-popconfirm>
               </span>
               <span v-else>
-                <el-tooltip class="item" effect="dark" content="编辑该条询价" placement="bottom-start">
+                <el-tooltip class="item" effect="dark" content="编辑" placement="bottom-start">
+                  <el-button type="primary" icon="el-icon-upload" size="mini" @click="toEdit(record)" />
+                </el-tooltip>
+                <el-tooltip class="item" effect="dark" content="行内编辑" placement="bottom-start">
                   <el-button type="primary" icon="el-icon-edit" size="mini" @click="edit(record)" />
                 </el-tooltip>
               </span>
@@ -89,11 +81,11 @@
       </a-table>
     </div>
     <!-- 模态框 -->
-    <el-dialog title="添加询价" :visible.sync="visible">
+    <el-dialog :title="title" :visible.sync="visible">
       <el-steps :active="active" simple style="background: #d8f1e3;margin-bottom: 8px;padding: 13px 4%;height: 36px">
         <el-step title="填写询价内容" icon="el-icon-edit" />
         <el-step title="上传询价文件" icon="el-icon-upload" />
-        <el-step title="选择审核流程" icon="el-icon-upload" />
+        <el-step title="上传技术文件" icon="el-icon-upload" />
       </el-steps>
       <el-form ref="form" :model="form" :rules="codeRules" status-icon>
         <div>
@@ -216,6 +208,7 @@
               name="file"
               :multiple="true"
               :action="fileUploadUrl"
+              withCredentials
               list-type="picture"
               :before-upload="beforeUpload"
               :file-list="fileList"
@@ -223,6 +216,9 @@
             >
               <p class="ant-upload-drag-icon">
                 <a-icon type="inbox" />
+              </p>
+              <p class="ant-upload-text" style="color: #40a9ff">
+                上传询价文件
               </p>
               <p class="ant-upload-text">
                 点击或者拖拽文件来上传
@@ -234,22 +230,83 @@
 
           </div>
           <div :style="active === 3?{display: 'block'}:{display:'none'}">
-            <el-select v-model="form.role" clearable placeholder="请选择要添加的审核" value-key="checkName" style="margin:0 0 8px 1em" @change="addCheck(form.role)">
-              <el-option v-for="item in roles" :key="item.id" :label="item.checkName" :value="item" />
-            </el-select>
-            <div :style="{height: proChecks.length*100+'px'}" style="position: relative;padding: 0 1em">
-
-              <el-steps direction="vertical" :active="proChecks.length">
-                <el-step v-for="item in proChecks" :key="item.roleId" :title="item.checkName" />
-              </el-steps>
-              <div class="removeBox"><i v-for="item in proChecks" :style="{marginBottom: (proChecks.length*(100-27))/(proChecks.length-1)+'px'}" class="el-icon-close" @click="removeCheck(form.role)" /></div>
-            </div>
+            <a-upload-dragger
+              name="file"
+              :multiple="true"
+              :action="fileUploadUrl"
+              withCredentials
+              list-type="picture"
+              :before-upload="beforeUpload"
+              :file-list="fileList1"
+              @change="uploadStatusChange1"
+              accept="*"
+            >
+              <p class="ant-upload-drag-icon">
+                <a-icon type="inbox" />
+              </p>
+              <p class="ant-upload-text" style="color: #40a9ff">
+                上传技术文件
+              </p>
+              <p class="ant-upload-text">
+                点击或者拖拽文件来上传
+              </p>
+              <p class="ant-upload-hint">
+                支持单个或多个文件上传. 单个文件请不要超过12M
+              </p>
+            </a-upload-dragger>
           </div>
         </div>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button size="small" @click="cancelHandler">{{ this.active === 1?'取消':'上一步' }}</el-button>
         <el-button type="primary" :loading="submitLoading" size="small" @click="saveRecordHandler('form')">{{ this.active === 3?'确定':'下一步' }}</el-button>
+      </div>
+    </el-dialog>
+    <el-dialog title="批量导入询价" class="importDialog" :visible.sync="visible2">
+     <!-- <el-steps :active="active1" simple style="background: #d8f1e3;margin-bottom: 8px;padding: 13px 4%;height: 36px">
+        <el-step title="批量导入询价" icon="el-icon-edit" />
+        <el-step title="选择审核流程" icon="el-icon-upload" />
+      </el-steps>-->
+      <el-form ref="form1" :model="form1" :rules="codeRules" status-icon>
+      <div>
+        {{importData}}
+            <el-form-item label="" label-width="0px" size="small" prop="proDetailId">
+              <el-select v-model="form1.proDetailId" clearable placeholder="请选择要询价的项目" value-key="name" size="small">
+                <el-option v-for="item in projects" :key="item.id" :label="item.name" :value="item.id" />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="" label-width="0px" size="small" prop="deviceTypeId">
+              <el-select v-model="form1.deviceTypeId" clearable placeholder="请选择设备类型" value-key="name" size="small">
+              <el-option v-for="item in deviceType" :key="item.id" :label="item.name" :value="item.id" />
+              </el-select>
+            </el-form-item>
+        <div style="margin: 8px 0">
+          <el-button @click="clickFileInput" type="primary" size="small"><a-icon type="file-excel" style="font-size: 12px;margin-right: 5px"/>excel导入</el-button>
+          <input type="file" ref="upload" accept=".xls,.xlsx" @change="readExcel" class="outputlist_upload">
+        </div>
+        <el-input
+          type="textarea"
+          placeholder="点击上方按钮导入或者复制excel中数据来粘贴"
+          :autosize="{ minRows: 4, maxRows: 12}"
+          v-model="importData">
+        </el-input>
+      </div>
+      <!--<div :style="active1 === 2?{display: 'block'}:{display:'none'}">
+        <el-select v-model="form1.role" clearable placeholder="请选择要添加的审核" value-key="checkName" style="margin:0 0 8px 1em" @change="addCheck(form1.role)">
+          <el-option v-for="item in roles" :key="item.id" :label="item.checkName" :value="item" />
+        </el-select>
+        <div :style="{height: proChecks.length*100+'px'}" style="position: relative;padding: 0 1em">
+
+          <el-steps direction="vertical" :active="proChecks.length">
+            <el-step v-for="item in proChecks" :key="item.roleId" :title="item.checkName" />
+          </el-steps>
+          <div class="removeBox"><i v-for="item in proChecks" :style="{marginBottom: (proChecks.length*(100-27))/(proChecks.length-1)+'px'}" class="el-icon-close" @click="removeCheck(form1.role)" /></div>
+        </div>
+      </div>-->
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button size="small" @click="cancelHandler2">取消</el-button>
+        <el-button type="primary" :loading="submitLoading" size="small" @click="importHandler('form1')">提交</el-button>
       </div>
     </el-dialog>
   </div>
@@ -260,6 +317,7 @@ import request from '@/utils/request'
 import qs from 'querystring'
 import { dateFormat } from '@/utils/format'
 import { getUser } from '@/utils/auth'
+import XLSX from 'xlsx'
 
 const columns = [
   { title: '项目名称', dataIndex: 'name', key: 'name', ellipsis: true },
@@ -270,20 +328,20 @@ const innerColumns = [
 
   { title: '供应商', dataIndex: 'supplier', scopedSlots: { customRender: 'supplier' }, fixed: 'left', width: 110,
     sorter: (a, b) => a.supplier.length - b.supplier.length, sortDirections: ['descend', 'ascend'] },
-  { title: '询价名', dataIndex: 'name', scopedSlots: { customRender: 'name' }, fixed: 'left', width: 110,
+  { title: '设备名', dataIndex: 'name', scopedSlots: { customRender: 'name' }, fixed: 'left', width: 110,
     sorter: (a, b) => a.name.length - b.name.length, sortDirections: ['descend', 'ascend'] },
-  { title: '设备名', dataIndex: 'device', scopedSlots: { customRender: 'device' }, fixed: 'left', width: 110,
-    sorter: (a, b) => a.device.length - b.device.length, sortDirections: ['descend', 'ascend'] },
-  { title: '设备型号', dataIndex: 'model', scopedSlots: { customRender: 'model' }, fixed: 'left', width: 110,
-    sorter: (a, b) => a.model.length - b.model.length, sortDirections: ['descend', 'ascend'] },
-  { title: '商家设备型号', dataIndex: 'suModel', scopedSlots: { customRender: 'suModel' }, fixed: 'left', width: 110,
-    sorter: (a, b) => a.suModel.length - b.suModel.length, sortDirections: ['descend', 'ascend'] },
+  /*{ title: '设备名', dataIndex: 'device', scopedSlots: { customRender: 'device' }, fixed: 'left', width: 110,
+    sorter: (a, b) => a.device.length - b.device.length, sortDirections: ['descend', 'ascend'] },*/
   { title: '技术参数', dataIndex: 'params', scopedSlots: { customRender: 'params' }, fixed: 'left', width: 110,
     sorter: (a, b) => a.params.length - b.params.length, sortDirections: ['descend', 'ascend'] },
-  { title: '商家技术参数', dataIndex: 'suParams', scopedSlots: { customRender: 'suParams' }, fixed: 'left', width: 110,
+  { title: '设备型号', dataIndex: 'model', scopedSlots: { customRender: 'model' }, fixed: 'left', width: 110,
+    sorter: (a, b) => a.model.length - b.model.length, sortDirections: ['descend', 'ascend'] },
+  { title: '商家技术参数', dataIndex: 'suParams', scopedSlots: { customRender: 'suParams' }, width: 100,
     sorter: (a, b) => a.suParams.length - b.suParams.length, sortDirections: ['descend', 'ascend'] },
-  { title: '品牌', dataIndex: 'brand', scopedSlots: { customRender: 'brand' }, width: 100, ellipsis: true,
-    sorter: (a, b) => a.brand.length - b.brand.length, sortDirections: ['descend', 'ascend'] },
+  { title: '商家设备型号', dataIndex: 'suModel', scopedSlots: { customRender: 'suModel' }, width: 110,
+    sorter: (a, b) => a.suModel.length - b.suModel.length, sortDirections: ['descend', 'ascend'] },
+  /*{ title: '品牌', dataIndex: 'brand', scopedSlots: { customRender: 'brand' }, width: 100, ellipsis: true,
+    sorter: (a, b) => a.brand.length - b.brand.length, sortDirections: ['descend', 'ascend'] },*/
   { title: '数量', dataIndex: 'number', scopedSlots: { customRender: 'number' }, width: 100, ellipsis: true,
     sorter: (a, b) => a.number - b.number, sortDirections: ['descend', 'ascend'] },
   { title: '单位', dataIndex: 'unit', scopedSlots: { customRender: 'unit' }, width: 100, ellipsis: true,
@@ -292,26 +350,49 @@ const innerColumns = [
     sorter: (a, b) => a.suPrice - b.suPrice, sortDirections: ['descend', 'ascend'] },
   { title: '商家总价', dataIndex: 'suTotalPrice', scopedSlots: { customRender: 'suTotalPrice' }, width: 100, ellipsis: true,
     sorter: (a, b) => a.suTotalPrice - b.suTotalPrice, sortDirections: ['descend', 'ascend'] },
-  { title: '商家备注', dataIndex: 'suRemark', scopedSlots: { customRender: 'suRemark' }, width: 100, ellipsis: true },
   { title: '商家货期', dataIndex: 'suDelivery', scopedSlots: { customRender: 'suDelivery' }, width: 100, ellipsis: true,
     sorter: (a, b) => a.suDelivery - b.suDelivery, sortDirections: ['descend', 'ascend'] },
   { title: '质保期', dataIndex: 'warranty', scopedSlots: { customRender: 'warranty' }, width: 100, ellipsis: true,
     sorter: (a, b) => a.warranty - b.warranty, sortDirections: ['descend', 'ascend'] },
-  { title: '商家资质', dataIndex: 'suWarranties', scopedSlots: { customRender: 'suWarranties' }, width: 100, ellipsis: true,
-    sorter: (a, b) => a.suWarranties.length - b.suWarranties.length, sortDirections: ['descend', 'ascend'] },
+  { title: '商家备注', dataIndex: 'suRemark', scopedSlots: { customRender: 'suRemark' }, width: 100, ellipsis: true },
+  /*{ title: '商家资质', dataIndex: 'suWarranties', scopedSlots: { customRender: 'suWarranties' }, width: 100, ellipsis: true,
+    sorter: (a, b) => a.suWarranties.length - b.suWarranties.length, sortDirections: ['descend', 'ascend'] },*/
   {
     title: '操作',
     dataIndex: 'operation',
     scopedSlots: { customRender: 'operation' },
-    width: 100,
-    fixed: 'right'
+    width: 170,
+    fixed: 'right',
+    align: 'center'
   }
 ]
 export default {
   data() {
     const fileUploadUrl = process.env.VUE_APP_BASE_API + 'file/uploadCache'
     return {
+      title: '新增询价',
+      childLoading: {},
+      form1: {},
+      active1: 1,
+      keys: {
+        "供应商": 'supplier',
+        "设备名称": 'name',
+        "品牌型号": 'model',
+        "技术要求": 'params',
+        "单位": 'unit',
+        "数量": 'number',
+        "报价品牌型号": 'suModel',
+        "实际技术参数": 'suParams',
+        "设备单价": 'suPrice',
+        "设备总价": 'suTotalPrice',
+        "货期": 'suDelivery',
+        "质保期/售后": 'warranty',
+        "备注": 'suRemark',
+      },
+      outputs: [],
+      importData: '',
       visible: false,
+      visible2: false,
       projects: [],
       loading: true,
       form: {},
@@ -324,6 +405,7 @@ export default {
       deviceType: [],
       fileUploadUrl,
       fileList: [],
+      fileList1: [],
       submitLoading: false,
       roles: [],
       proChecks: [],
@@ -340,7 +422,7 @@ export default {
         name: [
           { required: true, message: '不能为空', trigger: 'blur' }
         ],
-        device: [
+        /*device: [
           { required: true, message: '不能为空', trigger: 'blur' }
         ],
         model: [
@@ -381,7 +463,7 @@ export default {
         ],
         unit: [
           { required: true, message: '不能为空', trigger: 'blur' }
-        ]
+        ]*/
       }
     }
   },
@@ -389,7 +471,101 @@ export default {
     this.loadProjects()
   },
   methods: {
+    toEdit(record){
+      this.submitLoading = false
+      this.form = record
+      this.active = 1
+      this.visible = true
+      this.fileList = []
+      this.fileList1 = []
+      this.title = '编辑询价'
+      this.loadDeviceType()
+      this.loadProChecks()
+    },
+    clickFileInput() {
+      this.$refs.upload.dispatchEvent(new MouseEvent('click'))
+    },
+    readExcel(e) {//表格导入
+      var that = this;
+      const files = e.target.files;
+      //console.log(files);
+      if(files.length<=0){//如果没有文件名
+        return false;
+      }else if(!/\.(xls|xlsx)$/.test(files[0].name.toLowerCase())){
+        this.$Message.error('上传格式不正确，请上传xls或者xlsx格式');
+        return false;
+      }
+
+      const fileReader = new FileReader();
+      fileReader.onload = (ev) => {
+        try {
+          const data = ev.target.result;
+          const workbook = XLSX.read(data, {
+            type: 'binary'
+          });
+          const wsname = workbook.SheetNames[0];//取第一张表
+          const ws = XLSX.utils.sheet_to_json(workbook.Sheets[wsname]);//生成json表格内容
+          console.log(ws)
+          that.outputs = [];//清空接收数据
+          ws.map(item => {
+            if( item['供应商'] && item['设备名称']){
+              that.outputs.push(item);
+            }
+          })
+          this.$refs.upload.value = '';
+        } catch (e) {
+          return false;
+        }
+      };
+      fileReader.readAsBinaryString(files[0]);
+    },
+    importHandler(form1) {
+      console.log(this.form1)
+      this.$refs[form1].validate((valid) => {
+        if (valid) {
+          const form = []
+          let keyArray = []
+          this.outputs.map(item => {
+            keyArray = Object.keys(item)
+            let inquiry = {}
+            keyArray.map(key => {
+              if (this.keys[key] != undefined)
+                inquiry[this.keys[key]] = item[key]
+            })
+            form.push(inquiry)
+          })
+          let userId = parseInt(getUser())
+          form.map(item => {
+            item['proDetailId'] = this.form1.proDetailId
+            item['deviceTypeId'] = this.form1.deviceTypeId
+            item['operator'] = userId
+            item['proChecks'] = this.proChecks
+          })
+          request.request({
+            url: '/inquiry/batchAddInquiry',
+            method: 'post',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            data: JSON.stringify({inquiryVMs: form})
+          }).then( response => {
+            this.$message({ message: response.message, type: 'success' })
+            this.visible2 = false
+            this.loadProjects()
+          })
+        } else {
+          console.log('error commit')
+          return false
+        }
+      })
+    },
     dateFormat,
+    batchImport() {
+      this.visible2 = true
+      this.importData = ''
+      this.loadDeviceType()
+      this.loadProChecks()
+    },
     removeCheck(role) {
       /* this.proChecks.map((item,index) => {
         if(role.id === item.roleId){
@@ -421,10 +597,27 @@ export default {
             file.url = file.response.url
             file.id = file.response.fileId
             file.name = file.response.fileName
+            //file.type = 1
           }
           return file
         })
+
         this.fileList = fileList
+      }
+    },
+    uploadStatusChange1(info) {
+      if (info.file.status === 'uploading' || info.file.response.error === 0) {
+        let fileList = [...info.fileList]
+        fileList = fileList.map(file => {
+          if (file.response) {
+            file.url = file.response.url
+            file.id = file.response.fileId
+            file.name = file.response.fileName
+            //file.type = 2
+          }
+          return file
+        })
+        this.fileList1 = fileList
       }
     },
     loadDeviceType() {
@@ -533,11 +726,14 @@ export default {
         case 3:
           this.submitLoading = true
           const fileList = this.fileList.map(item => {
-            return { id: item.id, name: item.name, url: item.url }
+            return { id: item.id, name: item.name, url: item.url, type: 1 }
           })
-          this.form.files = [...fileList]
+          const fileList1 = this.fileList1.map(item => {
+            return { id: item.id, name: item.name, url: item.url, type: 2 }
+          })
+          this.form.files = [...fileList.concat(fileList1)]
           this.form.operator = parseInt(getUser())
-          this.form.proChecks = this.proChecks
+          //this.form.proChecks = this.proChecks
           request.request({
             url: '/inquiry/saveOrUpdate',
             method: 'post',
@@ -560,11 +756,21 @@ export default {
         this.active--
       }
     },
+    cancelHandler2() {
+      /*if (this.active1 === 1) {
+        this.visible2 = false
+      } else {
+        this.active1--
+      }*/
+      this.visible2 = false
+    },
     toAdd() {
       this.submitLoading = false
+      this.form = {}
       this.active = 1
       this.visible = true
       this.fileList = []
+      this.fileList1 = []
       this.loadDeviceType()
       this.loadProChecks()
     },
@@ -577,9 +783,12 @@ export default {
           this.projects.forEach((item, index) => {
             if (item.id === record.id) {
               this.projects[index].detailList = response.data
+              this.childLoading[record.id] = false
             }
           })
         })
+      }else {
+        this.childLoading[record.id] = true
       }
     },
     loadProjects() {
@@ -589,6 +798,9 @@ export default {
             item.detailList = []
           })
           this.projects = response.data
+          this.projects.map(item => {
+            this.childLoading[item.id] = true
+          })
           this.loading = false
         })
     }
@@ -647,6 +859,19 @@ export default {
           height: 24px;
           cursor: pointer;
           color: #319efc;
+        }
+      }
+    }
+    .outputlist_upload {
+      opacity: 0;
+      width: 0;
+      overflow: hidden;
+    }
+    .importDialog {
+      .el-form-item {
+        float: left;
+        .el-form-item__content {
+          margin: 0 8px 0 0 !important;
         }
       }
     }

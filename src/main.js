@@ -4,7 +4,7 @@ import Cookies from 'js-cookie'
 
 import 'normalize.css/normalize.css' // a modern alternative to CSS resets
 
-import { Table, Popconfirm, Input, Upload, Icon } from 'ant-design-vue'
+import { Table, Popconfirm, Input, Upload, Icon, Empty, Popover, Timeline } from 'ant-design-vue'
 import 'ant-design-vue/dist/antd.css'
 
 import Element from 'element-ui'
@@ -53,7 +53,15 @@ Vue.use(Upload, {
 Vue.use(Icon, {
   size: Cookies.get('size') || 'medium'
 })
-
+Vue.use(Empty, {
+  size: Cookies.get('size') || 'medium'
+})
+Vue.use(Popover,{
+  size: Cookies.get('size') || 'medium'
+})
+Vue.use(Timeline,{
+  size: Cookies.get('size') || 'medium'
+})
 // register global utility filters
 Object.keys(filters).forEach(key => {
   Vue.filter(key, filters[key])

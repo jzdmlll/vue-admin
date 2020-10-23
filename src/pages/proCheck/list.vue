@@ -1,6 +1,5 @@
 <template>
   <!-- 审核管理 -->
-
   <div class="check_list">
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
       <el-button :style="hasSelected?{display: 'inline-block'}:{display: 'none'}" type="primary" size="small" @click="toCheck(key=1)">通过</el-button>
@@ -19,7 +18,8 @@
         :columns="realColumns"
         :data-source="proChecks"
         class="childTable"
-        :row-selection="{ selectedRows: selectedRows, onChange: onSelectChange }"
+        :rowKey="record => record.id"
+        :row-selection="{ selectedRowKeys: selectedRowKeys, onChange: onSelectChange }"
       >
         <span slot="checkStatus" slot-scope="text, record, index">
           <el-tag :type="text === 0 ? 'info':(text === 1? 'success':'danger')">{{ statu(text) }}</el-tag>
@@ -84,15 +84,12 @@ export default {
       loading: 'true',
       columns,
       prop: {
-        '技术审核': ['inquiry.name', 'inquiry.device', 'inquiry.model',
+        '技术审核': ['inquiry.name', 'inquiry.model',
           'inquiry.suModel', 'inquiry.params', 'inquiry.suParams', 'checkStatus'
         ],
-        '商务审核': ['inquiry.supplier', 'inquiry.name', 'inquiry.device',
+        '商务审核': ['inquiry.supplier', 'inquiry.name',
           'inquiry.price', 'inquiry.number', 'inquiry.suTotalPrice', 'inquiry.suWarranties', 'checkStatus'
         ],
-        '最终审核': ['inquiry.supplier', 'inquiry.name', 'inquiry.device',
-          'inquiry.price', 'inquiry.number', 'inquiry.suTotalPrice', 'checkStatus'
-        ]
       },
       realColumns: [],
       status: ['未审核', '通过', '拒绝'],

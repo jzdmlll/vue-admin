@@ -2,7 +2,9 @@
   <div :style="{height:height+'px',zIndex:zIndex}">
     <div
       :class="className"
-      :style="{top:(isSticky ? stickyTop +'px' : ''),zIndex:zIndex,position:position,width:width,height:height+'px'}"
+      :style="{top:(isSticky ? stickyTop +'px' : ''),zIndex:zIndex,position:position,width:widthData,height: height,
+      background: backgroundData,margin: marginData, boxShadow: boxShadowData, padding: paddingData, right: rightData,
+      opacity: '1'}"
     >
       <slot>
         <div>sticky</div>
@@ -26,15 +28,45 @@ export default {
     className: {
       type: String,
       default: ''
+    },
+    boxShadow: {
+      type: String,
+      default: ''
+    },
+    background: {
+      type: String,
+      default: ''
+    },
+    width: {
+      type: String,
+      default: 'auto'
+    },
+    margin: {
+      type: String,
+      default: ''
+    },
+    padding: {
+      type: String,
+      default: ''
+    },
+    right: {
+      type: String,
+      default: ''
     }
   },
   data() {
     return {
       active: false,
       position: '',
-      width: undefined,
       height: undefined,
-      isSticky: false
+      marginLeft: '',
+      isSticky: false,
+      boxShadowData: '',
+      backgroundData: '',
+      widthData: '',
+      marginData: '',
+      paddingData: '',
+      rightData: '',
     }
   },
   mounted() {
@@ -56,8 +88,14 @@ export default {
       }
       this.position = 'fixed'
       this.active = true
-      this.width = this.width + 'px'
+      this.widthData = this.width
       this.isSticky = true
+      this.boxShadowData = this.boxShadow
+      this.backgroundData = this.background
+      this.paddingData = this.padding
+      this.rightData = this.right
+      this.height = '99px'
+      this.marginData = this.margin
     },
     handleReset() {
       if (!this.active) {
@@ -67,13 +105,19 @@ export default {
     },
     reset() {
       this.position = ''
-      this.width = 'auto'
+      this.widthData = 'auto'
       this.active = false
       this.isSticky = false
+      this.boxShadowData = ''
+      this.backgroundData = ''
+      this.rightData = ''
+      this.paddingData = ''
+      this.height = '74px'
+      this.marginData = ''
     },
     handleScroll() {
       const width = this.$el.getBoundingClientRect().width
-      this.width = width || 'auto'
+      this.widthData = width || 'auto'
       const offsetTop = this.$el.getBoundingClientRect().top
       if (offsetTop < this.stickyTop) {
         this.sticky()
@@ -83,7 +127,7 @@ export default {
     },
     handleResize() {
       if (this.isSticky) {
-        this.width = this.$el.getBoundingClientRect().width + 'px'
+        this.widthData = this.$el.getBoundingClientRect().width + 'px'
       }
     }
   }

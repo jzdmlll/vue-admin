@@ -1,4 +1,7 @@
 export function dateFormat(cjsj) {
+  if(cjsj == null || isNaN(cjsj)) {
+    return '暂未提供'
+  }
   var date = new Date(cjsj)
   var Y = date.getFullYear() + '-'
   var M = (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-'
@@ -7,6 +10,9 @@ export function dateFormat(cjsj) {
 }
 
 export function dateTimeFormat(cjsj) {
+  if(cjsj == null || isNaN(cjsj)) {
+    return '暂未提供'
+  }
   var date = new Date(cjsj)
   var Y = date.getFullYear() + '-'
   var M = (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-'
@@ -15,4 +21,11 @@ export function dateTimeFormat(cjsj) {
   var m = (date.getMinutes() + 1 < 10 ? '0' + (date.getMinutes()) : date.getMinutes()) + ':'
   var s = (date.getSeconds() + 1 < 10 ? '0' + (date.getSeconds()) : date.getSeconds())
   return Y + M + D + h + m + s
+}
+
+export function nullFormat(record) {
+  if (record == null || record == '') {
+    return '空'
+  }
+  return record
 }

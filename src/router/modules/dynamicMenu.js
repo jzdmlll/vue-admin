@@ -24,7 +24,7 @@ async function parseMenu(id) {
         for (const p of privilege.children) {
           if (p.type === 'menu') {
             let page = p.route
-            if (privilege.name === '审核管理') {
+            if (privilege.name === '审核管理' && page!='/proCheck/final') {
               page = '/proCheck/list'
             }
             const son_route = {

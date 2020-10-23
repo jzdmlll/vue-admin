@@ -26,9 +26,17 @@
     </div>
     <!-- 模态框 -->
     <el-dialog :title="title" :visible.sync="visible">
+      <el-form :model="form">
+        <el-form-item label="设备类型" label-width="80px">
+          <el-input v-model="form.name" autocomplete="off" />
+        </el-form-item>
+        <el-form-item label="设备类型编码" label-width="80px">
+          <el-input v-model="form.code" autocomplete="off" />
+        </el-form-item>
+      </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button size="small" @click="visible = false">取 消</el-button>
-        <el-button type="primary" size="small" @click="saveUserHandler">确 定</el-button>
+        <el-button type="primary" size="small" @click="saveHandler">确 定</el-button>
       </div>
     </el-dialog>
   </div>
@@ -60,8 +68,26 @@ export default {
         })
     },
     toEdit() {},
-    toAdd() {},
-    deleteHandler() {}
+    toAdd() {
+      this.visible = true
+
+    },
+    deleteHandler() {},
+    saveHandler() {
+      request.request({
+        url: '/deviceType/saveOrUpdate',
+        method: 'post',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        data: qs.stringify(this.form)
+      })
+        .then(response => {
+          this.visible = false
+          this.$message({ message: response.message, type: 'success' })
+          this.loadDevices()
+        })
+    },
   }
 }
 </script>
