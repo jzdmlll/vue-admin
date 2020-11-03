@@ -15,15 +15,29 @@
     </div>
     <div style="padding:1em;margin-bottom:1em;background:#fff">
       <a-table
+        :loading="loading"
         :columns="realColumns"
         :data-source="proChecks"
         class="childTable"
         :rowKey="record => record.id"
         :row-selection="{ selectedRowKeys: selectedRowKeys, onChange: onSelectChange }"
       >
+        <span slot="files" slot-scope="record">
+          <span v-for="file in record" v-if="file.type == fileType">
+            <el-link :href="file.url" :download="file.name" target="_blank" type="primary">{{file.name}}</el-link><br>
+          </span>
+        </span>
+        <span slot="image" slot-scope="text, record, index">
+          <el-image fit="contain" style="height: 40px; width:auto" :src="text" :preview-src-list="[text]" v-if="text!=null && text != ''">
+            <div slot="error" class="image-slot">
+              <i class="el-icon-picture-outline"></i>
+            </div>
+          </el-image>
+        </span>
         <span slot="checkStatus" slot-scope="text, record, index">
           <el-tag :type="text === 0 ? 'info':(text === 1? 'success':'danger')">{{ statu(text) }}</el-tag>
         </span>
+
       </a-table>
     </div>
   </div>
@@ -32,39 +46,38 @@
 import request from '@/utils/request'
 import qs from 'querystring'
 import '@/styles/auto-style.css'
+import { getUser } from '@/utils/auth'
 
 const columns = [
-  { title: '供应商', dataIndex: 'inquiry.supplier', key: 'inquiry.supplier', ellipsis: true,
-    sorter: (a, b) => a.inquiry.supplier.length - b.inquiry.supplier.length, sortDirections: ['descend', 'ascend'] },
-  { title: '询价名', dataIndex: 'inquiry.name', key: 'inquiry.name', ellipsis: true,
+  { title: '供应商', dataIndex: 'quote.supplier', key: 'quote.supplier', ellipsis: true,
+    sorter: (a, b) => a.quote.supplier.length - b.quote.supplier.length, sortDirections: ['descend', 'ascend'] },
+  { title: '设备名', dataIndex: 'inquiry.name', key: 'inquiry.name', ellipsis: true,
     sorter: (a, b) => a.inquiry.name.length - b.inquiry.name.length, sortDirections: ['descend', 'ascend'] },
-  { title: '设备名', dataIndex: 'inquiry.device', key: 'inquiry.device', ellipsis: true,
-    sorter: (a, b) => a.inquiry.device.length - b.inquiry.device.length, sortDirections: ['descend', 'ascend'] },
   { title: '设备型号', dataIndex: 'inquiry.model', key: 'inquiry.model', ellipsis: true,
     sorter: (a, b) => a.inquiry.model.length - b.inquiry.model.length, sortDirections: ['descend', 'ascend'] },
-  { title: '商家设备型号', dataIndex: 'inquiry.suModel', key: 'inquiry.suModel', ellipsis: true,
-    sorter: (a, b) => a.inquiry.suModel.length - b.inquiry.suModel.length, sortDirections: ['descend', 'ascend'] },
+  { title: '商家设备型号', dataIndex: 'quote.suModel', key: 'quote.suModel', ellipsis: true,
+    sorter: (a, b) => a.quote.suModel.length - b.quote.suModel.length, sortDirections: ['descend', 'ascend'] },
   { title: '技术参数', dataIndex: 'inquiry.params', key: 'inquiry.params', ellipsis: true,
     sorter: (a, b) => a.inquiry.params.length - b.inquiry.params.length, sortDirections: ['descend', 'ascend'] },
-  { title: '商家技术参数', dataIndex: 'inquiry.suParams', key: 'inquiry.suParams', ellipsis: true,
-    sorter: (a, b) => a.inquiry.suParams.length - b.inquiry.suParams.length, sortDirections: ['descend', 'ascend'] },
+  { title: '商家技术参数', dataIndex: 'quote.suParams', key: 'quote.suParams', ellipsis: true,
+    sorter: (a, b) => a.quote.suParams.length - b.quote.suParams.length, sortDirections: ['descend', 'ascend'] },
   { title: '品牌', dataIndex: 'inquiry.brand', key: 'inquiry.brand', ellipsis: true,
     sorter: (a, b) => a.inquiry.brand.length - b.inquiry.brand.length, sortDirections: ['descend', 'ascend'] },
   { title: '数量', dataIndex: 'inquiry.number', key: 'inquiry.number', ellipsis: true,
     sorter: (a, b) => a.inquiry.number - b.inquiry.number, sortDirections: ['descend', 'ascend'] },
   { title: '单位', dataIndex: 'inquiry.unit', key: 'inquiry.unit', ellipsis: true,
     sorter: (a, b) => a.inquiry.unit - b.inquiry.unit, sortDirections: ['descend', 'ascend'] },
-  { title: '商家单价', dataIndex: 'inquiry.suPrice', key: 'inquiry.suPrice', ellipsis: true,
-    sorter: (a, b) => a.inquiry.suPrice - b.inquiry.suPrice, sortDirections: ['descend', 'ascend'] },
-  { title: '商家总价', dataIndex: 'inquiry.suTotalPrice', key: 'inquiry.suTotalPrice', ellipsis: true,
-    sorter: (a, b) => a.inquiry.suTotalPrice - b.inquiry.suTotalPrice, sortDirections: ['descend', 'ascend'] },
-  { title: '商家备注', dataIndex: 'inquiry.suRemark', key: 'inquiry.suRemark', ellipsis: true },
-  { title: '商家货期', dataIndex: 'inquiry.suDelivery', scopedSlots: 'inquiry.suDelivery', ellipsis: true,
-    sorter: (a, b) => a.inquiry.suDelivery - b.inquiry.suDelivery, sortDirections: ['descend', 'ascend'] },
-  { title: '质保期', dataIndex: 'inquiry.warranty', key: 'inquiry.warranty', ellipsis: true,
-    sorter: (a, b) => a.inquiry.warranty - b.inquiry.warranty, sortDirections: ['descend', 'ascend'] },
-  { title: '商家资质', dataIndex: 'inquiry.suWarranties', key: 'inquiry.suWarranties', ellipsis: true,
-    sorter: (a, b) => a.inquiry.suWarranties.length - b.inquiry.suWarranties.length, sortDirections: ['descend', 'ascend'] },
+  { title: '商家单价', dataIndex: 'quote.suPrice', key: 'quote.suPrice', ellipsis: true,
+    sorter: (a, b) => a.quote.suPrice - b.quote.suPrice, sortDirections: ['descend', 'ascend'] },
+  { title: '商家总价', dataIndex: 'quote.suTotalPrice', key: 'quote.suTotalPrice', ellipsis: true,
+    sorter: (a, b) => a.quote.suTotalPrice - b.quote.suTotalPrice, sortDirections: ['descend', 'ascend'] },
+  { title: '商家备注', dataIndex: 'quote.suRemark', key: 'quote.suRemark', ellipsis: true },
+  { title: '商家货期', dataIndex: 'quote.suDelivery', scopedSlots: 'quote.suDelivery', ellipsis: true,
+    sorter: (a, b) => a.quote.suDelivery - b.quote.suDelivery, sortDirections: ['descend', 'ascend'] },
+  { title: '质保期', dataIndex: 'quote.warranty', key: 'quote.warranty', ellipsis: true,
+    sorter: (a, b) => a.quote.warranty - b.quote.warranty, sortDirections: ['descend', 'ascend'] },
+  { title: '文件',  dataIndex: 'files', scopedSlots: { customRender: 'files' }, key: 'files', ellipsis: true, align: 'center'},
+  { title: '设备图片', dataIndex: 'quote.image', scopedSlots: { customRender: 'image' }, key: 'quote.image', align: 'center'},
   { title: '审核状态', dataIndex: 'checkStatus', scopedSlots: { customRender: 'checkStatus' }, key: 'checkStatus',
     sorter: (a, b) => a.checkStatus - b.checkStatus, sortDirections: ['descend', 'ascend'] },
   {
@@ -79,16 +92,17 @@ const columns = [
 export default {
   data() {
     return {
+      fileType: -1,
       visible: false,
       proChecks: [],
-      loading: 'true',
+      loading: true,
       columns,
       prop: {
-        '技术审核': ['inquiry.name', 'inquiry.model',
-          'inquiry.suModel', 'inquiry.params', 'inquiry.suParams', 'checkStatus'
+        '技术审核': ['quote.supplier', 'inquiry.name',
+          'inquiry.model', 'quote.suModel', 'inquiry.params', 'quote.suParams', 'checkStatus', 'quote.image', 'files'
         ],
-        '商务审核': ['inquiry.supplier', 'inquiry.name',
-          'inquiry.price', 'inquiry.number', 'inquiry.suTotalPrice', 'inquiry.suWarranties', 'checkStatus'
+        '商务审核': ['quote.supplier', 'inquiry.name', 'inquiry.params',
+          'quote.suPrice', 'quote.suTotalPrice', 'inquiry.suWarranties', 'checkStatus', 'files'
         ],
       },
       realColumns: [],
@@ -111,6 +125,7 @@ export default {
     this.loadProjects()
   },
   methods: {
+    getUser,
     toCheck(key) {
       request.request({
         url: '/proCheck/batchCheck',
@@ -118,7 +133,7 @@ export default {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         },
-        data: qs.stringify({ status: key, ids: this.selectedRowKeys, inquiryIds: this.inquiryIds })
+        data: qs.stringify({ status: key, ids: this.selectedRowKeys, operator: parseInt(getUser()) })
       }).then(response => {
         this.$message({ message: response.message, type: 'success' })
         this.selectedRowKeys = []
@@ -141,7 +156,6 @@ export default {
     },
     toSearch() {
       this.form.checkName = this.$route.name
-      this.form.type = 0
 
       this.form.proDetailId = parseInt(this.form.proDetailId)
       request.request({
@@ -154,7 +168,7 @@ export default {
       })
         .then(response => {
           this.proChecks = response.data
-          console.log(this.proChecks)
+          this.loading = false
         })
       if (!this.form.proDetailId) {
         delete this.form.proDetailId
@@ -170,15 +184,20 @@ export default {
       return this.status[parseInt(text)]
     },
     loadChecks() {
-      request.get('/proCheck/cascadeFindAllByCheckName?checkName=' + this.$route.name + '&type=0')
+      request.get('/proCheck/cascadeFindAllByCheckName?checkName=' + this.$route.name)
         .then(response => {
           this.proChecks = response.data
-          console.log(this.proChecks)
+          this.loading = false
         })
     },
     initColumns() {
       console.log(this.prop[this.$route.name])
       // alert(this.$route.name)
+      if (this.$route.name == '技术审核') {
+        this.fileType = 2
+      }else if (this.$route.name == '商务审核') {
+        this.fileType = 3
+      }
       this.realColumns = this.columns.map(item => {
         const key = item.key
         if (this.prop[this.$route.name].includes(key)) {

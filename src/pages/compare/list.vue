@@ -1,6 +1,5 @@
 <template>
   <div class="compare_list">
-    {{compareForm}}<br>
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
       <el-button :style="hasSelected?{display: 'inline-block'}:{display: 'none'}" type="primary" size="small" @click="batchCompare()">批量比价</el-button>
       <el-select v-model="form.proDetailId" style="margin-right: 6px" filterable clearable placeholder="请选择项目" value-key="name">
@@ -16,12 +15,18 @@
                 size="small" @selection-change="handleSelectionChange" ref="multipleTable">
         <el-table-column type="selection" width="55"></el-table-column>
         <el-table-column type="index" prop="index" label="序号" width="120" />
-        <el-table-column prop="name" label="询价名" />
-        <el-table-column prop="params" label="参数" />
-        <el-table-column label="操作" align="center" width="180">
+        <el-table-column prop="name" label="询价名" :show-overflow-tooltip="true" />
+        <el-table-column prop="params" label="参数" :show-overflow-tooltip="true" />
+        <el-table-column prop="number" label="数量" />
+        <el-table-column prop="price" label="拟定报价单价" />
+        <el-table-column prop="totalPrice" label="拟定报价总价" />
+        <el-table-column label="操作" align="center" width="240">
           <template slot-scope="scope">
             <el-tooltip class="item" effect="dark" content="查看比价" placement="bottom-start">
               <el-button type="primary" size="mini" @click="compareDetail(scope.row)" >比价详情</el-button>
+            </el-tooltip>
+            <el-tooltip class="item" effect="dark" content="添加拟定报价" placement="bottom-start">
+              <el-button icon="el-icon-plus" type="primary" size="mini" @click="addPrice(scope.row)" >添加拟定报价</el-button>
             </el-tooltip>
           </template>
         </el-table-column>
@@ -35,7 +40,7 @@
           <el-button style="right:0;z-index: 99;" icon="el-icon-arrow-right" class="my-transition" circle @click="cardRight"></el-button>
         </sticky>
         <!-- 头部 供应商列表-->
-        <Sticky  margin="0 0 0 -28px" padding="0 0 0 2em" background="#fff" boxShadow="1px 1px 4px #9e9e9e" style="height: 74px;background:#fff">
+        <Sticky width="full"  margin="0 0 0 -28px" padding="0 0 0 2em" background="#fff" boxShadow="1px 1px 4px #9e9e9e" style="height: 74px;background:#fff">
           <div class="compare-container my-transition"
                :style="{gridTemplateColumns: '100px '+'repeat('+ suppliers.length + ', 1fr)', width: suppliers.length * 238+100 + 'px', transform: 'translate('+moveWidth+'px)'}" >
             <div></div>
@@ -58,7 +63,7 @@
             </div>
             <div class="compare-item my-transition" v-for="item in item.inquiryCompareVMS" :key="item.id">
               <el-radio v-if="item.id" border @change="radioChange(item, index)" v-model="compareForm[index].compareId" class="item-body my-transition"
-                        :class="{'item-body-select':(item.compareId == compareForm[index].compareId)}">
+                        :class="{'item-body-select':(compareForm[index] && item.compareId == compareForm[index].compareId)}">
                 <div class="check-div my-transition"><a-icon type="check" style="font-size: 18px;font-size: 20px;font-weight: 600;
                 transform: rotate(-45deg);margin-top: 5px;"/></div>
                 <a-popover title="备注" trigger="click" placement="right" v-if="item.compareId == compareForm[index].compareId">
@@ -94,8 +99,28 @@
       <span style="margin: 0 2em 0 0">总金额：￥{{suppliersTotal.total}}</span>
       <el-button :loading="submitLoading"  style="right:0;margin: 0 2em 0 0" type="primary" size="small" @click="submitCompare">{{submitLoading?'':'选用'}}</el-button>
     </div>
+    <!-- 模态框 -->
+    <el-dialog title="添加拟定报价" :visible.sync="visible">
+      <el-form ref="dialogForm" :model="dialogForm" :rules="codeRules" status-icon>
+        <el-form-item label="设备名" label-width="80px" size="small" prop="proOriginId">
+          {{dialogForm.name}}
+        </el-form-item>
+        <el-form-item label="技术参数" label-width="80px" size="small" prop="proOriginId">
+          {{dialogForm.params}}
+        </el-form-item>
+        <el-form-item label="报价单价" label-width="80px" size="small" prop="price">
+          <el-input v-model="dialogForm.price" autocomplete="off" />
+        </el-form-item>
+        <el-form-item label="报价总价" label-width="80px" size="small" prop="totalPrice">
+          <el-input v-model="dialogForm.totalPrice" autocomplete="off" />
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button size="small" @click="visible = false">取 消</el-button>
+        <el-button type="primary" size="small" @click="submitHandler('dialogForm')">确 定</el-button>
+      </div>
+    </el-dialog>
   </div>
-
 </template>
 
 <script>
@@ -104,11 +129,14 @@ import qs from 'querystring'
 import '@/styles/auto-style.css'
 import { dateFormat, nullFormat } from '@/utils/format'
 import Sticky from '@/components/Sticky'
+import { getUser } from '@/utils/auth'
 
 export default {
   components: { Sticky },
   data () {
     return {
+      dialogForm: {},
+      visible: false,
       moveWidth: 0,
       form: {},
       projects: [],
@@ -124,7 +152,7 @@ export default {
       loading: true,
       submitLoading: false,
       currentInquiry: '',
-      selected: {proDetailIds:[], names:[], params: []},
+      selected: {inquiryIds:[], names:[]},
       suppliers: [],
       suppliersTotal: {}
     }
@@ -139,6 +167,27 @@ export default {
     }
   },
   methods: {
+    submitHandler() {
+      let form = this.dialogForm
+      form.operator = parseInt(getUser())
+
+      request.request({
+        url: '/inquiry/rowSave',
+        method: 'post',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        data: JSON.stringify(form)
+      }).then(response => {
+        this.$message({ message: response.message, type: 'success' })
+        this.visible = false
+      })
+    },
+    addPrice(row){
+      this.visible = true
+      this.dialogForm = row
+    },
+    getUser,
     cardLeft() {
       if (this.moveWidth < 0) {
         this.moveWidth += 238
@@ -153,6 +202,7 @@ export default {
      * 点击批量比价
      */
     batchCompare () {
+      this.suppliers = []
       request.request({
         url: '/compare/batchGetCompare',
         method: 'post',
@@ -175,7 +225,7 @@ export default {
         const realCompares = []
         const compareForm = [...this.compareForm]
         this.realCompares.map( (item, index) => {
-          realCompares.push({name: item.name, inquiryCompareVMS: []})
+          realCompares.push({inquiryId: item.inquiryId, name: item.name, inquiryCompareVMS: []})
           item.inquiryCompareVMS.map( inquiry => {
             if (inquiry.compareStatus === 1) {
               this.$set(this.compareForm[index], 'remark', inquiry.compareRemark)
@@ -214,18 +264,16 @@ export default {
      * 批量比价多选触发事件
      * @param row
      */
-    handleSelectionChange( row) {
-      //alert(row)
-      console.log(row)
-      const selected = {proDetailIds:[], names:[], params: []}
+    handleSelectionChange(row) {
+      this.realCompares = []
+      const selected = {inquiryIds:[], names:[]}
       const compareForm = []
       row.map(item => {
-        selected.proDetailIds.push(item.proDetailId)
+        selected.inquiryIds.push(item.id)
         selected.names.push(item.name)
-        selected.params.push(item.params)
         compareForm.push({compareId: '',otherCompareId:[]})
       })
-      if(row.length > this.selected.proDetailIds.length){
+      if(row.length > this.selected.inquiryIds.length){
         this.compareForm = compareForm
         this.selected = selected
       }else {
@@ -257,7 +305,7 @@ export default {
         headers: {
           'Content-Type': 'application/json'
         },
-        data: JSON.stringify({checkCompareIds: checkCompareId, otherCompareIds: otherCompareId, remarks: remarks})
+        data: JSON.stringify({checkCompareIds: checkCompareId, otherCompareIds: otherCompareId, remarks: remarks, userId: parseInt(getUser())})
       }).then(response => {
         this.$message({ message: response.message, type: 'success' })
         this.submitLoading = false
@@ -278,7 +326,8 @@ export default {
       compareForm[index].supplier = item.supplier
       compareForm[index].suTotalPrice = parseInt(item.suTotalPrice)
       this.realCompares.map((i, index1) => {
-        if (i.name == item.name) {
+        if (i.inquiryId == item.inquiryId) {
+
           if (this.compareForm[index1].compareId !== '') {
             this.compareForm[index1].otherCompareId = []
           }
@@ -319,14 +368,13 @@ export default {
      * @param row
      */
     compareDetail (row) {
-      if(this.currentInquiry != row.name + row.proDetailId + row.params){
-        this.currentInquiry = row.name + row.proDetailId
+      if(this.currentInquiry != row.id){
+        this.currentInquiry = row.id
         console.log(row.params)
         request.get('/compare/cascadeFindAllByParams', {
             params: {
-              proDetailId: row.proDetailId,
+              inquiryId: row.id,
               name: row.name,
-              params: row.params
             }
           })
           .then(response => {
@@ -335,7 +383,7 @@ export default {
             const suppliers = []
             const compareForm = [{compareId: null, otherCompareId: []}]
             this.realCompares.map(item => {
-              realCompares.push({name: item.name, inquiryCompareVMS: []})
+              realCompares.push({inquiryId: item.inquiryId, name: item.name, inquiryCompareVMS: []})
                 item.inquiryCompareVMS.forEach( (inquiry, index) => {
                   realCompares[0].inquiryCompareVMS.push(inquiry)
                   suppliers.push(inquiry.supplier)
@@ -371,12 +419,9 @@ export default {
       this.form.proDetailId = parseInt(this.form.proDetailId)
       this.form.compareStatus = parseInt(this.form.compareStatus)
       request.request({
-        url: '/compare/cascadeFindAll',
-        method: 'post',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        data: qs.stringify(this.form)
+        url: '/compare/findByProIdOrCompareStatus',
+        method: 'get',
+        params: this.form
       })
         .then(response => {
           this.compares = response.data
@@ -403,7 +448,13 @@ export default {
      * 页面初始化时查询询价组
      */
     loadCompares() {
-      request.get('/compare/cascadeFindAll')
+      request.request({
+        url: '/compare/findByProIdOrCompareStatus',
+        method: 'get',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+      })
         .then(response => {
           this.compares = response.data
           this.loading = false

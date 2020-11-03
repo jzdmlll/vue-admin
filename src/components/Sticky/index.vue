@@ -88,7 +88,13 @@ export default {
       }
       this.position = 'fixed'
       this.active = true
-      this.widthData = this.width
+      //alert(this.width)
+      if (this.width == 'full') {
+
+        this.widthData = document.body.clientWidth
+      }else {
+        this.widthData = this.width
+      }
       this.isSticky = true
       this.boxShadowData = this.boxShadow
       this.backgroundData = this.background
@@ -105,7 +111,14 @@ export default {
     },
     reset() {
       this.position = ''
-      this.widthData = 'auto'
+      //alert('reset')
+      if (this.width == 'full') {
+
+        this.widthData = document.body.clientWidth
+      }else {
+        this.widthData = 'auto'
+      }
+
       this.active = false
       this.isSticky = false
       this.boxShadowData = ''
@@ -117,6 +130,7 @@ export default {
     },
     handleScroll() {
       const width = this.$el.getBoundingClientRect().width
+      //alert(width)
       this.widthData = width || 'auto'
       const offsetTop = this.$el.getBoundingClientRect().top
       if (offsetTop < this.stickyTop) {

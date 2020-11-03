@@ -25,7 +25,7 @@ export function dateTimeFormat(cjsj) {
 
 export function nullFormat(record) {
   if (record == null || record == '') {
-    return '空'
+    return ''
   }
   return record
 }

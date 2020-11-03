@@ -2,13 +2,21 @@
   <!-- 询价管理 -->
   <div class="pro_inquiry_list">
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
+      <el-tooltip class="item" v-if="selectedId.length > 0" effect="dark" content="批量删除" placement="bottom-start">
+        <el-button type="danger" size="small" icon="el-icon-delete" @click="batchDelete">批量删除</el-button>
+      </el-tooltip>
       <el-select v-model="searchForm.proDetailId" style="margin-right: 6px" filterable clearable placeholder="请选择项目" value-key="name">
         <el-option v-for="item in projects" :key="item.id" :label="item.name" :value="item.id" />
       </el-select>
       <el-button style="margin-right: 6px" type="primary" icon="el-icon-search" size="small" @click="toSearch">查询</el-button>
     </div>
     <div style="padding:1em;margin-bottom:1em;background:#fff">
-      <el-table class="table" v-loading="loading" :default-sort = "{prop: 'sort', order: 'ascending'}" :data="inquiryList" size="small" stripe>
+      <el-table class="table" v-loading="loading" :default-sort = "{prop: 'sort', order: 'ascending'}"
+                :data="inquiryList"  @selection-change="handleSelectionChange" size="small" stripe>
+        <el-table-column
+          type="selection"
+          width="55">
+        </el-table-column>
         <el-table-column prop="sort" label="序号" width="50" />
         <el-table-column prop="name" label="设备名称">
           <template slot-scope="{row}">
@@ -16,6 +24,14 @@
               <el-input v-model="row.name" class="edit-input" size="small" />
             </template>
             <template v-else>{{nullFormat(row.name)}}</template>
+          </template>
+        </el-table-column>
+        <el-table-column prop="realBrand" label="品牌">
+          <template slot-scope="{row}">
+            <template v-if="row.editable">
+              <el-input v-model="row.realBrand" class="edit-input" size="small" />
+            </template>
+            <template v-else>{{nullFormat(row.realBrand)}}</template>
           </template>
         </el-table-column>
         <el-table-column prop="params" label="技术参数" >
@@ -100,6 +116,7 @@
     data() {
       const fileUploadUrl = process.env.VUE_APP_BASE_API + 'file/uploadCache'
       return {
+        selectedId: [],
         searchForm: {},
         projects: [],
         inquiryList: [],
@@ -113,6 +130,36 @@
       this.init()
     },
     methods: {
+      batchDelete() {
+        this.$confirm('将删除选中询价, 是否删除?', '提示', {
+          confirmButtonText: '删除',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          if (this.selectedId.length > 0) {
+            request.request({
+              url: '/inquiry/batchSetInvalid',
+              method: 'post',
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+              },
+              data: qs.stringify({ids: this.selectedId})
+            })
+              .then(response => {
+                this.$message({ message: response.message, type: 'success' })
+                this.init()
+              })
+          }
+        })
+      },
+      handleSelectionChange(record) {
+        const selectedId = []
+        console.log(record)
+        record.map(item => {
+          selectedId.push(item.id)
+        })
+        this.selectedId = selectedId
+      },
       /**
        * 行内编辑（确定）
        */

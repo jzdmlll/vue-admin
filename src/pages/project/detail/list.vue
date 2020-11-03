@@ -107,7 +107,8 @@
             <el-button @click="clickFileInput" type="primary" size="small"><a-icon type="file-excel" style="font-size: 12px;margin-right: 5px"/>excel导入</el-button>
             <input type="file" ref="upload" accept=".xls,.xlsx" @change="readExcel" class="outputlist_upload">
             <div v-if="excelRows>0" style="position: absolute;left: 0;padding: 4px 0;font-size: 12px;color: #909399">从Excel读取到
-              <span style="color: #42b983">{{excelRows}}</span>条数据</div>
+              <span style="color: #42b983">{{excelRows}}</span>条数据
+            </div>
           </div>
 
           <el-input
@@ -135,10 +136,29 @@ import XLSX from 'xlsx'
 export default {
   data() {
     const fileUploadUrl = process.env.VUE_APP_BASE_API + 'file/uploadCache'
+
+    var validName = (rule, value, callback) => {
+      if (!value) {
+        return callback(new Error('不能为空'));
+      }
+      request.get('/project/detail/verifyExistence',{
+        params: {proName: value}
+      })
+        .then(response => {
+          console.log(response)
+          if (response.data && value != this.nameKey) {
+            callback(new Error('项目名已存在'))
+          }else {
+            callback();
+          }
+        })
+    };
     return {
+      nameKey: '',
       keys: {
         "设备名称": 'name',
-        "品牌型号": 'model',
+        "品牌": 'realBrand',
+        "型号": 'model',
         "技术要求": 'params',
         "品牌推荐": 'brand',
         "单位": 'unit',
@@ -151,7 +171,7 @@ export default {
       form1: {proDetailId: ''},
       importData: '',
       visible: false,
-      title: '添加记录',
+      title: '添加项目',
       projects: [],
       loading: true,
       submitLoading: false,
@@ -165,7 +185,7 @@ export default {
       proTypes: [],
       codeRules: {
         name: [
-          {required: true, message: '不能为空', trigger: 'blur'}
+          {validator: validName, trigger: 'blur'}
         ],
         proOriginId: [
           {required: true, message: '不能为空', trigger: 'blur'}
@@ -228,7 +248,7 @@ export default {
       if(files.length<=0){//如果没有文件名
         return false;
       }else if(!/\.(xls|xlsx)$/.test(files[0].name.toLowerCase())){
-        this.$Message.error('上传格式不正确，请上传xls或者xlsx格式');
+        this.$message.error('上传格式不正确，请上传xls或者xlsx格式');
         return false;
       }
       this.excelRows = 0
@@ -370,6 +390,7 @@ export default {
 
     toAdd() {
       this.visible = true
+      this.nameKey = ''
       this.form = {}
       this.title = '添加项目'
       this.submitLoading = false
@@ -398,8 +419,21 @@ export default {
     },
     editHandler(row) {
       this.visible = true
-      this.title = '修改记录'
+      this.title = '修改项目'
       this.form = row
+      this.submitLoading = false
+      this.nameKey = row.name
+      this.loadProChecks()
+      this.loadProOrigins()
+      this.loadProTypes()
+      let proChecks = []
+      request.get('/project/detail/findProDetailCheck?proDetailId='+row.id)
+        .then(response => {
+          response.data.map(item => {
+            proChecks.push({'checkName': item.checkName, 'roleId': item.id})
+          })
+          this.proChecks = [...proChecks]
+        })
     }
   }
 }
