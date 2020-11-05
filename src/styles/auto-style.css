@@ -4,6 +4,9 @@
     辅：#72DCAD
     辅：#8EDCB9
  */
+.el-tooltip__popper.is-dark {
+  max-width: 80%;
+}
 .my-transition {
   transition: all 0.3s;
   -moz-transition: all 0.3s;	/* Firefox 4 */

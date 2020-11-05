@@ -197,16 +197,16 @@
               type="selection"
               width="55">
             </el-table-column>
-            <el-table-column prop="supplier" label="供应商" />
-            <el-table-column prop="inquiry.name" label="设备名" />
-            <el-table-column prop="inquiry.params" label="技术要求" />
-            <el-table-column prop="inquiry.model" label="设备型号" />
-            <el-table-column prop="suModel" label="实际型号" />
-            <el-table-column prop="suParams" label="实际参数" />
-            <el-table-column prop="suPrice" label="单价" />
-            <el-table-column prop="suTotalPrice" label="总价" />
-            <el-table-column prop="inquiry.number" label="数量" />
-            <el-table-column prop="inquiry.unit" label="单位" />
+            <el-table-column :show-overflow-tooltip="true" prop="supplier" label="供应商" />
+            <el-table-column :show-overflow-tooltip="true" prop="inquiry.name" label="设备名" />
+            <el-table-column :show-overflow-tooltip="true" prop="inquiry.params" label="技术要求" />
+            <el-table-column :show-overflow-tooltip="true" prop="inquiry.model" label="设备型号" />
+            <el-table-column :show-overflow-tooltip="true" prop="suModel" label="实际型号" />
+            <el-table-column :show-overflow-tooltip="true" prop="suParams" label="实际参数" />
+            <el-table-column :show-overflow-tooltip="true" prop="suPrice" label="单价" />
+            <el-table-column :show-overflow-tooltip="true" prop="suTotalPrice" label="总价" />
+            <el-table-column :show-overflow-tooltip="true" prop="inquiry.number" label="数量" />
+            <el-table-column :show-overflow-tooltip="true" prop="inquiry.unit" label="单位" />
           </el-table>
         </div>
       </el-tab-pane>
@@ -483,7 +483,7 @@
       },
       importHandler(form1) {
         this.$refs[form1].validate((valid) => {
-          if (valid) {
+          if (valid && this.file.id) {
             this.submitLoading = true
             let form = {files:[]}
             let userId = parseInt(getUser())
@@ -503,8 +503,9 @@
               this.submitLoading = false
               this.init()
             })
+
           } else {
-            console.log('error commit')
+            this.$message({ message: "文件上传解析中", type: 'warning' })
             return false
           }
         })

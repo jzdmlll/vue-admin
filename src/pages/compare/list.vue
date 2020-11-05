@@ -11,7 +11,7 @@
       <el-button style="margin-right: 6px" type="primary" icon="el-icon-search" size="small" @click="toSearch">查询</el-button>
     </div>
     <div style="padding:1em;margin-bottom:1em;background:#fff;position: relative">
-      <el-table :height="compares.length>4?200:undefined" v-loading="loading" :data="compares"
+      <el-table :height="compares.length>8?400:undefined" v-loading="loading" :data="compares"
                 size="small" @selection-change="handleSelectionChange" ref="multipleTable">
         <el-table-column type="selection" width="55"></el-table-column>
         <el-table-column type="index" prop="index" label="序号" width="120" />
@@ -101,7 +101,7 @@
     </div>
     <!-- 模态框 -->
     <el-dialog title="添加拟定报价" :visible.sync="visible">
-      <el-form ref="dialogForm" :model="dialogForm" :rules="codeRules" status-icon>
+      <el-form ref="dialogForm" :model="dialogForm"  status-icon>
         <el-form-item label="设备名" label-width="80px" size="small" prop="proOriginId">
           {{dialogForm.name}}
         </el-form-item>
@@ -416,24 +416,25 @@ export default {
     toSearch() {
       this.loading = true
       this.realCompares = []
-      this.form.proDetailId = parseInt(this.form.proDetailId)
-      this.form.compareStatus = parseInt(this.form.compareStatus)
-      request.request({
-        url: '/compare/findByProIdOrCompareStatus',
-        method: 'get',
-        params: this.form
-      })
-        .then(response => {
-          this.compares = response.data
-          this.loading = false
+      const form = {}
+      form.proDetailId = this.form.proDetailId
+      form.compareStatus = this.form.compareStatus
+        request.request({
+          url: '/compare/findByProIdOrCompareStatus',
+          method: 'get',
+          params: form
         })
-      if (!this.form.proDetailId) {
+          .then(response => {
+            this.compares = response.data
+            this.loading = false
+          })
+      this.loading = false
+      /*if (!this.form.proDetailId) {
         delete this.form.proDetailId
-
       }
       if (!this.form.compareStatus) {
         delete this.form.compareStatus
-      }
+      }*/
     },
     /**
      * 加载所有项目详情（下拉框信息）

@@ -264,7 +264,7 @@ export default {
           console.log(ws)
           this.outputs = [];//清空接收数据
           ws.map(item => {
-            if(item['设备名称']){
+            if(item['序号']&&item['设备名称']){
               this.outputs.push(item);
               this.excelRows ++
             }
