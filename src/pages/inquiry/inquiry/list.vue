@@ -18,7 +18,7 @@
     </div>
     <div style="padding:1em;margin-bottom:1em;background:#fff">
       <el-table class="table" v-loading="loading" :default-sort = "{prop: 'sort', order: 'ascending'}"
-                :data="inquiryList"  @selection-change="handleSelectionChange" size="small" stripe>
+                :data="inquiryList" :row-class-name="tableRowClassName" @selection-change="handleSelectionChange" size="small" stripe>
         <el-table-column
           type="selection"
           width="55">
@@ -119,7 +119,7 @@
                   <el-button type="success" icon="el-icon-star-on" size="mini" style="padding: 7px 10px;background: #faad14;border-color:#faad14" @click="poolChoose(row)">产品池选择</el-button>
                 </el-tooltip>
                 <el-tooltip class="item" effect="dark" content="行内编辑" placement="bottom-start">
-                  <el-button type="primary" icon="el-icon-edit" size="mini" @click="edit(row)"></el-button>
+                  <el-button :disabled="row.veto==1?true:false" type="primary" icon="el-icon-edit" size="mini" @click="edit(row)"></el-button>
                 </el-tooltip>
               </span>
           </template>
@@ -181,6 +181,12 @@
       this.init()
     },
     methods: {
+      tableRowClassName({row, index}) {
+        if (row.veto == 1) {
+          return 'danger-row';
+        }
+        return '';
+      },
       submitHandler(){
         if(this.form.id){
           request.request({
@@ -374,6 +380,9 @@
   .pro_inquiry_list {
     .table {
       /deep/.el-table__body {
+        .danger-row, .danger-row td {
+          background: #f1b7b7;
+        }
         .cell {
           .el-button {
             margin-left: 5px!important;

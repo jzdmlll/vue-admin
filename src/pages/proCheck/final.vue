@@ -203,8 +203,8 @@
     </div>
     <div class="footer" >
       报价总价:<span style="margin: 0 2em 0 4px;color: #1682e6;">{{cost.toFixed(2)}}</span>
-      成本总价:<span style="margin: 0 2em 0 4px;color: #1682e6;">{{(priceChecks.total).toFixed(2)}}</span>
-      利率:<span style="margin: 0 2em 0 4px;color: #1682e6;">{{((cost-priceChecks.total)/priceChecks.total*100).toFixed(2)}}%</span>
+      成本总价:<span style="margin: 0 2em 0 4px;color: #1682e6;">{{priceChecks.total?(priceChecks.total).toFixed(2):0}}</span>
+      利率:<span style="margin: 0 2em 0 4px;color: #1682e6;">{{priceChecks.total?((cost-priceChecks.total)/priceChecks.total*100).toFixed(2):0}}%</span>
       已选择<span style="margin: 0 4px;color: #1682e6;">{{submitForm.checkCompareIds.length}}</span>家供应商
       <el-button :loading="submitLoading"  style="right:0;margin: 0 2em 0 0" type="primary" size="small" @click="submitCheck">{{submitLoading?'':'终审'}}</el-button>
     </div>
@@ -225,7 +225,7 @@ export default {
       refuseForm: {},
       popoverVisible: false,
       cost: 0,
-      priceChecks:{},
+      priceChecks:{total: 0},
       form1: {visible: false},
       visible: false,
       data: [],
@@ -416,7 +416,7 @@ export default {
         this.data = data
         const submitForm = { checkCompareIds: [], uncheckCompareIds: [], remarks: []}
         console.log(this.data)
-        this.priceChecks = {}
+        this.priceChecks = {total: 0}
         this.cost = 0
         let total = 0
 
@@ -487,7 +487,7 @@ export default {
               }
             })
           })
-          this.priceChecks = {}
+          this.priceChecks = {total: 0}
           this.cost = 0
           let total = 0
 

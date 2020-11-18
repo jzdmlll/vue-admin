@@ -33,6 +33,14 @@
   background: #42B983;
   border-color: #42B983;
 }
+.el-button--primary.is-disabled {
+  background: #97e5c1;
+  border-color: #97e5c1;
+}
+.el-button--primary.is-disabled:hover {
+  background: #97e5c1;
+  border-color: #97e5c1;
+}
 .ant-table-fixed {
   border-right: 1px solid #fafafa;
 }
