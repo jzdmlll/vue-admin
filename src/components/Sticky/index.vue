@@ -4,7 +4,7 @@
       :class="className"
       :style="{top:(isSticky ? stickyTop +'px' : ''),zIndex:zIndex,position:position,width:widthData,height: height,
       background: backgroundData,margin: marginData, boxShadow: boxShadowData, padding: paddingData, right: rightData,
-      opacity: '1'}"
+      opacity: '1', minWidth: minWidthData}"
     >
       <slot>
         <div>sticky</div>
@@ -39,7 +39,11 @@ export default {
     },
     width: {
       type: String,
-      default: 'auto'
+      default: 'full'
+    },
+    minWidth: {
+      type: String,
+      default: '0'
     },
     margin: {
       type: String,
@@ -64,6 +68,7 @@ export default {
       boxShadowData: '',
       backgroundData: '',
       widthData: '',
+      minWidthData: '',
       marginData: '',
       paddingData: '',
       rightData: '',
@@ -91,10 +96,11 @@ export default {
       //alert(this.width)
       if (this.width == 'full') {
 
-        this.widthData = document.body.clientWidth
+        this.widthData = '100%'
       }else {
         this.widthData = this.width
       }
+      this.minWidthData = this.minWidth
       this.isSticky = true
       this.boxShadowData = this.boxShadow
       this.backgroundData = this.background
@@ -114,11 +120,11 @@ export default {
       //alert('reset')
       if (this.width == 'full') {
 
-        this.widthData = document.body.clientWidth
+        this.widthData = '100%'
       }else {
         this.widthData = 'auto'
       }
-
+      this.minWidthData = 0
       this.active = false
       this.isSticky = false
       this.boxShadowData = ''

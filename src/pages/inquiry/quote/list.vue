@@ -13,7 +13,8 @@
           <el-button style="margin-right: 6px" type="primary" icon="el-icon-search" size="small" @click="toSearch">查询</el-button>
         </div>
         <div style="padding:1em;margin-bottom:1em;background:#fff">
-          <a-table :columns="columns" :loading="loading" size="default" :data-source="inquiryList" :scroll="{ x: 786 }" @expand="expandChange">
+          <a-table class="parentTable" :columns="columns" :loading="loading" size="default" :data-source="inquiryList" :scroll="{ x: 786 }"
+                   :row-class-name="tableRowClassName" @expand="expandChange">
             <a-table
               slot="expandedRowRender"
               slot-scope="scope"
@@ -34,22 +35,12 @@
                 <el-tooltip class="item" effect="dark" :content="text+''" placement="bottom-start">
                   <div :key="col">
                     <a-input
-                      v-if="record.editable && (col != 'suDelivery' && col != 'warranty')"
+                      v-if="record.editable"
                       style="margin: -5px 0"
                       :value="text"
                       @change="e => handleChange(e.target.value, record, col)"
                     />
-                    <el-date-picker
-                      v-if="record.editable && (col === 'suDelivery' || col === 'warranty')"
-                      v-model.number="record[col]"
-                      value-format="timestamp"
-                      type="date"
-                      @change="e => handleChange(e.target.value, record, col)"
-                    />
-                    <template v-if="!record.editable && (col === 'suDelivery' || col === 'warranty')">
-                      {{ dateFormat(parseInt(text)) }}
-                    </template>
-                    <template v-if="!record.editable && (col !== 'suDelivery' && col !== 'warranty')">
+                    <template v-if="!record.editable">
                       {{ text }}
                     </template>
                   </div>
@@ -192,7 +183,8 @@
           <el-button style="margin-right: 6px" type="primary" icon="el-icon-search" size="small" @click="toSearchQuote">查询</el-button>
         </div>
         <div style="padding:1em;margin-bottom:1em;background:#fff">
-          <el-table v-loading="quoteLoading" @selection-change="handleSelectionChange" :data="quoteList" stripe size="small">
+          <el-table id="quote_table" class="parentTable" v-loading="quoteLoading" @selection-change="handleSelectionChange"
+                    :row-class-name="tableRowClassName1" :data="quoteList" stripe size="small" :max-height="tableHeight">
             <el-table-column
               type="selection"
               width="55">
@@ -262,6 +254,9 @@
     data() {
       const fileUploadUrl = process.env.VUE_APP_BASE_API + 'file/uploadCache'
       return {
+        hasNextPage: false,
+        currentPage: 1,
+        tableHeight: document.documentElement.clientHeight-83-220,
         selectedId: [],
         quoteList: [],
         quoteLoading: true,
@@ -329,7 +324,45 @@
       this.loadProjects()
       this.init()
     },
+    mounted() {
+      var that = this
+      let table = document.querySelector('#quote_table .el-table__body-wrapper');
+      table.addEventListener("scroll", function() {
+        const scrollDistance =table.scrollHeight - table.scrollTop - table.clientHeight;
+        console.log(table.scrollHeight + '-' +table.scrollTop +'-' +table.clientHeight+'='+scrollDistance)
+        if(scrollDistance <= 0.5) {//等于0证明已经到底，可以请求接口
+          if(that.hasNextPage){
+            const proId = that.searchFormQuote.proDetailId
+            const supplier = that.searchFormQuote.supplier
+            //请求接口的代码
+            request.request({
+              url: '/quote/findBySupplierOrPro?pageNum='+that.currentPage,
+              method: 'get',
+              params: {proId: proId, supplier: supplier}
+            }).then( response => {
+              //将请求回来的数据和当前展示的数据合并在一起
+              that.quoteList = that.quoteList.concat(response.data.list)
+              that.currentPage = response.data.nextPage
+              that.hasNextPage = response.data.hasNextPage
+              that.quoteLoading = false
+            })
+          }
+        }
+      })
+    },
     methods: {
+      tableRowClassName1({row, index}) {
+        if (row.dataSource == 0) {
+          return 'warning-row';
+        }
+        return '';
+      },
+      tableRowClassName(row, index){
+        if (row.isinquiry == 0) {
+          return 'warning-row';
+        }
+        return '';
+      },
       batchDelete() {
         this.$confirm('将删除选中报价价, 是否删除?', '提示', {
           confirmButtonText: '删除',
@@ -379,7 +412,9 @@
           method: 'get',
           params: {proId: proId, supplier: supplier}
         }).then( response => {
-          this.quoteList = response.data
+          this.quoteList = response.data.list
+          this.currentPage = response.data.nextPage
+          this.hasNextPage = response.data.hasNextPage
           this.quoteLoading = false
         })
       },
@@ -502,6 +537,8 @@
               this.visible2 = false
               this.submitLoading = false
               this.init()
+            }).catch(()=>{
+              this.submitLoading = false
             })
 
           } else {
@@ -754,6 +791,9 @@
 
 <style lang="scss">
   .pro_quote_list {
+    .parentTable .warning-row {
+      background: oldlace;
+    }
     .el-tabs__content {
       background: #fafafa;
     }

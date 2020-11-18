@@ -32,7 +32,7 @@
       <el-steps :active="active" simple style="background: #d8f1e3;margin-bottom: 8px;padding: 13px 4%;height: 36px">
         <el-step title="填写项目内容" icon="el-icon-edit" />
         <el-step title="上传项目文件" icon="el-icon-upload" />
-        <el-step title="选择审核流程" icon="el-icon-upload" />
+        <!--<el-step title="选择审核流程" icon="el-icon-upload" />-->
       </el-steps>
       <el-form ref="form" :rules="codeRules" status-icon :model="form">
         <!-- 填写项目内容 -->
@@ -81,7 +81,7 @@
           </a-upload-dragger>
         </div>
         <!-- 选择审核流程 -->
-        <div :style="active === 3?{display: 'block'}:{display:'none'}">
+        <!--<div :style="active === 3?{display: 'block'}:{display:'none'}">
           <el-select size="small" v-model="form.role" placeholder="请选择要添加的审核" value-key="checkName" style="margin:0 0 8px 1em" @change="addCheck(form.role)">
             <el-option v-for="item in roles" :key="item.id" :label="item.checkName" :value="item" />
           </el-select>
@@ -93,11 +93,11 @@
               </a-timeline-item>
             </a-timeline>
           </div>
-        </div>
+        </div>-->
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button size="small" @click="cancelHandler">{{ this.active === 1?'取消':'上一步' }}</el-button>
-        <el-button type="primary" :loading="submitLoading" size="small" @click="saveRecordHandler('form')">{{ this.active === 3?'确定':'下一步' }}</el-button>
+        <el-button type="primary" :loading="submitLoading" size="small" @click="saveRecordHandler('form')">{{ this.active === 2?'确定':'下一步' }}</el-button>
       </div>
     </el-dialog>
     <el-dialog title="导入询价函" class="importDialog" :visible.sync="visible2">
@@ -180,7 +180,7 @@ export default {
       fileList: [],
       fileUploadUrl,
       roles: [],
-      proChecks: [],
+      //proChecks: [],
       proOrigins: [],
       proTypes: [],
       codeRules: {
@@ -285,10 +285,10 @@ export default {
       this.form1.proDetailId = row.id
       this.excelRows  = 0
     },
-    removeCheck(role) {
+    /*removeCheck(role) {
       this.proChecks.splice(this.proChecks.findIndex(item => item.roleId === role.id), 1)
-    },
-    addCheck(role) {
+    },*/
+    /*addCheck(role) {
       let key = 0;
       this.proChecks.map(item => {
         if (item.roleId == role.id) {
@@ -306,7 +306,7 @@ export default {
         .then(response => {
           this.roles = response.data
         })
-    },
+    },*/
     loadProOrigins() {
       request.get('/project/origin/findAll')
         .then(response => {
@@ -361,9 +361,6 @@ export default {
           })
           break
         case 2:
-          this.active++;
-          break
-        case 3:
           this.submitLoading = true
           const fileList = this.fileList.map(item => {
             return { id: item.id, name: item.name, url: item.url, type: 1 }
@@ -376,7 +373,7 @@ export default {
             headers: {
               'Content-Type': 'application/json'
             },
-            data: JSON.stringify({proDetails: this.form, files: fileList, proChecks: this.proChecks})
+            data: JSON.stringify({proDetails: this.form, files: fileList})
           })
             .then(response => {
               this.submitLoading = false
@@ -396,7 +393,6 @@ export default {
       this.submitLoading = false
       this.active = 1
       this.fileList = []
-      this.loadProChecks()
       this.loadProOrigins()
       this.loadProTypes()
     },
@@ -414,7 +410,12 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-
+        request.request({
+          url: '/project/detail/setInvalid?proDetailId='+id,
+          method: 'post'
+        }).then(resp => {
+          this.$message({message: resp.message, type: 'success'})
+        })
       })
     },
     editHandler(row) {
@@ -423,17 +424,17 @@ export default {
       this.form = row
       this.submitLoading = false
       this.nameKey = row.name
-      this.loadProChecks()
+      //this.loadProChecks()
       this.loadProOrigins()
       this.loadProTypes()
-      let proChecks = []
-      request.get('/project/detail/findProDetailCheck?proDetailId='+row.id)
+      //let proChecks = []
+      /*request.get('/project/detail/findProDetailCheck?proDetailId='+row.id)
         .then(response => {
           response.data.map(item => {
             proChecks.push({'checkName': item.checkName, 'roleId': item.id})
           })
           this.proChecks = [...proChecks]
-        })
+        })*/
     }
   }
 }

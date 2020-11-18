@@ -8,7 +8,7 @@
       <el-select v-model="form.proDetailId" style="margin-right: 6px" filterable clearable placeholder="请选择项目" value-key="name">
         <el-option v-for="item in projects" :key="item.id" :label="item.name" :value="item.id" />
       </el-select>
-      <el-select v-model="form.status" style="margin-right: 6px" multiple :style="form.status.length >2 ? {width:'250px'}:{}" clearable placeholder="请选择审核状态" value-key="name">
+      <el-select v-model="form.status" style="margin-right: 6px" :style="form.status.length >2 ? {width:'250px'}:{}" clearable placeholder="请选择审核状态" value-key="name">
         <el-option v-for="item in select" :key="item.status" :label="item.name" :value="item.status" />
       </el-select>
       <el-button style="margin-right: 6px" type="primary" icon="el-icon-search" size="small" @click="toSearch">查询</el-button>
@@ -34,9 +34,13 @@
             </div>
           </el-image>
         </span>
-        <span slot="checkStatus" slot-scope="text, record, index">
+        <span slot="technicalAudit" slot-scope="text, record, index">
           <el-tag :type="text === 0 ? 'info':(text === 1? 'success':'danger')">{{ statu(text) }}</el-tag>
         </span>
+        <span slot="businessAudit" slot-scope="text, record, index">
+          <el-tag :type="text === 0 ? 'info':(text === 1? 'success':'danger')">{{ statu(text) }}</el-tag>
+        </span>
+
 
       </a-table>
     </div>
@@ -48,7 +52,9 @@ import qs from 'querystring'
 import '@/styles/auto-style.css'
 import { getUser } from '@/utils/auth'
 
-const columns = [
+let checkStatusCol = ''
+
+let columns = [
   { title: '供应商', dataIndex: 'quote.supplier', key: 'quote.supplier', ellipsis: true,
     sorter: (a, b) => a.quote.supplier.length - b.quote.supplier.length, sortDirections: ['descend', 'ascend'] },
   { title: '设备名', dataIndex: 'inquiry.name', key: 'inquiry.name', ellipsis: true,
@@ -78,7 +84,13 @@ const columns = [
     sorter: (a, b) => a.quote.warranty - b.quote.warranty, sortDirections: ['descend', 'ascend'] },
   { title: '文件',  dataIndex: 'files', scopedSlots: { customRender: 'files' }, key: 'files', ellipsis: true, align: 'center'},
   { title: '设备图片', dataIndex: 'quote.image', scopedSlots: { customRender: 'image' }, key: 'quote.image', align: 'center'},
-  { title: '审核状态', dataIndex: 'checkStatus', scopedSlots: { customRender: 'checkStatus' }, key: 'checkStatus',
+  { title: '审核状态', dataIndex: 'businessAudit', scopedSlots: { customRender: 'businessAudit' }, key: 'businessAudit',
+    sorter: (a, b) => a.checkStatus - b.checkStatus, sortDirections: ['descend', 'ascend'] },
+  { title: '审核状态', dataIndex: 'technicalAudit', scopedSlots: { customRender: 'technicalAudit' }, key: 'technicalAudit',
+    sorter: (a, b) => a.checkStatus - b.checkStatus, sortDirections: ['descend', 'ascend'] },
+  { title: '备注', dataIndex: 'businessRemark', scopedSlots: { customRender: 'businessRemark' }, key: 'businessRemark',
+    sorter: (a, b) => a.checkStatus - b.checkStatus, sortDirections: ['descend', 'ascend'] },
+  { title: '备注', dataIndex: 'technicalRemark', scopedSlots: { customRender: 'technicalRemark' }, key: 'technicalRemark',
     sorter: (a, b) => a.checkStatus - b.checkStatus, sortDirections: ['descend', 'ascend'] },
   {
     title: '操作',
@@ -92,6 +104,7 @@ const columns = [
 export default {
   data() {
     return {
+      checkStatusCol: '',
       fileType: -1,
       visible: false,
       proChecks: [],
@@ -99,16 +112,16 @@ export default {
       columns,
       prop: {
         '技术审核': ['quote.supplier', 'inquiry.name',
-          'inquiry.model', 'quote.suModel', 'inquiry.params', 'quote.suParams', 'checkStatus', 'quote.image', 'files'
+          'inquiry.model', 'quote.suModel', 'inquiry.params', 'quote.suParams', 'checkStatus', 'quote.image', 'files', 'technicalAudit', 'technicalRemark'
         ],
         '商务审核': ['quote.supplier', 'inquiry.name', 'inquiry.params',
-          'quote.suPrice', 'quote.suTotalPrice', 'inquiry.suWarranties', 'checkStatus', 'files'
+          'quote.suPrice', 'quote.suTotalPrice', 'inquiry.suWarranties', 'checkStatus', 'files', 'businessAudit', 'businessRemark'
         ],
       },
       realColumns: [],
       status: ['未审核', '通过', '拒绝'],
       select: [{ status: 0, name: '未审核' }, { status: 1, name: '通过' }, { status: 2, name: '拒绝' }],
-      form: { status: [] },
+      form: { status: '' },
       projects: [],
       selectedRowKeys: [],
       inquiryIds: []
@@ -123,21 +136,41 @@ export default {
     this.loadChecks()
     this.initColumns()
     this.loadProjects()
+
+
   },
   methods: {
     getUser,
     toCheck(key) {
+      let status = ''
+      if (this.$route.name == '技术审核') {
+        status = 'technicalAudit'
+      }else if (this.$route.name == '商务审核') {
+        status = 'businessAudit'
+      }
+      const data = []
+      this.selectedRowKeys.map(id => {
+        this.proChecks.map(item => {
+          if(id == item.id) {
+            item.operator = parseInt(getUser())
+            item[status] = key
+            data.push(item)
+          }
+        })
+      })
       request.request({
-        url: '/proCheck/batchCheck',
+        url: '/proCheck/updateTechnicalStatus',
         method: 'post',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
+          'Content-Type': 'application/json'
         },
-        data: qs.stringify({ status: key, ids: this.selectedRowKeys, operator: parseInt(getUser()) })
+        data: JSON.stringify(data)
       }).then(response => {
         this.$message({ message: response.message, type: 'success' })
         this.selectedRowKeys = []
         this.inquiryIds = []
+        this.toSearch()
+      }).catch(()=>{
         this.toSearch()
       })
     },
@@ -147,27 +180,29 @@ export default {
           return item.id
         }
       })
-      this.inquiryIds = selectedRows.map(item => {
-        if (item.id) {
-          return item.contentId
-        }
-      })
       this.selectedRowKeys = rows
     },
     toSearch() {
-      this.form.checkName = this.$route.name
-
+      let url = ''
+      if (this.$route.name == '技术审核') {
+        url = '/proCheck/findTechnicalCheck'
+      }else if (this.$route.name == '商务审核') {
+        url = '/proCheck/findBusinessCheck'
+      }
       this.form.proDetailId = parseInt(this.form.proDetailId)
+
       request.request({
-        url: '/proCheck/cascadeFindAllByCheckName',
-        method: 'post',
+        url: url,
+        method: 'get',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         },
-        data: qs.stringify(this.form)
+        params: this.form
       })
         .then(response => {
           this.proChecks = response.data
+          this.loading = false
+        }).catch(()=>{
           this.loading = false
         })
       if (!this.form.proDetailId) {
@@ -184,9 +219,17 @@ export default {
       return this.status[parseInt(text)]
     },
     loadChecks() {
-      request.get('/proCheck/cascadeFindAllByCheckName?checkName=' + this.$route.name)
+      let url = ''
+      if (this.$route.name == '技术审核') {
+        url = '/proCheck/findTechnicalCheck'
+      }else if (this.$route.name == '商务审核') {
+        url = '/proCheck/findBusinessCheck'
+      }
+      request.get(url)
         .then(response => {
           this.proChecks = response.data
+          this.loading = false
+        }).catch(()=>{
           this.loading = false
         })
     },

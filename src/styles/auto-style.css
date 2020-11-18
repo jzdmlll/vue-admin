@@ -4,8 +4,8 @@
     辅：#72DCAD
     辅：#8EDCB9
  */
-.el-tooltip__popper.is-dark {
-  max-width: 80%;
+.el-tooltip__popper.is-dark, .el-tooltip__popper {
+  max-width: 70%!important;
 }
 .my-transition {
   transition: all 0.3s;

@@ -1,5 +1,6 @@
 <template>
   <div class="compare_list">
+    {{compareForm}}<br>{{suppliersTotal}}
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
       <el-button :style="hasSelected?{display: 'inline-block'}:{display: 'none'}" type="primary" size="small" @click="batchCompare()">批量比价</el-button>
       <el-select v-model="form.proDetailId" style="margin-right: 6px" filterable clearable placeholder="请选择项目" value-key="name">
@@ -18,6 +19,9 @@
         <el-table-column prop="name" label="询价名" :show-overflow-tooltip="true" />
         <el-table-column prop="params" label="参数" :show-overflow-tooltip="true" />
         <el-table-column prop="number" label="数量" />
+        <el-table-column  label="利率" >
+          <template slot-scope="scope">{{scope.row.rate/1000}}%</template>
+        </el-table-column>
         <el-table-column prop="price" label="拟定报价单价" />
         <el-table-column prop="totalPrice" label="拟定报价总价" />
         <el-table-column label="操作" align="center" width="240">
@@ -40,7 +44,7 @@
           <el-button style="right:0;z-index: 99;" icon="el-icon-arrow-right" class="my-transition" circle @click="cardRight"></el-button>
         </sticky>
         <!-- 头部 供应商列表-->
-        <Sticky width="full"  margin="0 0 0 -28px" padding="0 0 0 2em" background="#fff" boxShadow="1px 1px 4px #9e9e9e" style="height: 74px;background:#fff">
+        <Sticky minWidth="100%" margin="0 0 0 -28px" padding="0 0 0 2em" background="#fff" boxShadow="1px 1px 4px #9e9e9e" style="height: 74px;background:#fff">
           <div class="compare-container my-transition"
                :style="{gridTemplateColumns: '100px '+'repeat('+ suppliers.length + ', 1fr)', width: suppliers.length * 238+100 + 'px', transform: 'translate('+moveWidth+'px)'}" >
             <div></div>
@@ -53,16 +57,17 @@
         <!-- 询价卡片 -->
         <div v-for="(item,index) in realCompares" :key="index" class="my-transition" :style="{transform: 'translate('+moveWidth+'px)'}">
           <div class="compare-container" :style="{gridTemplateColumns: '100px '+'repeat('+item.inquiryCompareVMS.length+', 1fr)',width:item.inquiryCompareVMS.length*238+100+'px'}">
-            <div class="compare-item" :slot="item.inquiryCompareVMS[0]" v-if="item.inquiryCompareVMS.length>0" style="color: #42B983">
-          <!--    <div class="item-head" style="width: 0;overflow:hidden;border: none"></div>-->
+            <!--<div class="compare-item" :slot="item.inquiryCompareVMS[0]" v-if="item.inquiryCompareVMS.length>0" style="color: #42B983">
+          &lt;!&ndash;    <div class="item-head" style="width: 0;overflow:hidden;border: none"></div>&ndash;&gt;
               <div class="item-body" style="border: none">
                 <span id="compareColumn" v-for="key in compareColumns" :key="key" v-if="compareColumns.includes(key)">
                   {{compareColumnsValue[key]}}
                 </span>
               </div>
-            </div>
+            </div>-->
+            <div></div>
             <div class="compare-item my-transition" v-for="item in item.inquiryCompareVMS" :key="item.id">
-              <el-radio v-if="item.id" border @change="radioChange(item, index)" v-model="compareForm[index].compareId" class="item-body my-transition"
+              <el-radio v-if="item.id && (item['businessAudit']==1 && item['technicalAudit']==1)" border @change="radioChange(item, index)" v-model="compareForm[index].compareId" class="item-body my-transition"
                         :class="{'item-body-select':(compareForm[index] && item.compareId == compareForm[index].compareId)}">
                 <div class="check-div my-transition"><a-icon type="check" style="font-size: 18px;font-size: 20px;font-weight: 600;
                 transform: rotate(-45deg);margin-top: 5px;"/></div>
@@ -75,16 +80,33 @@
                       v-model="compareForm[index].remark">
                     </el-input>
                   </template>
-                <span v-for="key in compareColumns" :key="key" :class="{ellipsis: key!='suParams'}" v-if="compareColumns.includes(key)">
-                  {{(key==='warranty' || key==='suDelivery')?(dateFormat(parseInt(item[key]))):nullFormat(item[key])}}
-                </span>
+
+                    <span v-for="key in compareColumns" :key="key" class="ellipsis" v-if="compareColumns.includes(key)">
+                      <el-tooltip :content="item[key]" placement="top" effect="light">
+                        <div>{{compareColumnsValue[key]}}：{{(key==='warranty' || key==='suDelivery')?item[key]:nullFormat(item[key])}}</div>
+                      </el-tooltip>
+                    </span>
+
                 </a-popover>
                 <div v-else>
-                <span v-for="key in compareColumns" :key="key" :class="{ellipsis: key!='suParams'}" v-if="compareColumns.includes(key)">
-                  {{(key==='warranty' || key==='suDelivery')?(dateFormat(parseInt(item[key]))):nullFormat(item[key])}}
-                </span>
+                  <span v-for="key in compareColumns" :key="key" class="ellipsis"
+                        v-if="compareColumns.includes(key)">
+                    <el-tooltip :content="item[key]" placement="top" effect="light">
+                        <div>{{compareColumnsValue[key]}}：{{(key==='warranty' || key==='suDelivery')?item[key]:nullFormat(item[key])}}</div>
+                      </el-tooltip>
+                  </span>
                 </div>
               </el-radio>
+              <div v-else-if="item.id && (item['businessAudit']==2 || item['technicalAudit']==2)" style="border-color: red" class="item-body my-transition">
+                <div class="el-radio__label">
+                  <span v-for="key in compareColumns" :key="key" class="ellipsis"
+                        v-if="compareColumns.includes(key)">
+                    <el-tooltip :content="item[key]" placement="top" effect="light">
+                        <div>{{compareColumnsValue[key]}}：{{(key==='warranty' || key==='suDelivery')?item[key]:nullFormat(item[key])}}</div>
+                      </el-tooltip>
+                  </span>
+                </div>
+              </div>
 
               <template v-else >
                 <a-empty style="width: 180px;margin:0;top: 50%;position: relative;transform: translate(0,-60%);" />
@@ -109,7 +131,12 @@
           {{dialogForm.params}}
         </el-form-item>
         <el-form-item label="报价单价" label-width="80px" size="small" prop="price">
-          <el-input v-model="dialogForm.price" autocomplete="off" />
+          <el-autocomplete
+            v-model="dialogForm.price"
+            :fetch-suggestions="querySearchAsync"
+            placeholder="请输入内容"
+            @select="handleSelect"
+          ></el-autocomplete>
         </el-form-item>
         <el-form-item label="报价总价" label-width="80px" size="small" prop="totalPrice">
           <el-input v-model="dialogForm.totalPrice" autocomplete="off" />
@@ -120,6 +147,7 @@
         <el-button type="primary" size="small" @click="submitHandler('dialogForm')">确 定</el-button>
       </div>
     </el-dialog>
+    {{compareForm}}
   </div>
 </template>
 
@@ -135,6 +163,8 @@ export default {
   components: { Sticky },
   data () {
     return {
+      priceInquiries: [],
+      poolForm: {},
       dialogForm: {},
       visible: false,
       moveWidth: 0,
@@ -143,11 +173,10 @@ export default {
       select: [{ status: 0, name: '未比价' }, { status: 1, name: '已比价' }],
       compares: [],
       realCompares: [],
-      compareColumns: ['name','suParams','suModel','suPrice','suTotalPrice',
-        'warranty','suDelivery','suRemark'],
-      compareColumnsValue: {'brand':'品牌','warranty':'质保期','suModel':'型号(商)','model':'型号'
-        ,'suRemark':'备注(商)','suDelivery':'货期(商)','suWarranties':'资质','unit':'单位','name': '设备名',
-        'suParams':'参数(商)','suPrice':'单价(商)','suTotalPrice':'总价(商)','number':'数量(商)','device':'设备'},
+      compareColumns: ['name','suBrand','suParams','suModel','suPrice','suTotalPrice',
+        'warranty','suDelivery','suRemark','businessRemark','technicalRemark','finallyRemark'],
+      compareColumnsValue: {'name': '设备名','suBrand':'品牌','suParams':'参数','suModel':'型号','suPrice':'单价(商)', 'suTotalPrice':'总价(商)',
+        'warranty':'质保期','suDelivery':'货期','suRemark':'备注(商)', 'businessRemark':'商审备注','technicalRemark':'技审备注','finallyRemark':'终审备注'},
       compareForm: [{compareId: '',otherCompareId:[]}],
       loading: true,
       submitLoading: false,
@@ -167,6 +196,28 @@ export default {
     }
   },
   methods: {
+    handleSelect(item) {
+      this.dialogForm.price = item.value
+    },
+    querySearchAsync(queryString, cb){
+        if(this.poolForm[this.dialogForm.id]){
+          let name = this.poolForm[this.dialogForm.id].name
+          let model = this.poolForm[this.dialogForm.id].model
+          request.request({
+            url: '/pool/findHistoryPrices',
+            method: 'get',
+            params: {name: name, model: model}
+          }).then(response => {
+            const result = []
+            response.data.map(item => {
+              result.push({value: item.price})
+            })
+            cb(result)
+          })
+        }else{
+          cb(new Array())
+        }
+    },
     submitHandler() {
       let form = this.dialogForm
       form.operator = parseInt(getUser())
@@ -194,7 +245,7 @@ export default {
       }
     },
     cardRight() {
-      if (this.moveWidth > (this.realCompares.length - 6) * -238) {
+      if (this.moveWidth > (this.realCompares.length - 7) * -238) {
         this.moveWidth -= 238
       }
     },
@@ -202,7 +253,9 @@ export default {
      * 点击批量比价
      */
     batchCompare () {
+      this.priceInquiries = []
       this.suppliers = []
+      this.suppliersTotal = {}
       request.request({
         url: '/compare/batchGetCompare',
         method: 'post',
@@ -284,7 +337,6 @@ export default {
      * 比价选用按钮点击事件
      */
     submitCompare () {
-      this.submitLoading = true
       let otherCompareId = []
       const checkCompareId = []
       const remarks = []
@@ -305,10 +357,9 @@ export default {
         headers: {
           'Content-Type': 'application/json'
         },
-        data: JSON.stringify({checkCompareIds: checkCompareId, otherCompareIds: otherCompareId, remarks: remarks, userId: parseInt(getUser())})
+        data: JSON.stringify({checkCompareIds: checkCompareId, otherCompareIds: otherCompareId, remarks: remarks, inquiries: this.priceInquiries, userId: parseInt(getUser())})
       }).then(response => {
         this.$message({ message: response.message, type: 'success' })
-        this.submitLoading = false
       })
       this.compareForm.otherCompareId = []
 
@@ -319,8 +370,25 @@ export default {
      */
     radioChange (item, index) {
       this.sumTotal(item, index)
+      console.log(item)
+      let compares = this.compares
+      const priceInquiries = [...this.priceInquiries]
+      compares.map(i => {
+        if(i.id == item.inquiryId){
+          i.price = (item.suPrice * (1 + i.rate/100000)).toFixed(2)
+          i.totalPrice = (item.suTotalPrice * (1 + i.rate/100000)).toFixed(2)
+          priceInquiries.push({
+            'id': i.id,
+            'price': i.price,
+            'totalPrice': i.totalPrice
+          })
+        }
+      })
+      this.priceInquiries = priceInquiries
+      this.compares = compares
     },
     sumTotal(item, index){
+      this.$set(this.poolForm, item.inquiryId, {name: item.name, model: item.suModel})
       const compareForm = [...this.compareForm]
       compareForm[index].compareId = item.compareId
       compareForm[index].supplier = item.supplier
@@ -368,6 +436,8 @@ export default {
      * @param row
      */
     compareDetail (row) {
+      this.priceInquiries = []
+      this.suppliersTotal = {}
       if(this.currentInquiry != row.id){
         this.currentInquiry = row.id
         console.log(row.params)
@@ -467,7 +537,7 @@ export default {
 
 <style lang="scss">
 .compare_list {
-  .ellipsis {
+  .ellipsis, .ellipsis div {
     overflow: hidden!important;
     white-space: nowrap!important;
     text-overflow: ellipsis!important;

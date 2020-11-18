@@ -14,11 +14,7 @@
         <el-table-column prop="params" label="技术参数" />
         <el-table-column prop="model" label="品牌型号" />
         <el-table-column prop="price" label="单价" />
-        <el-table-column label="货期" >
-          <template slot-scope="{row}">
-           <template>{{dateFormat(row.delivery)}}</template>
-          </template>
-        </el-table-column>
+        <el-table-column prop="delivery" label="货期" />
         <el-table-column prop="remark" label="备注" />
         <el-table-column label="操作" align="center" width="180">
           <template slot-scope="scope">
