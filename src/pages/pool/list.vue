@@ -2,28 +2,34 @@
   <!-- 角色管理 -->
   <div class="role_list">
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
-      <el-tooltip class="item" effect="dark" content="添加" placement="bottom-start">
+      <!--<el-tooltip class="item" effect="dark" content="添加" placement="bottom-start">
         <el-button type="primary" icon="el-icon-plus" size="small" @click="toAdd">添加</el-button>
-      </el-tooltip>
+      </el-tooltip>-->
     </div>
     <div style="padding:1em;margin-bottom:1em;background:#fff">
       <el-table v-loading="loading" :data="pools" size="small">
         <el-table-column type="index" prop="" label="序号" width="120" />
-        <el-table-column prop="name" label="设备名称" />
-        <el-table-column prop="supplier" label="供应商" />
-        <el-table-column prop="params" label="技术参数" />
-        <el-table-column prop="model" label="品牌型号" />
-        <el-table-column prop="price" label="单价" />
-        <el-table-column prop="delivery" label="货期" />
-        <el-table-column prop="remark" label="备注" />
+        <el-table-column :show-overflow-tooltip="true" prop="proName" label="项目名" />
+        <el-table-column :show-overflow-tooltip="true" prop="name" label="设备名" />
+        <el-table-column :show-overflow-tooltip="true" prop="supplier" label="供应商" />
+        <el-table-column :show-overflow-tooltip="true" prop="params" label="技术参数" />
+        <el-table-column :show-overflow-tooltip="true" prop="model" label="品牌型号" />
+        <el-table-column :show-overflow-tooltip="true" prop="price" label="单价" />
+        <el-table-column :show-overflow-tooltip="true" prop="delivery" label="货期" />
+        <el-table-column :show-overflow-tooltip="true" prop="remark" label="备注" />
+        <el-table-column :show-overflow-tooltip="true" label="时间">
+          <template slot-scope="{row}">
+            {{dateTimeFormat(row.time)}}
+          </template>
+        </el-table-column>
         <el-table-column label="操作" align="center" width="180">
           <template slot-scope="scope">
-            <el-tooltip class="item" effect="dark" content="修改角色" placement="bottom-start">
+            <!--<el-tooltip class="item" effect="dark" content="修改角色" placement="bottom-start">
               <el-button icon="el-icon-edit" type="success" size="mini" @click="toEdit(scope.row)" />
             </el-tooltip>
             <el-tooltip class="item" effect="dark" content="删除角色" placement="bottom-start">
               <el-button icon="el-icon-delete" type="danger" size="mini" @click="deleteHandler(scope.row.id)" />
-            </el-tooltip>
+            </el-tooltip>-->
           </template>
         </el-table-column>
       </el-table>
@@ -61,7 +67,7 @@
   import request from '@/utils/request'
   import qs from 'querystring'
   import '@/styles/auto-style.css'
-  import { dateFormat,nullFormat } from '@/utils/format'
+  import { dateTimeFormat,nullFormat } from '@/utils/format'
 
   export default {
     data() {
@@ -84,7 +90,7 @@
       this.loadPrivileges()
     },
     methods: {
-      dateFormat,
+      dateTimeFormat,
       authorizationHandler() {
         request.request({
           url: '/role/authorization',

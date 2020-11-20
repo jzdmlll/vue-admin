@@ -1,7 +1,6 @@
 <template>
   <!-- 最终审核 -->
   <div class="finalCheck_list">
-    {{form1}}
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
       <el-button :style="hasSelected?{display: 'inline-block'}:{display: 'none'}" type="primary" size="small" @click="toCheck(key=1)">通过</el-button>
       <el-button :style="hasSelected?{display: 'inline-block'}:{display: 'none'}" type="danger" size="small" @click="toCheck(key=2)">拒绝</el-button>
@@ -62,15 +61,16 @@
             <div style="position:relative;cursor: pointer">
             <el-popover ref="popover1" v-model="popVis[scope.row['inquiry'].inquiryId]" title="修改拟定报价" trigger="manual" placement="right" >
                 <el-form ref="form1" :model="form1"  status-icon>
-                  <el-form-item label-width="0" size="small" prop="price">
+                  <el-form-item style="margin-left: 0px!important;" label-width="0" size="small" prop="price">
                     <el-autocomplete
                       v-model="form1.price"
+                      style="width: 300px"
                       :fetch-suggestions="querySearchAsync"
                       placeholder="请输入拟定单价"
                       @select="handleSelect"
                     ></el-autocomplete>
                   </el-form-item>
-                  <el-form-item label-width="0" size="small" prop="totalPrice">
+                  <el-form-item style="margin-left: 0px!important;" label-width="0" size="small" prop="totalPrice">
                     <el-input
                       type="text"
                       :rows="3"
@@ -111,7 +111,7 @@
                 </el-input>
               </template>
               <div class="my-transition" style="position: relative;cursor: pointer" v-bind:style="scope.row[supplier] && scope.row.inquiry.veto == 0 && scope.row[supplier].finallyAudit === 1?{background: '#4bbc89',boxShadow: '2px 2px 2px #909090',color: '#fff'}:scope.row[supplier] && scope.row[supplier].compareStatus === 1?{border: '1px #2b2f3a dashed'}:{}"
-                   @click="finalCheck(scope.row[supplier].compareId, scope.row[supplier].name, scope.row[supplier].supplier, scope.row.inquiry.veto)">
+                   @click="finalCheck(scope.row[supplier], scope.row.inquiry.veto)">
                 <i class="el-icon-medal-1" style="opacity: .7;font-size: 18px;color: #0568c3; float: right" v-if="scope.row[supplier] && scope.row[supplier].minPrice === 1">
                   <span style="font-size: 12px">最低价</span>
                 </i>
@@ -126,26 +126,26 @@
                 </el-tooltip>
                   <p class="ellipsis">单价：{{scope.row[supplier]?nullFormat(scope.row[supplier].suPrice):''}}</p>
                   <p class="ellipsis">总价：{{scope.row[supplier]?nullFormat(scope.row[supplier].suTotalPrice):''}}</p>
-                  <p>
-                    <span>技审：</span><el-tag size="mini" :type="scope.row[supplier].technicalAudit == 1?'success':'danger'">{{scope.row[supplier].technicalAudit == 1?'通过':'拒绝'}}</el-tag>
-                    <el-tooltip v-if="scope.row[supplier].technicalRemark" :content="scope.row[supplier].technicalRemark" placement="top" effect="light">
-                      <span style="float: right; width: calc(100% - 80px)" class="ellipsis">备注：{{scope.row[supplier].technicalRemark}}</span>
-                    </el-tooltip>
-                  </p>
-                  <p>
-                    <span>商审：</span><el-tag size="mini" :type="scope.row[supplier].businessAudit == 1?'success':'danger'">{{scope.row[supplier].businessAudit == 1?'通过':'拒绝'}}</el-tag>
-                    <el-tooltip v-if="scope.row[supplier].businessRemark" :content="scope.row[supplier].businessRemark" placement="top" effect="light">
-                      <span style="float: right; width: calc(100% - 80px)" class="ellipsis">备注：{{scope.row[supplier].businessRemark}}</span>
-                    </el-tooltip>
-                  </p>
+                <p>
+                  <span>技审：</span><el-tag size="mini" :type="statusType[scope.row[supplier].technicalAudit]">{{status[scope.row[supplier].technicalAudit]}}</el-tag>
+                  <el-tooltip v-if="scope.row[supplier].technicalRemark" :content="scope.row[supplier].technicalRemark" placement="top" effect="light">
+                    <span style="float: right; width: calc(100% - 80px)" class="ellipsis">备注：{{scope.row[supplier].technicalRemark}}</span>
+                  </el-tooltip>
+                </p>
+                <p>
+                  <span>商审：</span><el-tag size="mini" :type="statusType[scope.row[supplier].businessAudit]">{{status[scope.row[supplier].businessAudit]}}</el-tag>
+                  <el-tooltip v-if="scope.row[supplier].businessRemark" :content="scope.row[supplier].businessRemark" placement="top" effect="light">
+                    <span style="float: right; width: calc(100% - 80px)" class="ellipsis">备注：{{scope.row[supplier].businessRemark}}</span>
+                  </el-tooltip>
+                </p>
                 <el-tooltip :content="scope.row['inquiry'].compareRemark" placement="top" effect="light">
-                  <p style="margin-bottom: 14px" v-if="scope.row[supplier] && scope.row[supplier].compareStatus == 1">拟比价备注：{{scope.row[supplier]?nullFormat(scope.row[supplier].compareRemark):''}}</p>
+                  <p class="ellipsis" style="margin-bottom: 14px" v-if="scope.row[supplier] && scope.row[supplier].compareStatus == 1">拟比价备注：{{scope.row[supplier]?nullFormat(scope.row[supplier].compareRemark):''}}</p>
                 </el-tooltip>
               </div>
             </a-popover>
             <div style="cursor: pointer;position:relative;" v-if="scope.row[supplier] && (scope.row[supplier].compareStatus !== 1 && scope.row[supplier].finallyAudit !== 1)" class="my-transition"
                  v-bind:style="scope.row[supplier] && scope.row[supplier].finallyAudit === 1?{background: '#4bbc89',boxShadow: '2px 2px 2px #909090',color: '#fff'}:scope.row[supplier] && scope.row[supplier].compareStatus === 1?{border: '1px #ff4949 dashed'}:{}"
-                 @click="finalCheck(scope.row[supplier].compareId, scope.row[supplier].name, scope.row[supplier].supplier, scope.row.inquiry.veto)">
+                 @click="finalCheck(scope.row[supplier], scope.row.inquiry.veto)">
               <i class="el-icon-medal-1" style="opacity: .7;font-size: 18px;color: #0568c3; float: right" v-if="scope.row[supplier] && scope.row[supplier].minPrice === 1">
                 <span style="font-size: 12px">最低价</span>
               </i>
@@ -161,19 +161,19 @@
               <p class="ellipsis">单价：{{scope.row[supplier]?nullFormat(scope.row[supplier].suPrice):''}}</p>
               <p class="ellipsis">总价：{{scope.row[supplier]?nullFormat(scope.row[supplier].suTotalPrice):''}}</p>
               <p>
-                <span>技审：</span><el-tag size="mini" :type="scope.row[supplier].technicalAudit == 1?'success':'danger'">{{scope.row[supplier].technicalAudit == 1?'通过':'拒绝'}}</el-tag>
+                <span>技审：</span><el-tag size="mini" :type="statusType[scope.row[supplier].technicalAudit]">{{status[scope.row[supplier].technicalAudit]}}</el-tag>
                 <el-tooltip v-if="scope.row[supplier].technicalRemark" :content="scope.row[supplier].technicalRemark" placement="top" effect="light">
                   <span style="float: right; width: calc(100% - 80px)" class="ellipsis">备注：{{scope.row[supplier].technicalRemark}}</span>
                 </el-tooltip>
               </p>
               <p>
-                <span>商审：</span><el-tag size="mini" :type="scope.row[supplier].businessAudit == 1?'success':'danger'">{{scope.row[supplier].businessAudit == 1?'通过':'拒绝'}}</el-tag>
+                <span>商审：</span><el-tag size="mini" :type="statusType[scope.row[supplier].businessAudit]">{{status[scope.row[supplier].businessAudit]}}</el-tag>
                 <el-tooltip v-if="scope.row[supplier].businessRemark" :content="scope.row[supplier].businessRemark" placement="top" effect="light">
                   <span style="float: right; width: calc(100% - 80px)" class="ellipsis">备注：{{scope.row[supplier].businessRemark}}</span>
                 </el-tooltip>
               </p>
               <el-tooltip :content="scope.row['inquiry'].compareRemark" placement="top" effect="light">
-                <p style="margin-bottom: 14px" v-if="scope.row[supplier] && scope.row[supplier].compareStatus == 1">拟比价备注：{{scope.row[supplier]?nullFormat(scope.row[supplier].compareRemark):''}}</p>
+                <p class="ellipsis" style="margin-bottom: 14px" v-if="scope.row[supplier] && scope.row[supplier].compareStatus == 1">拟比价备注：{{scope.row[supplier]?nullFormat(scope.row[supplier].compareRemark):''}}</p>
               </el-tooltip>
             </div>
           </template>
@@ -221,6 +221,8 @@ export default {
 
   data() {
     return {
+      status: ['未审核', '通过', '拒绝'],
+      statusType: ['info', 'success', 'danger'],
       popVis:{},
       refuseForm: {},
       popoverVisible: false,
@@ -274,7 +276,7 @@ export default {
 
     },
     handleSelect(item) {
-      this.form1.price = item.value
+      //this.form1.price = item.value
     },
     querySearchAsync(qs, cb){
       if(this.form1.inquiry){
@@ -286,7 +288,7 @@ export default {
         }).then(response => {
           const result = []
           response.data.map(item => {
-            result.push({value: item.price})
+            result.push({value: '采购价:'+item.price+'  报价:'+item.quote})
           })
           cb(result)
         })
@@ -389,8 +391,11 @@ export default {
         this.$message({ message: '还未选择终审通过的供应商', type: 'warning' })
       }
     },
-    finalCheck(id, name, supplier, veto) {
-      if(id && name && supplier && veto == 0) {
+    finalCheck(row, veto) {
+      const id = row.compareId
+      const name = row.name
+      const supplier = row.supplier
+      if(id && name && supplier && veto == 0 && row.businessAudit == 1 && row.technicalAudit) {
         //alert(id + '  ' + name + '  ' + supplier)
         const data = [...this.data]
         const allCompareIds = []
@@ -527,6 +532,9 @@ export default {
 
 <style lang="scss" scoped>
   .finalCheck_list {
+    /deep/.el-form-item__content {
+      margin-left: 0!important;
+    }
     /deep/.el-table__body .danger-row {
       background: #f1b7b7;
     }

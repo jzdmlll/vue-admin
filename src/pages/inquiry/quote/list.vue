@@ -360,6 +360,8 @@
       tableRowClassName(row, index){
         if (row.isinquiry == 0) {
           return 'warning-row';
+        }else if(row.veto == 1){
+          return 'danger-row';
         }
         return '';
       },
@@ -791,8 +793,13 @@
 
 <style lang="scss">
   .pro_quote_list {
-    .parentTable .warning-row {
-      background: oldlace;
+    .parentTable {
+      .warning-row {
+        background: oldlace;
+      }
+      .danger-row {
+        background: #f1b7b7;
+      }
     }
     .el-tabs__content {
       background: #fafafa;

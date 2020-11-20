@@ -34,12 +34,12 @@
   border-color: #42B983;
 }
 .el-button--primary.is-disabled {
-  background: #97e5c1;
-  border-color: #97e5c1;
+  background: #58cc97;
+  border-color: #58cc97;
 }
 .el-button--primary.is-disabled:hover {
-  background: #97e5c1;
-  border-color: #97e5c1;
+  background: #58cc97;
+  border-color: #58cc97;
 }
 .ant-table-fixed {
   border-right: 1px solid #fafafa;
@@ -98,7 +98,7 @@
 .el-form-item__content{
   height:auto;
   line-height:32px;
-  margin-left:90px!important
+  margin-left:90px
 }
 .el-dialog__body{
   background:#f5f5f5;

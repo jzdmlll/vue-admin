@@ -11,6 +11,7 @@ export default {
 </script>
 
 <style lang="css">
+
   li {
     text-align: left;
   }

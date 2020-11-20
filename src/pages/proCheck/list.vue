@@ -40,10 +40,21 @@
         <span slot="businessAudit" slot-scope="text, record, index">
           <el-tag :type="text === 0 ? 'info':(text === 1? 'success':'danger')">{{ statu(text) }}</el-tag>
         </span>
-
-
       </a-table>
     </div>
+
+    <!-- 模态框 -->
+    <el-dialog title="填写备注" :visible.sync="visible">
+      <el-form ref="form" :rules="codeRules" :model="form"  status-icon>
+        <el-form-item label="备注" label-width="80px" size="small" prop="remark">
+          <el-input type="text" v-model="form.remark"></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button size="small" @click="visible = false">取 消</el-button>
+        <el-button type="primary" size="small" @click="submitHandler('form')">提 交</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 <script>
@@ -104,6 +115,8 @@ let columns = [
 export default {
   data() {
     return {
+      form: {},
+      visible: false,
       checkStatusCol: '',
       fileType: -1,
       visible: false,
@@ -124,7 +137,12 @@ export default {
       form: { status: '' },
       projects: [],
       selectedRowKeys: [],
-      inquiryIds: []
+      inquiryIds: [],
+      codeRules: {
+        remark: [
+          {required: true, message: '不能为空', trigger: 'blur'}
+        ],
+      }
     }
   },
   computed: {
@@ -140,39 +158,83 @@ export default {
 
   },
   methods: {
-    getUser,
-    toCheck(key) {
+    submitHandler(form) {
+      const key = this.form.key
       let status = ''
+      let remark = ''
       if (this.$route.name == '技术审核') {
         status = 'technicalAudit'
+        remark = 'technicalRemark'
       }else if (this.$route.name == '商务审核') {
         status = 'businessAudit'
+        remark = 'businessRemark'
       }
       const data = []
-      this.selectedRowKeys.map(id => {
-        this.proChecks.map(item => {
-          if(id == item.id) {
-            item.operator = parseInt(getUser())
-            item[status] = key
-            data.push(item)
+      if(key == 2){
+        this.$refs[form].validate((valid) => {
+          if(valid){
+            this.selectedRowKeys.map(id => {
+              this.proChecks.map(item => {
+                if(id == item.id) {
+                  item.operator = parseInt(getUser())
+                  item[status] = key
+                  item[remark] = this.form.remark
+                  data.push(item)
+                }
+              })
+            })
+            request.request({
+              url: '/proCheck/updateTechnicalStatus',
+              method: 'post',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              data: JSON.stringify(data)
+            }).then(response => {
+              this.$message({ message: response.message, type: 'success' })
+              this.selectedRowKeys = []
+              this.inquiryIds = []
+              this.toSearch()
+            }).catch(()=>{
+              this.toSearch()
+            })
+          }else{
+            console.log('error commit')
+            return false
           }
         })
-      })
-      request.request({
-        url: '/proCheck/updateTechnicalStatus',
-        method: 'post',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        data: JSON.stringify(data)
-      }).then(response => {
-        this.$message({ message: response.message, type: 'success' })
-        this.selectedRowKeys = []
-        this.inquiryIds = []
-        this.toSearch()
-      }).catch(()=>{
-        this.toSearch()
-      })
+      }else{
+        this.selectedRowKeys.map(id => {
+          this.proChecks.map(item => {
+            if(id == item.id) {
+              item.operator = parseInt(getUser())
+              item[status] = key
+              item[remark] = this.form.remark
+              data.push(item)
+            }
+          })
+        })
+        request.request({
+          url: '/proCheck/updateTechnicalStatus',
+          method: 'post',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          data: JSON.stringify(data)
+        }).then(response => {
+          this.$message({ message: response.message, type: 'success' })
+          this.selectedRowKeys = []
+          this.inquiryIds = []
+          this.toSearch()
+        }).catch(()=>{
+          this.toSearch()
+        })
+      }
+    },
+    getUser,
+    toCheck(key) {
+      this.visible = true
+      this.form.key = key
     },
     onSelectChange(selectedRowKeys, selectedRows) {
       const rows = selectedRows.map(item => {
@@ -259,6 +321,11 @@ export default {
 
 <style lang="scss">
   .check_list {
+    /deep/.el-form-item__content{
+      height:auto;
+      line-height:32px;
+      margin-left:90px!important
+    }
     .childTable{
       th, td, .ant-table-column-sorters {
         overflow: hidden;

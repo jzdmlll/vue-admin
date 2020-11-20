@@ -96,6 +96,7 @@
               inactive-color="#8b8b8b"
               :active-value="1"
               :inactive-value="0"
+              :disabled="row.veto==1?true:false"
               @change="switchChange(row.id, row.isinquiry)"
             >
             </el-switch>
@@ -117,6 +118,9 @@
               <span v-else>
                  <el-tooltip v-if="row.isinquiry == 0" class="item" effect="dark" content="选择历史产品" placement="bottom-start">
                   <el-button type="success" icon="el-icon-star-on" size="mini" style="padding: 7px 10px;background: #faad14;border-color:#faad14" @click="poolChoose(row)">产品池选择</el-button>
+                </el-tooltip>
+                <el-tooltip v-if="row.veto==1" class="item" effect="dark" content="重新询价" placement="bottom-start">
+                  <el-button type="primary" icon="el-icon-edit" size="mini" @click="addInquiry(row)">重新询价</el-button>
                 </el-tooltip>
                 <el-tooltip class="item" effect="dark" content="行内编辑" placement="bottom-start">
                   <el-button :disabled="row.veto==1?true:false" type="primary" icon="el-icon-edit" size="mini" @click="edit(row)"></el-button>
@@ -150,6 +154,64 @@
         <el-button type="primary" size="small" @click="submitHandler">提交</el-button>
       </div>
     </el-dialog>
+
+    <!-- 模态框 -->
+    <el-dialog title="重新询价" :visible.sync="inquiryVisible">
+      <el-form :model="form" status-icon>
+        <el-row>
+          <el-col :sm="24" :lg="12">
+            <el-form-item size="mini" label="设备名" label-width="80px" prop="name">
+              <el-input v-model="form.name" autocomplete="off" size="small" />
+            </el-form-item>
+          </el-col>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="品牌" label-width="80px" prop="realBrand">
+              <el-input v-model="form.realBrand" autocomplete="off" size="small" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="技术参数" label-width="80px" prop="params">
+              <el-input v-model="form.params" autocomplete="off" size="small" />
+            </el-form-item>
+          </el-col>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="型号" label-width="80px" prop="model">
+              <el-input v-model="form.model" autocomplete="off" size="small" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="单位" label-width="80px" prop="unit">
+              <el-input v-model="form.unit" autocomplete="off" size="small" />
+            </el-form-item>
+          </el-col>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="数量" label-width="80px" prop="number">
+              <el-input v-model="form.number" autocomplete="off" size="small" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="品牌推荐" label-width="80px" prop="brand">
+              <el-input v-model="form.brand" autocomplete="off" size="small" />
+            </el-form-item>
+          </el-col>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="备注" label-width="80px" prop="brand">
+              <el-input v-model="form.remark" autocomplete="off" size="small" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button size="small" @click="inquiryVisible = false">取消</el-button>
+        <el-button type="primary" size="small" @click="addInquirySubmit">提交</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 <script>
@@ -163,6 +225,7 @@
     data() {
       const fileUploadUrl = process.env.VUE_APP_BASE_API + 'file/uploadCache'
       return {
+        inquiryVisible: false,
         loading1: true,
         poolData: [],
         visible: false,
@@ -181,6 +244,25 @@
       this.init()
     },
     methods: {
+      addInquirySubmit(){
+        this.form.operator = getUser()
+        request.request({
+          url: '/inquiry/saveOrUpdate',
+          method: 'post',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          data: qs.stringify(this.form)
+        }).then(resp => {
+          this.$message({ message: resp.message, type: 'success' })
+          this.inquiryVisible = false
+          this.form = {}
+        })
+      },
+      addInquiry(row) {
+        this.form = row
+        this.inquiryVisible = true
+      },
       tableRowClassName({row, index}) {
         if (row.veto == 1) {
           return 'danger-row';
@@ -378,6 +460,11 @@
 
 <style lang="scss" scoped>
   .pro_inquiry_list {
+    /deep/.el-form-item__content{
+      height:auto;
+      line-height:32px;
+      margin-left:90px!important
+    }
     .table {
       /deep/.el-table__body {
         .danger-row, .danger-row td {
@@ -389,6 +476,9 @@
           }
         }
       }
+    }
+    /deep/.el-col {
+      padding: 0 1em
     }
   }
 </style>

@@ -1,6 +1,5 @@
 <template>
   <div class="compare_list">
-    {{compareForm}}<br>{{suppliersTotal}}
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
       <el-button :style="hasSelected?{display: 'inline-block'}:{display: 'none'}" type="primary" size="small" @click="batchCompare()">批量比价</el-button>
       <el-select v-model="form.proDetailId" style="margin-right: 6px" filterable clearable placeholder="请选择项目" value-key="name">
@@ -147,7 +146,6 @@
         <el-button type="primary" size="small" @click="submitHandler('dialogForm')">确 定</el-button>
       </div>
     </el-dialog>
-    {{compareForm}}
   </div>
 </template>
 
@@ -210,7 +208,7 @@ export default {
           }).then(response => {
             const result = []
             response.data.map(item => {
-              result.push({value: item.price})
+              result.push({value: '采购价:'+item.price+'  报价:'+item.quote})
             })
             cb(result)
           })
@@ -537,6 +535,11 @@ export default {
 
 <style lang="scss">
 .compare_list {
+  /deep/.el-form-item__content{
+    height:auto;
+    line-height:32px;
+    margin-left:90px!important
+  }
   .ellipsis, .ellipsis div {
     overflow: hidden!important;
     white-space: nowrap!important;
