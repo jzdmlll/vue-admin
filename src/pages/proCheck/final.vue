@@ -1,6 +1,7 @@
 <template>
   <!-- 最终审核 -->
   <div class="finalCheck_list">
+    {{form}}
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
       <el-button :style="hasSelected?{display: 'inline-block'}:{display: 'none'}" type="primary" size="small" @click="toCheck(key=1)">通过</el-button>
       <el-button :style="hasSelected?{display: 'inline-block'}:{display: 'none'}" type="danger" size="small" @click="toCheck(key=2)">拒绝</el-button>
@@ -20,11 +21,11 @@
     </div>
     <div style="padding:1em;margin-bottom:4em;background:#fff">
       <el-table :data="data" border size="small" :default-sort = "{prop: 'sort', order: 'ascending'}"
-                :row-class-name="tableRowClassName" style="width: 100%">
+                :row-class-name="tableRowClassName" style="width: 100%" >
         <el-table-column
           prop="inquiry"
           label="询价序号"
-          :fixed="dynamicColumns.suppliers.length > 8?'left':false"
+          :fixed="dynamicColumns.suppliers.length > 6?'left':false"
           v-if="data.length>0"
           align="center"
           width="70">
@@ -35,9 +36,9 @@
         <el-table-column
           prop="inquiry"
           label="询价内容"
-          :fixed="dynamicColumns.suppliers.length > 8?'left':false"
+          :fixed="dynamicColumns.suppliers.length > 6?'left':false"
           v-if="data.length>0"
-          width="auto">
+          :width="dynamicColumns.suppliers.length > 6? 180:'auto'">
           <template style="width: 100%" slot-scope="scope">
             <div style="position:relative;">
             <el-tooltip :content="scope.row['inquiry'].name" placement="top" effect="light">
@@ -54,9 +55,9 @@
         <el-table-column
           prop="draft"
           label="拟定报价"
-          :fixed="dynamicColumns.suppliers.length > 8?'left':false"
+          :fixed="dynamicColumns.suppliers.length > 6?'left':false"
           v-if="data.length>0"
-          width="auto">
+          :width="dynamicColumns.suppliers.length > 6? 180:'auto'">
           <template slot-scope="scope">
             <div style="position:relative;cursor: pointer">
             <el-popover ref="popover1" v-model="popVis[scope.row['inquiry'].inquiryId]" title="修改拟定报价" trigger="manual" placement="right" >
@@ -97,7 +98,7 @@
           :label="supplier"
           :prop="supplier"
           :key="supplier"
-          :width="dynamicColumns.suppliers.length > 8? 160:undefined"
+          :width="dynamicColumns.suppliers.length > 6? 180:undefined"
           >
           <template  slot-scope="scope">
             <a-popover title="备注" trigger="click" placement="right" v-if="scope.row[supplier]
@@ -307,6 +308,7 @@ export default {
         data: qs.stringify(this.refuseForm)
       }).then(response => {
         this.$message({ message: response.message, type: 'success' })
+        this.loadData()
       })
     },
     tableRowClassName({row, index}) {
@@ -564,7 +566,6 @@ export default {
                 height: 100%;
                 width: 100%;
                 padding: 1em!important;
-                margin: 1%;
                 p {
                   margin: 0;
                 }

@@ -195,6 +195,7 @@ export default {
               this.selectedRowKeys = []
               this.inquiryIds = []
               this.toSearch()
+              this.visible = false
             }).catch(()=>{
               this.toSearch()
             })
@@ -226,6 +227,7 @@ export default {
           this.selectedRowKeys = []
           this.inquiryIds = []
           this.toSearch()
+          this.visible = false
         }).catch(()=>{
           this.toSearch()
         })
