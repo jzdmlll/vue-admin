@@ -257,6 +257,7 @@
           this.$message({ message: resp.message, type: 'success' })
           this.inquiryVisible = false
           this.form = {}
+          this.init()
         })
       },
       addInquiry(row) {
@@ -418,11 +419,15 @@
        * 页面初始化
        */
       init() {
-        request.get('/inquiry/findAll')
-          .then(response => {
-            this.inquiryList = response.data
-            this.loading = false
-          })
+        if (this.searchForm.proDetailId) {
+          this.toSearch()
+        }else {
+          request.get('/inquiry/findAll')
+            .then(response => {
+              this.inquiryList = response.data
+              this.loading = false
+            })
+        }
       },
       /**
        * 点击条件查询
@@ -433,6 +438,8 @@
           request.get('/inquiry/findByProDetailId?proDetailId='+this.searchForm.proDetailId)
             .then(response => {
               this.inquiryList = response.data
+              this.loading = false
+            }).catch(()=>{
               this.loading = false
             })
         }

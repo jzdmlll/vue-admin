@@ -1,5 +1,6 @@
 <template>
   <div class="compare_list">
+    {{compareForm}}
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
       <el-button :style="hasSelected?{display: 'inline-block'}:{display: 'none'}" type="primary" size="small" @click="batchCompare()">批量比价</el-button>
       <el-select v-model="form.proDetailId" style="margin-right: 6px" filterable clearable placeholder="请选择项目" value-key="name">
@@ -117,7 +118,9 @@
       </div>
     </div>
     <div class="footer" :style="realCompares.length > 0?{display: 'block'}:{display: 'none'}">
-      <span style="margin: 0 2em 0 0">总金额：￥{{suppliersTotal.total}}</span>
+      报价总价:<span style="margin: 0 2em 0 4px;color: #1682e6;">{{cost.toFixed(2)}}</span>
+      成本总价:<span style="margin: 0 2em 0 4px;color: #1682e6;">{{suppliersTotal.total?(suppliersTotal.total).toFixed(2):0}}</span>
+      利率:<span style="margin: 0 2em 0 4px;color: #1682e6;">{{suppliersTotal.total?((cost-suppliersTotal.total)/suppliersTotal.total*100).toFixed(2):0}}%</span>
       <el-button :loading="submitLoading"  style="right:0;margin: 0 2em 0 0" type="primary" size="small" @click="submitCompare">{{submitLoading?'':'选用'}}</el-button>
     </div>
     <!-- 模态框 -->
@@ -161,6 +164,7 @@ export default {
   components: { Sticky },
   data () {
     return {
+      cost: 0.00,
       priceInquiries: [],
       poolForm: {},
       dialogForm: {},
@@ -230,11 +234,12 @@ export default {
       }).then(response => {
         this.$message({ message: response.message, type: 'success' })
         this.visible = false
+        this.loadCompares()
       })
     },
     addPrice(row){
       this.visible = true
-      this.dialogForm = row
+      this.dialogForm = JSON.parse(JSON.stringify(row))
     },
     getUser,
     cardLeft() {
@@ -307,6 +312,8 @@ export default {
           })
         })
         this.realCompares = realCompares
+        // 计算报价总价
+        this.countCost()
       })
 
       this.currentInquiry = "批量比价"
@@ -367,7 +374,9 @@ export default {
      * @param value
      */
     radioChange (item, index) {
+      // 计算每个供应商总价
       this.sumTotal(item, index)
+      // 点击按照项目利率计算报价单价、总价
       console.log(item)
       let compares = this.compares
       const priceInquiries = [...this.priceInquiries]
@@ -384,16 +393,53 @@ export default {
       })
       this.priceInquiries = priceInquiries
       this.compares = compares
+      // 计算报价总价
+      this.countCost()
+    },
+    /**
+     * 计算报价总价
+     *
+     */
+    countCost(){
+      this.cost = 0.00
+      let compareIds = []
+      this.compareForm.map(cf => {
+        if(cf.compareId){
+          compareIds.push(cf.compareId)
+        }
+      })
+      console.log("compareIds",compareIds)
+      let inquiryIds = []
+      this.realCompares.map(rc => {
+        console.log(rc)
+        let key = 0
+        rc.inquiryCompareVMS.map(inquiry => {
+          if(compareIds.includes(inquiry.compareId)){
+            key ++
+          }
+        })
+        if(key > 0){
+          inquiryIds.push(rc.inquiryId)
+        }
+      })
+      console.log("inquiryIds",inquiryIds)
+
+      this.compares.map(c => {
+        if(inquiryIds.includes(c.id)){
+          this.cost += parseFloat(c.totalPrice)
+        }
+      })
     },
     sumTotal(item, index){
+      this.cost = 0.00
       this.$set(this.poolForm, item.inquiryId, {name: item.name, model: item.suModel})
       const compareForm = [...this.compareForm]
       compareForm[index].compareId = item.compareId
       compareForm[index].supplier = item.supplier
       compareForm[index].suTotalPrice = parseInt(item.suTotalPrice)
+
       this.realCompares.map((i, index1) => {
         if (i.inquiryId == item.inquiryId) {
-
           if (this.compareForm[index1].compareId !== '') {
             this.compareForm[index1].otherCompareId = []
           }
@@ -420,6 +466,7 @@ export default {
       this.suppliersTotal = suppliersTotal
       this.compareForm = compareForm
       console.log(suppliersTotal)
+
     },
     /**
      * 日期时间格式转换
@@ -473,6 +520,8 @@ export default {
               })
             })
             this.realCompares = realCompares
+            // 计算报价总价
+            this.countCost()
           })
 
         this.$refs.multipleTable.clearSelection()
