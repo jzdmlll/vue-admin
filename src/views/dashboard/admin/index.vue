@@ -1,39 +1,102 @@
 <template>
   <div class="dashboard-editor-container">
-
     <panel-group @handleSetLineChartData="handleSetLineChartData" />
 
     <el-row style="background:#fff;padding:16px 16px 0;margin-bottom:32px;">
       <line-chart :chart-data="lineChartData" />
     </el-row>
     <div style="padding: 1em;background: #fff;">
-      <a-tabs v-model="indexBottomTab" size="large" :tab-bar-style="{marginBottom: '24px', paddingLeft: '16px'}">
-        <!--<div class="extra-wrapper" slot="tabBarExtraContent">
-          <a-radio-group v-model="indexRegisterType" @change="changeRegisterType">
-            <a-radio-button value="转移登记">转移登记</a-radio-button>
-            <a-radio-button value="抵押登记">抵押登记</a-radio-button>
-            <a-radio-button value="">所有</a-radio-button>
-          </a-radio-group>
-        </div>-->
+      <a-row type="flex" justify="start" :gutter="3">
+        <a-col :sm="24" :lg="12">
+          <el-card>
+            <div slot="header" class="index-md-title">
+              <span>终审待办【{{ dataSource1.length }}】</span>
+              <a v-if="dataSource1 " slot="footer" @click="goPage('终审')">前往 <a-icon type="double-right" /></a>
+            </div>
+            <a-table
+              :dataSource="dataSource1"
+              :pagination="false"
+              :scroll="{ y: 166 }"
+              size="small"
+            >
+              <a-table-column ellipsis="true" key="proName" title="项目" data-index="proName"/>
+              <a-table-column ellipsis="true" key="inquiryName" title="设备名" data-index="inquiryName"/>
+              <a-table-column ellipsis="true" key="quoteSupplier" title="供应商" data-index="quoteSupplier"/>
+              <a-table-column ellipsis="true" key="finallyAudit" title="状态" data-index="finallyAudit">
+                <template slot-scope="finallyAudit">
+                  <el-tag :type="finallyAudit == 0 ? 'info':(finallyAudit == 1? 'success':'danger')">{{ statu(finallyAudit) }}</el-tag>
+                </template>
+              </a-table-column>
+            </a-table>
+          </el-card>
+        </a-col>
+        <a-col :sm="24" :lg="12">
+          <el-card>
+            <div slot="header" class="index-md-title">
+              <span>技审待办【{{ dataSource2.length }}】</span>
+              <a v-if="dataSource2 " slot="footer" @click="goPage('技审')">前往 <a-icon type="double-right" /></a>
+            </div>
+            <a-table
+              :dataSource="dataSource2"
+              size="small"
+              :scroll="{ y: 166 }"
+              :pagination="false"
+            >
+              <a-table-column ellipsis="true" key="proName" title="项目" data-index="proName"/>
+              <a-table-column ellipsis="true" key="inquiryName" title="设备名" data-index="inquiryName"/>
+              <a-table-column ellipsis="true" key="quoteSupplier" title="供应商" data-index="quoteSupplier"/>
+              <a-table-column ellipsis="true" key="quoteSuParams" title="实际参数" data-index="quoteSuParams"/>
+              <a-table-column ellipsis="true" key="quoteSuModel" title="实际型号" data-index="quoteSuModel"/>
+              <a-table-column ellipsis="true" key="technicalAudit" title="状态" data-index="technicalAudit"/>
+            </a-table>
+          </el-card>
+        </a-col>
+        <a-col :sm="24" :lg="12">
+          <el-card>
+            <div slot="header" class="index-md-title">
+              <span>商审待办【{{ dataSource3.length }}】</span>
+              <a v-if="dataSource3 " slot="footer" @click="goPage('商审')">前往 <a-icon type="double-right" /></a>
+            </div>
+            <a-table
+              :dataSource="dataSource3"
+              size="small"
+              :scroll="{ y: 166 }"
+              :pagination="false"
+            >
+              <a-table-column ellipsis="true" key="proName" title="项目" data-index="proName"/>
+              <a-table-column ellipsis="true" key="inquiryName" title="设备名" data-index="inquiryName"/>
+              <a-table-column ellipsis="true" key="quoteSupplier" title="供应商" data-index="quoteSupplier"/>
+              <a-table-column ellipsis="true" key="quoteSuBrand" title="品牌" data-index="quoteSuBrand"/>
+              <a-table-column ellipsis="true" key="quoteSuPrice" title="单价" data-index="quoteSuPrice"/>
+              <a-table-column ellipsis="true" key="businessAudit" title="状态" data-index="businessAudit"/>
+            </a-table>
+          </el-card>
+        </a-col>
+        <a-col :sm="24" :lg="12">
+          <el-card>
+            <div slot="header" class="index-md-title">
+              <span>比价待办【{{ dataSource4.length }}】</span>
+              <a v-if="dataSource4 " slot="footer" @click="goPage('比价')">前往 <a-icon type="double-right" /></a>
+            </div>
+            <a-table
+              :dataSource="dataSource4"
+              size="small"
+              :scroll="{ y: 166 }"
+              :pagination="false"
+            >
+              <a-table-column key="proName" title="项目" data-index="proName"/>
+              <a-table-column key="inquiryName" title="设备名" data-index="inquiryName"/>
+              <a-table-column key="quoteSupplier" title="供应商" data-index="quoteSupplier"/>
+              <a-table-column key="quoteSuBrand" title="品牌" data-index="quoteSuBrand"/>
+              <a-table-column key="quoteSuModel" title="实际参数" data-index="quoteSuModel"/>
+              <a-table-column key="quoteSuParams" title="实际型号" data-index="quoteSuParams"/>
+              <a-table-column key="quoteSuPrice" title="单价" data-index="quoteSuPrice"/>
+              <a-table-column key="compareAudit" title="状态" data-index="compareAudit"/>
+            </a-table>
+          </el-card>
+        </a-col>
 
-        <!--<a-tab-pane loading="true" tab="业务流程限时监管" key="1">
-
-          <a-table :dataSource="dataSource1" size="default" rowKey="id" :columns="columns" :pagination="ipagination1" @change="tableChange1">
-            <template slot="flowRate" slot-scope="text, record, index">
-              <a-progress :strokeColor="getPercentColor(record.flowRate)" :format="getPercentFormat" :percent="getFlowRateNumber(record.flowRate)" style="width:80px" />
-            </template>
-          </a-table>
-        </a-tab-pane>
-
-        <a-tab-pane loading="true" tab="业务节点限时监管" key="2">
-          <a-table :dataSource="dataSource2" size="default" rowKey="id" :columns="columns2" :pagination="ipagination2" @change="tableChange2">
-            <template slot="flowRate" slot-scope="text, record, index">
-              <span style="color: red;">{{ record.flowRate }}小时</span>
-            </template>
-          </a-table>
-        </a-tab-pane>
--->
-      </a-tabs>
+      </a-row>
     </div>
 
     <!--<el-row :gutter="32">
@@ -59,7 +122,6 @@
         &lt;!&ndash;<transaction-table />&ndash;&gt;
       </el-col>
       <el-col :xs="{span: 24}" :sm="{span: 12}" :md="{span: 12}" :lg="{span: 6}" :xl="{span: 6}" style="margin-bottom:30px;">
-        <todo-list />
       </el-col>
       <el-col :xs="{span: 24}" :sm="{span: 12}" :md="{span: 12}" :lg="{span: 6}" :xl="{span: 6}" style="margin-bottom:30px;">
         <box-card />
@@ -79,6 +141,7 @@ import TransactionTable from './components/TransactionTable'
 import TodoList from './components/TodoList'
 import BoxCard from './components/BoxCard'
 import request from '@/utils/request'
+import '@/styles/auto-style.css'
 
 /*let lineChartData = {
   projects: {
@@ -105,6 +168,7 @@ export default {
   },
   data() {
     return {
+      status: ['未审核', '通过', '拒绝'],
       lineChartData: [],
       allChartData: {
         projects: {
@@ -114,7 +178,11 @@ export default {
           actualData: []
         },
       },
-      indexBottomTab: "1"
+      indexBottomTab: "1",
+      dataSource1:[],
+      dataSource2:[],
+      dataSource3:[],
+      dataSource4:[],
     }
   },
   created() {
@@ -122,6 +190,9 @@ export default {
     this.lineChartData = this.allChartData.projects
   },
   methods: {
+    statu(text) {
+      return this.status[parseInt(text)]
+    },
     handleSetLineChartData(type) {
       this.lineChartData = this.allChartData[type]
     },
@@ -137,6 +208,35 @@ export default {
           this.allChartData.suppliers.actualData = resp.data
           console.log(this.lineChartData)
         })
+      this.loadToDoList()
+    },
+    goPage(page) {
+      let path = ''
+      switch (page) {
+        case '终审': path = 'proCheck/final'; break;
+        case '技审': path = 'proCheck/technology'; break;
+        case '商审': path = 'proCheck/business'; break;
+        case '比价': path = 'compare/list'; break;
+      }
+      this.$router.push(path)
+    },
+    loadToDoList() {
+      request.get('/sysIndex/findCompareAuditDeal')
+        .then(resp => {
+          this.dataSource4 = resp.data
+        })
+      request.get('/sysIndex/findTechnicalAuditDeal')
+        .then(resp => {
+          this.dataSource2 = resp.data
+        })
+      request.get('/sysIndex/findBusinessAuditDeal')
+        .then(resp => {
+          this.dataSource3 = resp.data
+        })
+      request.get('/sysIndex/findFinallyAuditDeal')
+        .then(resp => {
+          this.dataSource1 = resp.data
+        })
     }
   }
 }
@@ -144,7 +244,7 @@ export default {
 
 <style lang="scss" scoped>
 .dashboard-editor-container {
-  padding: 32px;
+  padding: 0px;
   background-color: rgb(240, 242, 245);
   position: relative;
 
@@ -159,6 +259,34 @@ export default {
     background: #fff;
     padding: 16px 16px 0;
     margin-bottom: 32px;
+  }
+
+  /deep/.el-card__header {
+    background: #f0f2f5;
+    padding: 14px 18px;
+    .index-md-title {
+      color: #1890ff;
+      line-height: 27px;
+      span {
+        font-size: 18px;
+        font-family: cursive;
+      }
+      a {
+        font-size: 14px;
+        float: right
+      }
+    }
+  }
+  /deep/.el-card__body {
+    padding: 12px;
+  }
+
+  .ant-col {
+    margin-bottom: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    display: none
   }
 }
 

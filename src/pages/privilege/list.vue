@@ -146,3 +146,13 @@ export default {
   }
 }
 </script>
+
+<style lang="scss" scoped>
+.privilege_list{
+  /deep/.el-form-item__content{
+    height:auto;
+    line-height:32px;
+    margin-left:90px!important
+  }
+}
+</style>
