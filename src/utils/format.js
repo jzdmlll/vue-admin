@@ -1,6 +1,6 @@
 export function dateFormat(cjsj) {
   if(cjsj == null || isNaN(cjsj)) {
-    return '暂未提供'
+    return ''
   }
   var date = new Date(cjsj)
   var Y = date.getFullYear() + '-'
@@ -11,7 +11,7 @@ export function dateFormat(cjsj) {
 
 export function dateTimeFormat(cjsj) {
   if(cjsj == null || isNaN(cjsj)) {
-    return '暂未提供'
+    return ''
   }
   var date = new Date(cjsj)
   var Y = date.getFullYear() + '-'

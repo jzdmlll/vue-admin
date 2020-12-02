@@ -8,7 +8,7 @@
       <el-select v-model="form.proDetailId" style="margin-right: 6px" filterable clearable placeholder="请选择项目" value-key="name">
         <el-option v-for="item in projects" :key="item.id" :label="item.name" :value="item.id" />
       </el-select>
-      <el-button style="margin-right: 6px" type="primary" :loading="searchLoading" icon="el-icon-search" size="small" @click="loadData">查询</el-button>
+      <el-button style="margin-right: 6px" type="primary" icon="el-icon-search" size="small" @click="loadData">查询</el-button>
       <div class="helper">
         <el-tag effect="dark" style="float: left;background: #4bbc89;border-color: #4bbc89;width: 24px;height:24px;"></el-tag>
         <span style="font-size: 14px;height: 24px;display: block;float: left;margin-left: 4px;color: #303133">终审</span>
@@ -20,7 +20,7 @@
     </div>
     <div style="padding:1em;margin-bottom:4em;background:#fff">
       <el-table :data="data" border size="small" :default-sort = "{prop: 'sort', order: 'ascending'}"
-                :max-height="tableHeight" :row-class-name="tableRowClassName" style="width: 100%" >
+                :row-class-name="tableRowClassName" style="width: 100%" >
         <el-table-column
           prop="inquiry"
           label="询价序号"
@@ -59,7 +59,33 @@
           :width="dynamicColumns.suppliers.length > 6? 180:'auto'">
           <template slot-scope="scope">
             <div style="position:relative;cursor: pointer">
-            <div style="position: relative" @click="draftClick(scope.row['inquiry'], scope.row['draft'])">
+            <el-popover ref="popover1" v-model="popVis[scope.row['inquiry'].inquiryId]" title="修改拟定报价" trigger="manual" placement="right" >
+                <el-form ref="form1" :model="form1"  status-icon>
+                  <el-form-item style="margin-left: 0px!important;" label-width="0" size="small" prop="price">
+                    <el-autocomplete
+                      v-model="form1.price"
+                      style="width: 300px"
+                      :fetch-suggestions="querySearchAsync"
+                      placeholder="请输入拟定单价"
+                      @select="handleSelect"
+                    ></el-autocomplete>
+                  </el-form-item>
+                  <el-form-item style="margin-left: 0px!important;" label-width="0" size="small" prop="totalPrice">
+                    <el-input
+                      type="text"
+                      :rows="3"
+                      placeholder="请输入拟定总价"
+                      size="mini"
+                      v-model="form1.totalPrice"
+                    >
+                    </el-input>
+                  </el-form-item>
+                  <el-button type="primary" size="small" @click="submitPrice('form1', scope.row['inquiry'].inquiryId)">提交</el-button>
+                  <el-button plain size="small" @click="popVisClick(scope.row['inquiry'], new Object())">取消</el-button>
+                </el-form>
+
+            </el-popover>
+            <div v-popover:popover1 style="position: relative" @click="popVisClick(scope.row['inquiry'], scope.row['draft'])">
               <p :style="scope.row['draft'].totalPrice < priceChecks[scope.row['inquiry'].inquiryId]?{color: 'red'}:scope.row['draft'].totalPrice > 2*priceChecks[scope.row['inquiry'].inquiryId]?{color: '#faad14'}:{}">报价单价：{{scope.row['draft'].price}}</p>
               <p :style="scope.row['draft'].totalPrice < priceChecks[scope.row['inquiry'].inquiryId]?{color: 'red'}:scope.row['draft'].totalPrice > 2*priceChecks[scope.row['inquiry'].inquiryId]?{color: '#faad14'}:{}">报价总价：{{scope.row['draft'].totalPrice}}</p>
             </div>
@@ -182,30 +208,6 @@
       已选择<span style="margin: 0 4px;color: #1682e6;">{{submitForm.checkCompareIds.length}}</span>家供应商
       <el-button :loading="submitLoading"  style="right:0;margin: 0 2em 0 0" type="primary" size="small" @click="submitCheck">{{submitLoading?'':'终审'}}</el-button>
     </div>
-
-    <el-dialog
-      title="修改拟定报价"
-      :visible.sync="draftDialogVisible"
-      >
-      <el-form ref="form1" :model="form1" status-icon>
-        <el-form-item label="拟定报价单价" label-width="80px">
-          <el-autocomplete
-            v-model="form1.price"
-            :fetch-suggestions="querySearchAsync"
-            placeholder="请输入拟定单价"
-            @select="handleSelect"
-            style="width: 100%"
-          ></el-autocomplete>
-        </el-form-item>
-        <el-form-item label="拟定报价总价" label-width="80px">
-          <el-input type="text" v-model="form1.totalPrice"></el-input>
-        </el-form-item>
-      </el-form>
-      <span slot="footer" class="dialog-footer">
-        <el-button size="small" @click="draftDialogVisible = false">取 消</el-button>
-        <el-button size="small" type="primary" @click="draftDialogHandler">确 定</el-button>
-      </span>
-    </el-dialog>
   </div>
 </template>
 <script>
@@ -219,16 +221,14 @@ export default {
 
   data() {
     return {
-      searchLoading: false,
-      draftDialogVisible: false,
-      tableHeight: document.documentElement.clientHeight-83-196,
       status: ['未审核', '通过', '拒绝'],
       statusType: ['info', 'success', 'danger'],
+      popVis:{},
       refuseForm: {},
       popoverVisible: false,
       cost: 0,
       priceChecks:{total: 0},
-      form1: {},
+      form1: {visible: false},
       visible: false,
       data: [],
       loading: 'true',
@@ -246,18 +246,34 @@ export default {
       return this.selectedRowKeys.length > 0
     }
   },
-  mounted() {
+  mounted: function () {
     var that = this
-    that.tableHeight = document.documentElement.clientHeight-83-196
+    that.tableMaxHeight = document.documentElement.clientHeight-83-190
   },
   created() {
     this.loadProjects()
   },
   methods: {
-    draftDialogHandler() {},
-    draftClick(inquiry, draft) {
-      this.draftDialogVisible = true
-      this.form1 = {id: inquiry.inquiryId, inquiry: inquiry, price: draft.price, totalPrice: draft.totalPrice}
+    popVisClick(inquiry, draft) {
+      this.$set(this.form1, 'inquiry', inquiry)
+      this.$set(this.form1, 'price', draft.price)
+      this.$set(this.form1, 'totalPrice', draft.totalPrice)
+
+      this.data.map(item => {
+        if(item.inquiry.inquiryId!=inquiry.inquiryId){
+          this.popVis[item.inquiry.inquiryId] = false
+        }
+      })
+      if(draft) {
+        this.form1.price = draft.price
+        this.form1.totalPrice = draft.totalPrice
+      }
+      if(this.popVis[inquiry.inquiryId]){
+        this.popVis[inquiry.inquiryId] = false
+      }else {
+        this.popVis[inquiry.inquiryId] = true
+      }
+
     },
     handleSelect(item) {
       //this.form1.price = item.value
@@ -301,16 +317,17 @@ export default {
       }
       return '';
     },
-    draftDialogHandler(form1) {
+    submitPrice(form1, id) {
       let form = this.form1
 
+      form.id = id
       form.operator = parseInt(getUser())
       const data = [...this.data]
       //this.data = [...this.data]
       let i = ''
       data.map((item, index) => {
         //console.log(item)
-        if(item.inquiry.inquiryId == form.id) {
+        if(item.inquiry.inquiryId == id) {
           i = index
           item.draft.price = form.price
           item.draft.totalPrice = form.totalPrice
@@ -318,7 +335,7 @@ export default {
       })
       this.data = data
       request.request({
-        url: '/inquiry/finallyUpdateDraft',
+        url: '/inquiry/rowSave',
         method: 'post',
         headers: {
           'Content-Type': 'application/json'
@@ -326,10 +343,8 @@ export default {
         data: JSON.stringify(form)
       }).then(response => {
         this.loadData()
-        this.draftDialogVisible = false
         this.$message({ message: response.message, type: 'success' })
-      }).catch(()=> {
-        this.loadData()
+
       })
     },
     nullFormat,
@@ -445,7 +460,6 @@ export default {
     },
     loadData() {
       if(this.form.proDetailId){
-        this.searchLoading = true
         let data = []
         let suppliers = []
         request.get('/finallyCheck/findDraftComparePrice?proDetailId='+this.form.proDetailId)
@@ -485,6 +499,7 @@ export default {
 
           this.data.map((item, index) => {
             let key = 0
+            this.$set(this.popVis, item.inquiry.inquiryId, false)
             this.dynamicColumns.suppliers.map(s => {
               if(item[s] && (item[s].finallyAudit === 1 && item.inquiry.veto == 0)){
                 key ++
@@ -507,9 +522,6 @@ export default {
           submitForm.allCompareIds = [...allCompareIds]
 
           this.submitForm = submitForm
-          this.searchLoading = false
-        }).catch(()=>{
-          this.searchLoading = true
         })
       }else {
         this.$message({ message: '请选择项目', type: 'warning' })
@@ -521,10 +533,8 @@ export default {
 
 <style lang="scss" scoped>
   .finalCheck_list {
-    /deep/.el-form-item__content{
-      height:auto;
-      line-height:32px;
-      margin-left:90px!important
+    /deep/.el-form-item__content {
+      margin-left: 0!important;
     }
     /deep/.el-table__body .danger-row {
       background: #f1b7b7;
@@ -538,6 +548,9 @@ export default {
       float: right;
       height: 24px;
       line-height: 24px;
+    }
+    /deep/.el-form-item__content {
+      margin-left: 0!important;
     }
     /deep/.el-table__body {
       tbody {

@@ -50,6 +50,16 @@
           <el-form-item label="项目名称" label-width="80px" size="small" prop="name">
             <el-input v-model="form.name" autocomplete="off" />
           </el-form-item>
+          <el-form-item label="项目利率" label-width="80px" size="small" prop="proRate">
+            <a-input-number
+              :default-value="10"
+              v-model="form.proRate"
+              :min="0"
+              :max="100"
+              :formatter="value => `${value}%`"
+              :parser="value => value.replace('%', '')"
+            />
+          </el-form-item>
           <el-form-item label="项目内容" label-width="80px" size="small" prop="code">
             <el-input v-model="form.content" type="textarea" />
           </el-form-item>
@@ -175,7 +185,7 @@ export default {
       projects: [],
       loading: true,
       submitLoading: false,
-      form: {proOriginId: '', proTypeId: ''},
+      form: {proOriginId: '', proTypeId: '', proRate: 10},
       active: 1,
       fileList: [],
       fileUploadUrl,
@@ -194,6 +204,9 @@ export default {
           {required: true, message: '不能为空', trigger: 'blur'}
         ],
         proDetailId: [
+          {required: true, message: '不能为空', trigger: 'blur'}
+        ],
+        proRate: [
           {required: true, message: '不能为空', trigger: 'blur'}
         ]
       }
@@ -388,7 +401,7 @@ export default {
     toAdd() {
       this.visible = true
       this.nameKey = ''
-      this.form = {}
+      this.form = {proOriginId: '', proTypeId: '', proRate: 10},
       this.title = '添加项目'
       this.submitLoading = false
       this.active = 1
@@ -415,6 +428,7 @@ export default {
           method: 'post'
         }).then(resp => {
           this.$message({message: resp.message, type: 'success'})
+          this.loadProjects()
         })
       })
     },
@@ -441,6 +455,12 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+   /deep/.el-form-item__content{
+     height:auto;
+     line-height:32px;
+     margin-left:90px!important
+   }
+
   .pro_list {
     .timeline-container {
       padding: 1em;

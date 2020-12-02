@@ -24,9 +24,9 @@ export default {
   },
   created() {
     console.log(this.roles[0].name)
-    if (this.roles[0].name !== '管理员') {
+    /*if (this.roles[0].name !== '管理员') {
       this.currentRole = 'editorDashboard'
-    }
+    }*/
   }
 }
 </script>

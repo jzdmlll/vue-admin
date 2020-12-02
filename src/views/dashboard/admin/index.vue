@@ -18,6 +18,7 @@
               :pagination="false"
               :scroll="{ y: 166 }"
               size="small"
+              :row-key="(r,i)=>{i.toString()}"
             >
               <a-table-column ellipsis="true" key="proName" title="项目" data-index="proName"/>
               <a-table-column ellipsis="true" key="inquiryName" title="设备名" data-index="inquiryName"/>
@@ -41,13 +42,18 @@
               size="small"
               :scroll="{ y: 166 }"
               :pagination="false"
+              :row-key="(r,i)=>{i.toString()}"
             >
               <a-table-column ellipsis="true" key="proName" title="项目" data-index="proName"/>
               <a-table-column ellipsis="true" key="inquiryName" title="设备名" data-index="inquiryName"/>
               <a-table-column ellipsis="true" key="quoteSupplier" title="供应商" data-index="quoteSupplier"/>
               <a-table-column ellipsis="true" key="quoteSuParams" title="实际参数" data-index="quoteSuParams"/>
               <a-table-column ellipsis="true" key="quoteSuModel" title="实际型号" data-index="quoteSuModel"/>
-              <a-table-column ellipsis="true" key="technicalAudit" title="状态" data-index="technicalAudit"/>
+              <a-table-column ellipsis="true" key="technicalAudit" title="状态" data-index="technicalAudit">
+                <template slot-scope="technicalAudit">
+                  <el-tag :type="technicalAudit == 0 ? 'info':(technicalAudit == 1? 'success':'danger')">{{ statu(technicalAudit) }}</el-tag>
+                </template>
+              </a-table-column>
             </a-table>
           </el-card>
         </a-col>
@@ -62,13 +68,18 @@
               size="small"
               :scroll="{ y: 166 }"
               :pagination="false"
+              :row-key="(r,i)=>{i.toString()}"
             >
               <a-table-column ellipsis="true" key="proName" title="项目" data-index="proName"/>
               <a-table-column ellipsis="true" key="inquiryName" title="设备名" data-index="inquiryName"/>
               <a-table-column ellipsis="true" key="quoteSupplier" title="供应商" data-index="quoteSupplier"/>
               <a-table-column ellipsis="true" key="quoteSuBrand" title="品牌" data-index="quoteSuBrand"/>
               <a-table-column ellipsis="true" key="quoteSuPrice" title="单价" data-index="quoteSuPrice"/>
-              <a-table-column ellipsis="true" key="businessAudit" title="状态" data-index="businessAudit"/>
+              <a-table-column ellipsis="true" key="businessAudit" title="状态" data-index="businessAudit">
+                <template slot-scope="businessAudit">
+                  <el-tag :type="businessAudit == 0 ? 'info':(businessAudit == 1? 'success':'danger')">{{ statu(businessAudit) }}</el-tag>
+                </template>
+              </a-table-column>
             </a-table>
           </el-card>
         </a-col>
@@ -83,15 +94,20 @@
               size="small"
               :scroll="{ y: 166 }"
               :pagination="false"
+              :row-key="(r,i)=>{i.toString()}"
             >
-              <a-table-column key="proName" title="项目" data-index="proName"/>
-              <a-table-column key="inquiryName" title="设备名" data-index="inquiryName"/>
-              <a-table-column key="quoteSupplier" title="供应商" data-index="quoteSupplier"/>
-              <a-table-column key="quoteSuBrand" title="品牌" data-index="quoteSuBrand"/>
-              <a-table-column key="quoteSuModel" title="实际参数" data-index="quoteSuModel"/>
-              <a-table-column key="quoteSuParams" title="实际型号" data-index="quoteSuParams"/>
-              <a-table-column key="quoteSuPrice" title="单价" data-index="quoteSuPrice"/>
-              <a-table-column key="compareAudit" title="状态" data-index="compareAudit"/>
+              <a-table-column ellipsis="true" key="proName" title="项目" data-index="proName"/>
+              <a-table-column ellipsis="true" key="inquiryName" title="设备名" data-index="inquiryName"/>
+              <a-table-column ellipsis="true" key="quoteSupplier" title="供应商" data-index="quoteSupplier"/>
+              <a-table-column ellipsis="true" key="quoteSuBrand" title="品牌" data-index="quoteSuBrand"/>
+              <a-table-column ellipsis="true" key="quoteSuModel" title="实际参数" data-index="quoteSuModel"/>
+              <a-table-column ellipsis="true" key="quoteSuParams" title="实际型号" data-index="quoteSuParams"/>
+              <a-table-column ellipsis="true" key="quoteSuPrice" title="单价" data-index="quoteSuPrice"/>
+              <a-table-column ellipsis="true" key="compareAudit" title="状态" data-index="compareAudit">
+                <template slot-scope="compareAudit">
+                  <el-tag :type="compareAudit == 0 ? 'info':(compareAudit == 1? 'success':'danger')">{{ statu(compareAudit) }}</el-tag>
+                </template>
+              </a-table-column>
             </a-table>
           </el-card>
         </a-col>

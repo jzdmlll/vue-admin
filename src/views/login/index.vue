@@ -29,7 +29,7 @@
             </div>
           </div>
           <a href="#">Forgot Password?</a>
-          <el-button :loading="loading" class="btn" @click.native.prevent="handleLogin">登 陆</el-button>
+          <el-button :loading="loading" class="btn" @keyup.enter.native="handleLogin" @click.native.prevent="handleLogin">登 陆</el-button>
 
         </el-form>
       </div>
@@ -95,6 +95,18 @@ export default {
   },
   created() {
     // window.addEventListener('storage', this.afterQRScan)
+    var t = this;
+    document.onkeydown = function(e){
+      if(window.event == undefined){
+        var key = e.keyCode;
+      }else{
+        var key = window.event.keyCode;
+      }
+      //enter的ASCII码是13
+      if(key == 13){
+        t.handleLogin();
+      }
+    }
   },
   mounted() {
     const inputs = document.querySelectorAll('.input')

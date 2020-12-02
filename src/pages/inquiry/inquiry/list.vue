@@ -132,6 +132,13 @@
     </div>
     <!-- 模态框 -->
     <el-dialog title="选择产品池产品" class="importDialog" :visible.sync="visible">
+      <el-input type="text"
+                v-model="searchForm.name"
+                placeholder="设备名" size="small" style="max-width: 200px;"></el-input>
+      <el-input type="text"
+                v-model="searchForm.model"
+                placeholder="型号" size="small" style="max-width: 200px;"></el-input>
+      <el-button type="primary" size="small" @click="find">查询</el-button>
       <el-form :model="form" status-icon>
         <el-table :data="poolData" v-loading="loading1" size="small">
           <el-table-column label width="35">
@@ -144,6 +151,7 @@
           <el-table-column :show-overflow-tooltip="true" prop="params" label="技术参数" />
           <el-table-column :show-overflow-tooltip="true" prop="model" label="品牌型号" />
           <el-table-column :show-overflow-tooltip="true" prop="price" label="单价" />
+          <el-table-column :show-overflow-tooltip="true" prop="number" label="数量" />
           <el-table-column :show-overflow-tooltip="true" prop="delivery" label="货期" />
           <el-table-column :show-overflow-tooltip="true" prop="remark" label="备注" />
         </el-table>
@@ -225,6 +233,7 @@
     data() {
       const fileUploadUrl = process.env.VUE_APP_BASE_API + 'file/uploadCache'
       return {
+        searchForm: {},
         inquiryVisible: false,
         loading1: true,
         poolData: [],
@@ -240,10 +249,26 @@
       }
     },
     created() {
-      this.loadProjects()
       this.init()
     },
     methods: {
+      find(){
+        if(this.searchForm.name || this.searchForm.model){
+          console.log(this.searchForm)
+          request.request({
+            url: '/pool/fuzzyQueryByNameOrModel',
+            method: 'get',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            params: {name: this.searchForm.name, model: this.searchForm.model}
+          }).then(resp => {
+            this.poolData = resp.data
+          })
+        }else {
+          this.$message({ message: "请输入查询条件", type: 'warning' })
+        }
+      },
       addInquirySubmit(){
         this.form.operator = getUser()
         request.request({
@@ -418,15 +443,15 @@
       /**
        * 页面初始化
        */
-      init() {
-        if (this.searchForm.proDetailId) {
+      async init() {
+        await this.loadProjects()
+        if(this.projects.length > 0){
+          if(!this.searchForm.proDetailId) {
+            this.$set(this.searchForm, 'proDetailId', this.projects[0].id)
+          }
           this.toSearch()
         }else {
-          request.get('/inquiry/findAll')
-            .then(response => {
-              this.inquiryList = response.data
-              this.loading = false
-            })
+          this.loading = false
         }
       },
       /**
@@ -455,8 +480,8 @@
       /**
        * 查询所有项目
        */
-      loadProjects() {
-        request.get('/project/detail/findByAll')
+      async loadProjects() {
+        await request.get('/project/detail/findByAll')
           .then(response => {
             this.projects = response.data
           })

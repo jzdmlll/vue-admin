@@ -109,6 +109,7 @@ function getRefreshToken() {
         }
       }).catch((err) => {
         reject(err)
+        logout()
       })
   })
 }

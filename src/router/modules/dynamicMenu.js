@@ -10,7 +10,7 @@ async function parseMenu(id) {
     pid: 'parentId',
     children: 'children'
   })
-  console.log(privileges)
+
   const routes = []
   for (const privilege of privileges) {
     if (privilege.type === 'parent') {
@@ -35,7 +35,7 @@ async function parseMenu(id) {
                 require(['@/pages' + page + '.vue'], resolve)
               },
               name: p.name.replace(/\//g, '_'),
-              meta: { title: p.name, affix: true }
+              meta: { title: p.name, affix: true, noCache: false }
             }
             route.children.push(son_route)
           }
@@ -45,6 +45,7 @@ async function parseMenu(id) {
     }
   }
   routes.push({ path: '*', redirect: '/404', hidden: true })
+  console.log(routes)
   return routes
 }
 // let routes = parseMenu();

@@ -145,7 +145,7 @@
           <el-form ref="form1" :model="form1" :rules="codeRules" status-icon>
             <div>
               <el-form-item label="" label-width="0px" size="small" prop="proDetailId">
-                <el-select v-model="form1.proDetailId" clearable placeholder="请选择项目" value-key="name" size="small">
+                <el-select v-model="form1.proDetailId" filterable clearable placeholder="请选择项目" value-key="name" size="small">
                   <el-option v-for="item in projects" :key="item.id" :label="item.name" :value="item.id" />
                 </el-select>
               </el-form-item>
@@ -321,7 +321,6 @@
       }
     },
     created() {
-      this.loadProjects()
       this.init()
     },
     mounted() {
@@ -420,19 +419,18 @@
           this.quoteLoading = false
         })
       },
-      init() {
-        request.get('/inquiry/findAll')
-          .then(response => {
-            response.data.map(item => {
-              item.detailList = []
-            })
-            this.inquiryList = response.data
-            this.inquiryList.map(item => {
-              this.childLoading[item.id] = true
-            })
-            this.loading = false
-          })
-        this.loadProChecks()
+      async init() {
+        await this.loadProjects()
+        if(this.projects.length > 0){
+          if(!this.searchForm.proDetailId) {
+            this.$set(this.searchForm, 'proDetailId', this.projects[0].id)
+          }
+          this.toSearch()
+        }else {
+          this.loading = false
+        }
+
+        //this.loadProChecks()
       },
       toSearch() {
         if(this.searchForm.proDetailId) {
@@ -458,7 +456,7 @@
         this.fileList1 = []
         this.title = '编辑询价'
         this.loadDeviceType()
-        this.loadProChecks()
+        //this.loadProChecks()
       },
       clickFileInput() {
         this.$refs.upload.dispatchEvent(new MouseEvent('click'))
@@ -555,7 +553,7 @@
         this.submitLoading = false
         this.importData = ''
         this.loadDeviceType()
-        this.loadProChecks()
+        //this.loadProChecks()
       },
       removeCheck(role) {
         /* this.proChecks.map((item,index) => {
@@ -781,8 +779,8 @@
           this.childLoading[record.id] = true
         }
       },
-      loadProjects() {
-        request.get('/project/detail/findByAll')
+     async loadProjects() {
+        await request.get('/project/detail/findByAll')
           .then(response => {
             this.projects = response.data
           })

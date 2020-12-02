@@ -2,15 +2,19 @@
   <!-- 产品池管理 -->
   <div class="pro_pool_list">
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
+      <el-select v-model="form.proDetailId" style="margin-right: 6px" filterable clearable placeholder="请选择项目" value-key="name">
+        <el-option v-for="item in projects" :key="item.id" :label="item.name" :value="item.id" />
+      </el-select>
       <el-input v-model="form.name" style="width: auto" placeholder="请输入设备名"></el-input>
+      <el-input v-model="form.model" style="width: auto" placeholder="请输入型号"></el-input>
       <el-input v-model="form.brand" style="width: auto" placeholder="请输入品牌"></el-input>
       <el-button style="margin-right: 6px" type="primary" icon="el-icon-search" size="small" @click="toSearch">查询</el-button>
     </div>
     <div style="padding:1em;margin-bottom:1em;background:#fff">
       <el-table v-loading="loading" :data="pools" size="small">
-        <el-table-column :show-overflow-tooltip="true">
+        <el-table-column :show-overflow-tooltip="true" lable="项目名">
           <template slot-scope="{row}">
-            <el-link type="primary" @click="goToProject(row.id)">默认链接</el-link>
+            <el-link type="primary" @click="goToProject(row.id)">{{row.proName}}</el-link>
           </template>
         </el-table-column>
         <el-table-column type="index" prop="" label="序号" width="60" />
@@ -26,9 +30,6 @@
         <el-table-column :show-overflow-tooltip="true" prop="price" label="单价" />
         <el-table-column :show-overflow-tooltip="true" prop="delivery" label="货期" />
         <el-table-column :show-overflow-tooltip="true" prop="warranty" label="质保期" />
-        <el-table-column :show-overflow-tooltip="true" prop="purchaseDate" label="采购时间" />
-        <el-table-column :show-overflow-tooltip="true" prop="purchaseContractNo" label="采购合同" />
-        <el-table-column :show-overflow-tooltip="true" prop="saleContractNo" label="销售合同" />
         <el-table-column  label="图片">
           <template slot-scope="{row}">
             <el-image fit="contain" style="height: 40px; width:auto" :src="row.image" :preview-src-list="[row.image]" v-if="row.image!=null && row.image != ''">
@@ -79,16 +80,17 @@
     },
     created() {
       this.loadPools()
+      this.loadProjects()
     },
     methods: {
       goToProject(id) {
-        this.$router.push('project/detail/list')
+        this.$router.push('/project/detail/list')
       },
       toSearch() {
         request.request({
           url: '/inquiryPool/findByParams',
           method: 'get',
-          params: {'name': this.form.name, 'brand': this.form.brand}
+          params: {'name': this.form.name, 'brand': this.form.brand, 'proDetailId': this.form.proDetailId, 'model': this.form.model}
         })
           .then(response => {
             this.pools = response.data
@@ -107,6 +109,15 @@
           })
           .catch(() => {
             this.loading = false
+          })
+      },
+      /**
+       * 加载所有项目详情（下拉框信息）
+       */
+      loadProjects() {
+        request.get('/project/detail/findByAll')
+          .then(response => {
+            this.projects = response.data
           })
       },
     }

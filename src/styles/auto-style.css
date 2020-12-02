@@ -58,7 +58,8 @@
 }
 .el-input__inner:focus, .ant-table-row-expand-icon:hover,
 .ant-table-row-expand-icon:active, .ant-table-row-expand-icon:focus,
-.ant-input:hover, .ant-input:focus{
+.ant-input:hover, .ant-input:focus, .ant-input-number:hover, .ant-input-number:focus, .ant-input-number:active,
+.ant-input-number-focused{
   border-color: #4bcb90!important;
   box-shadow: 0 0 0 2px #e2ffef
 }

@@ -181,3 +181,11 @@ export default {
   }
 }
 </script>
+<style lang="scss" scoped>
+  /deep/.el-form-item__content{
+    height:auto;
+    line-height:32px;
+    margin-left:90px!important
+  }
+
+</style>

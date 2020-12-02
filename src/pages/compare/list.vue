@@ -1,6 +1,5 @@
 <template>
   <div class="compare_list">
-    {{compareForm}}
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
       <el-button :style="hasSelected?{display: 'inline-block'}:{display: 'none'}" type="primary" size="small" @click="batchCompare()">批量比价</el-button>
       <el-select v-model="form.proDetailId" style="margin-right: 6px" filterable clearable placeholder="请选择项目" value-key="name">
@@ -189,8 +188,7 @@ export default {
     }
   },
   created () {
-    this.loadProjects()
-    this.loadCompares()
+    this.init()
   },
   computed: {
     hasSelected() {
@@ -198,6 +196,19 @@ export default {
     }
   },
   methods: {
+    async init() {
+      await this.loadProjects()
+      this.loadCompares()
+
+      if(this.projects.length > 0){
+        if(!this.form.proDetailId) {
+          this.$set(this.form, 'proDetailId', this.projects[0].id)
+        }
+        this.toSearch()
+      }else {
+        this.loading = false
+      }
+    },
     handleSelect(item) {
       this.dialogForm.price = item.value
     },
@@ -225,7 +236,7 @@ export default {
       form.operator = parseInt(getUser())
 
       request.request({
-        url: '/inquiry/rowSave',
+        url: '/inquiry/compareUpdateDraft',
         method: 'post',
         headers: {
           'Content-Type': 'application/json'
@@ -377,7 +388,7 @@ export default {
       // 计算每个供应商总价
       this.sumTotal(item, index)
       // 点击按照项目利率计算报价单价、总价
-      console.log(item)
+      // console.log(item)
       let compares = this.compares
       const priceInquiries = [...this.priceInquiries]
       compares.map(i => {
@@ -408,10 +419,10 @@ export default {
           compareIds.push(cf.compareId)
         }
       })
-      console.log("compareIds",compareIds)
+      // console.log("compareIds",compareIds)
       let inquiryIds = []
       this.realCompares.map(rc => {
-        console.log(rc)
+        // console.log(rc)
         let key = 0
         rc.inquiryCompareVMS.map(inquiry => {
           if(compareIds.includes(inquiry.compareId)){
@@ -422,9 +433,8 @@ export default {
           inquiryIds.push(rc.inquiryId)
         }
       })
-      console.log("inquiryIds",inquiryIds)
-
       this.compares.map(c => {
+
         if(inquiryIds.includes(c.id)){
           this.cost += parseFloat(c.totalPrice)
         }
@@ -465,7 +475,6 @@ export default {
 
       this.suppliersTotal = suppliersTotal
       this.compareForm = compareForm
-      console.log(suppliersTotal)
 
     },
     /**
@@ -485,7 +494,6 @@ export default {
       this.suppliersTotal = {}
       if(this.currentInquiry != row.id){
         this.currentInquiry = row.id
-        console.log(row.params)
         request.get('/compare/cascadeFindAllByParams', {
             params: {
               inquiryId: row.id,
@@ -556,8 +564,8 @@ export default {
     /**
      * 加载所有项目详情（下拉框信息）
      */
-    loadProjects() {
-      request.get('/project/detail/findByAll')
+    async loadProjects() {
+      await request.get('/project/detail/findByAll')
         .then(response => {
           this.projects = response.data
         })

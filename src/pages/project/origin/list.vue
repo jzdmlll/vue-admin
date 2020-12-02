@@ -117,7 +117,7 @@ export default {
         })
           .then(response => {
             this.$message({ type: 'success', message: response.message })
-            this.loadRecords()
+            this.loadProjects()
           })
       })
     },
@@ -129,3 +129,10 @@ export default {
   }
 }
 </script>
+<style lang="scss" scoped>
+  /deep/.el-form-item__content{
+    height:auto;
+    line-height:32px;
+    margin-left:90px!important
+  }
+</style>
