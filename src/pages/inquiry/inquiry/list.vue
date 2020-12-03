@@ -5,12 +5,12 @@
       <el-tooltip class="item" v-if="selectedId.length > 0" effect="dark" content="批量删除" placement="bottom-start">
         <el-button type="danger" size="small" icon="el-icon-delete" @click="batchDelete">批量删除</el-button>
       </el-tooltip>
-      <el-tooltip class="item" v-if="selectedId.length > 0" effect="dark" content="无需询价" placement="bottom-start">
+      <!--<el-tooltip class="item" v-if="selectedId.length > 0" effect="dark" content="无需询价" placement="bottom-start">
         <el-button type="success" size="small" @click="setIsNotInquiry(0)">无需询价</el-button>
       </el-tooltip>
       <el-tooltip class="item" v-if="selectedId.length > 0" effect="dark" content="撤回无需询价" placement="bottom-start">
         <el-button type="warning" size="small" @click="setIsNotInquiry(1)">撤回</el-button>
-      </el-tooltip>
+      </el-tooltip>-->
       <el-select v-model="searchForm.proDetailId" style="margin-right: 6px" filterable clearable placeholder="请选择项目" value-key="name">
         <el-option v-for="item in projects" :key="item.id" :label="item.name" :value="item.id" />
       </el-select>
@@ -88,7 +88,7 @@
             <template v-else>{{nullFormat(row.remark)}}</template>
           </template>
         </el-table-column>
-        <el-table-column prop="isInquiry" label="是否需要询价" fixed="right">
+        <!--<el-table-column prop="isInquiry" label="是否需要询价" fixed="right">
           <template slot-scope="{row}">
             <el-switch
               v-model.string="row.isinquiry"
@@ -102,7 +102,7 @@
             </el-switch>
 
           </template>
-        </el-table-column>
+        </el-table-column>-->
         <el-table-column align="right" label="操作" width="180" fixed="right">
           <template slot-scope="{row}">
               <span v-if="row.editable" >
@@ -116,7 +116,7 @@
                 </a-popconfirm>
               </span>
               <span v-else>
-                 <el-tooltip v-if="row.isinquiry == 0" class="item" effect="dark" content="选择历史产品" placement="bottom-start">
+                 <el-tooltip class="item" effect="dark" content="选择历史产品" placement="bottom-start">
                   <el-button type="success" icon="el-icon-star-on" size="mini" style="padding: 7px 10px;background: #faad14;border-color:#faad14" @click="poolChoose(row)">产品池选择</el-button>
                 </el-tooltip>
                 <el-tooltip v-if="row.veto==1" class="item" effect="dark" content="重新询价" placement="bottom-start">

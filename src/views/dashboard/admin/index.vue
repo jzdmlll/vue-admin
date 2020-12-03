@@ -10,11 +10,12 @@
         <a-col :sm="24" :lg="12">
           <el-card>
             <div slot="header" class="index-md-title">
-              <span>终审待办【{{ dataSource1.length }}】</span>
+              <span>终审待办【{{ maxPage[0] }}】</span>
               <a v-if="dataSource1 " slot="footer" @click="goPage('终审')">前往 <a-icon type="double-right" /></a>
             </div>
             <a-table
               :dataSource="dataSource1"
+              id="finalLazyLoadTable"
               :pagination="false"
               :scroll="{ y: 166 }"
               size="small"
@@ -34,12 +35,13 @@
         <a-col :sm="24" :lg="12">
           <el-card>
             <div slot="header" class="index-md-title">
-              <span>技审待办【{{ dataSource2.length }}】</span>
+              <span>技审待办【{{ maxPage[1] }}】</span>
               <a v-if="dataSource2 " slot="footer" @click="goPage('技审')">前往 <a-icon type="double-right" /></a>
             </div>
             <a-table
               :dataSource="dataSource2"
               size="small"
+              id="technicalLazyLoadTable"
               :scroll="{ y: 166 }"
               :pagination="false"
               :row-key="(r,i)=>{i.toString()}"
@@ -60,12 +62,13 @@
         <a-col :sm="24" :lg="12">
           <el-card>
             <div slot="header" class="index-md-title">
-              <span>商审待办【{{ dataSource3.length }}】</span>
+              <span>商审待办【{{ maxPage[2] }}】</span>
               <a v-if="dataSource3 " slot="footer" @click="goPage('商审')">前往 <a-icon type="double-right" /></a>
             </div>
             <a-table
               :dataSource="dataSource3"
               size="small"
+              id="businessLazyLoadTable"
               :scroll="{ y: 166 }"
               :pagination="false"
               :row-key="(r,i)=>{i.toString()}"
@@ -86,12 +89,13 @@
         <a-col :sm="24" :lg="12">
           <el-card>
             <div slot="header" class="index-md-title">
-              <span>比价待办【{{ dataSource4.length }}】</span>
+              <span>比价待办【{{ maxPage[3] }}】</span>
               <a v-if="dataSource4 " slot="footer" @click="goPage('比价')">前往 <a-icon type="double-right" /></a>
             </div>
             <a-table
               :dataSource="dataSource4"
               size="small"
+              id="compareLazyLoadTable"
               :scroll="{ y: 166 }"
               :pagination="false"
               :row-key="(r,i)=>{i.toString()}"
@@ -199,13 +203,71 @@ export default {
       dataSource2:[],
       dataSource3:[],
       dataSource4:[],
+      hasNextPage: [false, false, false, false],
+      currentPage: [1, 1, 1, 1],
+      maxPage: [],
     }
   },
   created() {
     this.init()
     this.lineChartData = this.allChartData.projects
   },
+  mounted() {
+    var that = this
+    let finalLazyLoadTable = document.querySelector('#finalLazyLoadTable .ant-table-body');
+    finalLazyLoadTable.addEventListener("scroll", function (){
+      that.lazyLoadListener(finalLazyLoadTable, 0)
+    })
+
+    let technicalLazyLoadTable = document.querySelector('#technicalLazyLoadTable .ant-table-body');
+    technicalLazyLoadTable.addEventListener("scroll", function (){
+      that.lazyLoadListener(technicalLazyLoadTable, 1)
+    })
+
+    let businessLazyLoadTable = document.querySelector('#businessLazyLoadTable .ant-table-body');
+    businessLazyLoadTable.addEventListener("scroll", function (){
+      that.lazyLoadListener(businessLazyLoadTable, 2)
+    })
+
+    let compareLazyLoadTable = document.querySelector('#compareLazyLoadTable .ant-table-body');
+    compareLazyLoadTable.addEventListener("scroll", function (){
+      that.lazyLoadListener(compareLazyLoadTable, 3)
+    })
+  },
   methods: {
+    lazyLoadListener(table, index) {
+      const scrollDistance =table.scrollHeight - table.scrollTop - table.clientHeight;
+      console.log(table.scrollHeight + '-' +table.scrollTop +'-' +table.clientHeight+'='+scrollDistance)
+      if(scrollDistance <= 0.5) {//等于0证明已经到底，可以请求接口
+        let url = '/sysIndex/findCompareAuditDeal?pageNum='
+        switch (index) {
+          case 0: url = '/sysIndex/findFinallyAuditDeal?pageNum='; break
+          case 1: url = '/sysIndex/findTechnicalAuditDeal?pageNum='; break
+          case 2: url = '/sysIndex/findBusinessAuditDeal?pageNum='; break
+          case 3: url = '/sysIndex/findCompareAuditDeal?pageNum='; break
+        }
+        if(this.hasNextPage[index]){
+          //请求接口的代码
+          request.request({
+            url: url+this.currentPage[index],
+            method: 'get',
+          }).then( response => {
+            //将请求回来的数据和当前展示的数据合并在一起
+            switch (index) {
+              case 0: this.dataSource1 = this.dataSource1.concat(response.data.list); break
+              case 1: this.dataSource2 = this.dataSource2.concat(response.data.list); break
+              case 2: this.dataSource3 = this.dataSource3.concat(response.data.list); break
+              case 3: this.dataSource4 = this.dataSource4.concat(response.data.list); break
+            }
+            this.currentPage[index] = response.data.nextPage
+            this.hasNextPage[index] = response.data.hasNextPage
+            this.loading = false
+          }).catch(()=>{
+            this.loading = false
+          })
+        }
+      }
+    },
     statu(text) {
       return this.status[parseInt(text)]
     },
@@ -239,19 +301,31 @@ export default {
     loadToDoList() {
       request.get('/sysIndex/findCompareAuditDeal')
         .then(resp => {
-          this.dataSource4 = resp.data
+          this.dataSource4 = resp.data.list
+          this.currentPage[3] = resp.data.nextPage
+          this.hasNextPage[3] = resp.data.hasNextPage
+          this.maxPage[3] = resp.data.total
         })
       request.get('/sysIndex/findTechnicalAuditDeal')
         .then(resp => {
-          this.dataSource2 = resp.data
+          this.dataSource2 = resp.data.list
+          this.currentPage[1] = resp.data.nextPage
+          this.hasNextPage[1] = resp.data.hasNextPage
+          this.maxPage[1] = resp.data.total
         })
       request.get('/sysIndex/findBusinessAuditDeal')
         .then(resp => {
-          this.dataSource3 = resp.data
+          this.dataSource3 = resp.data.list
+          this.currentPage[2] = resp.data.nextPage
+          this.hasNextPage[2] = resp.data.hasNextPage
+          this.maxPage[2] = resp.data.total
         })
       request.get('/sysIndex/findFinallyAuditDeal')
         .then(resp => {
-          this.dataSource1 = resp.data
+          this.dataSource1 = resp.data.list
+          this.currentPage[0] = resp.data.nextPage
+          this.hasNextPage[0] = resp.data.hasNextPage
+          this.maxPage[0] = resp.data.total
         })
     }
   }

@@ -25,6 +25,7 @@
               :data-source="scope.detailList"
               :pagination="false"
               :loading="childLoading[scope.id]"
+              :row-class-name="tableRowClassName2"
             >
               <template
                 v-for="col in ['supplier','suBrand','suParams','suModel','brand','suPrice','suTotalPrice','suDelivery',
@@ -350,6 +351,12 @@
       })
     },
     methods: {
+      tableRowClassName2(row, index) {
+        if(row.dataSource == 0){
+          return 'warning-row';
+        }
+        return ''
+      },
       tableRowClassName1({row, index}) {
         if (row.dataSource == 0) {
           return 'warning-row';
