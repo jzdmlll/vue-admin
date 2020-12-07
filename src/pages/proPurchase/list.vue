@@ -1,7 +1,6 @@
 <template>
   <!-- 采购管理 -->
   <div class="pro_purchase_list">
-    {{selectedRowKeys}}
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
       <el-button v-if="selectedRowKeys.length>0" style="margin-right: 6px" type="primary" icon="el-icon-document" size="small" :loading="downloadLoading" @click="handleDownload">导出Excel</el-button>
      <!-- <el-tooltip class="item" v-if="selectedId.length > 0" effect="dark" content="批量删除" placement="bottom-start">
@@ -24,13 +23,17 @@
             {{index+1}}
           </template>
         </a-table-column>
+        <a-table-column key="quote.supplier" title="供应商" data-index="quote.supplier" />
+        <a-table-column key="quote.suBrand" title="品牌" data-index="quote.suBrand" />
         <a-table-column key="quote.suModel" title="规格型号" data-index="quote.suModel" />
         <a-table-column key="inquiry.name" title="名称" data-index="inquiry.name" />
         <a-table-column key="inquiry.unit" title="单位" data-index="inquiry.unit" />
         <a-table-column key="inquiry.number" title="数量" data-index="inquiry.number" />
         <a-table-column key="inquiry.price" title="单价" data-index="inquiry.price" />
         <a-table-column key="inquiry.totalPrice" title="总价" data-index="inquiry.totalPrice" />
-        <a-table-column key="inquiry.params" title="产品描述/备注" data-index="inquiry.params" />
+        <a-table-column key="inquiry.params" title="技术要求" data-index="inquiry.params" />
+        <a-table-column key="quote.suDelivery" title="货期" data-index="inquiry.suDelivery" />
+        <a-table-column key="inquiry.remark" title="备注" data-index="inquiry.remark" />
         <!--<a-table-column key="action" title="操作">
           <template slot-scope="text, record">
             <el-tooltip class="item" effect="dark" content="选择历史产品" placement="bottom-start">
@@ -68,20 +71,26 @@
         if (this.selectedRowKeys.length) {
           this.downloadLoading = true
           import('@/vendor/Export2Excel').then(excel => {
-            const tHeader = ['规格型号', '名称', '单位', '数量', '单价', '总价', '产品描述/备注']
-            const filterVal = ['suModel', 'name', 'unit', 'number', 'price',
-              'totalPrice', 'params']
+            const tHeader = ['序号', '设备名称', '型号', '配置需求',  '单位', '数量', '单价', '总价', '设备厂家', '货期', '备注']
+            const filterVal = ['sort', 'name', 'suModel', 'params', 'unit', 'number', 'price',
+              'totalPrice', 'supplier', 'delivery', 'remark']
             let list = []
+            let sort = 0
             this.purchases.map(item=>{
+              sort ++
               if(this.selectedRowKeys.includes(item.quote.id)){
                 list.push({
-                  suModel: item.quote.suModel,
+                  sort: sort,
                   name: item.inquiry.name,
+                  suModel: item.quote.suModel,
+                  params: item.inquiry.params,
                   unit: item.inquiry.unit,
                   number: item.inquiry.number,
                   price: item.inquiry.price,
                   totalPrice: item.inquiry.totalPrice,
-                  params: item.inquiry.params,
+                  supplier: item.quote.supplier,
+                  delivery: item.quote.suDelivery,
+                  remark: item.inquiry.remark,
                 })
               }
             })

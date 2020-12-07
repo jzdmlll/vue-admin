@@ -91,6 +91,11 @@
             <template v-else>{{nullFormat(row.remark)}}</template>
           </template>
         </el-table-column>
+        <el-table-column prop="quoteNum" label="报价数量" >
+          <template slot-scope="{row}">
+            <template>{{nullFormat(row.quoteNum)}}</template>
+          </template>
+        </el-table-column>
         <!--<el-table-column prop="isInquiry" label="是否需要询价" fixed="right">
           <template slot-scope="{row}">
             <el-switch
@@ -300,7 +305,7 @@
               filename: this.filename
             })
             this.downloadLoading = false
-            this.$ref.inquiryList.clearSelection()
+            this.$refs.inquiryList.clearSelection()
 
           })
         } else {
@@ -351,8 +356,10 @@
         this.inquiryVisible = true
       },
       tableRowClassName({row, index}) {
-        if (row.veto == 1) {
+        if (row.veto == 1 || row.refuseNum != 0) {
           return 'danger-row';
+        }else if(row.poolNum != 0){
+          return 'warning-row';
         }
         return '';
       },
@@ -562,6 +569,9 @@
       /deep/.el-table__body {
         .danger-row, .danger-row td {
           background: #f1b7b7;
+        }
+        .warning-row, .warning-row td {
+          background: #eae2c5;
         }
         .cell {
           .el-button {

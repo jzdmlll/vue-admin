@@ -806,7 +806,7 @@
   .pro_quote_list {
     .parentTable {
       .warning-row {
-        background: oldlace;
+        background: #eae2c5;
       }
       .danger-row {
         background: #f1b7b7;
