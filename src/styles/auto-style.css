@@ -4,6 +4,14 @@
     辅：#72DCAD
     辅：#8EDCB9
  */
+.btns .el-input,.btns .el-select  {
+  width: 20%;
+  max-width: 200px
+}
+.btns .el-select .el-input {
+  width: 100%;
+  min-width: 80px;
+}
 .el-tooltip__popper.is-dark, .el-tooltip__popper {
   max-width: 70%!important;
 }

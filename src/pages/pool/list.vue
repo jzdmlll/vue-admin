@@ -3,8 +3,10 @@
   <div class="pro_pool_list">
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
       <el-button style="margin-right: 6px" type="primary" icon="el-icon-plus" size="small" @click="add">新增</el-button>
-      <el-input v-model="form.name" style="width: auto" placeholder="请输入设备名"></el-input>
-      <el-input v-model="form.brand" style="width: auto" placeholder="请输入品牌"></el-input>
+      <el-input v-model="form.proName" placeholder="请输入项目名"></el-input>
+      <el-input v-model="form.name" placeholder="请输入设备名"></el-input>
+      <el-input v-model="form.brand" placeholder="请输入品牌"></el-input>
+      <el-input v-model="form.model" placeholder="请输入型号"></el-input>
       <el-button style="margin-right: 6px" type="primary" icon="el-icon-search" size="small" @click="toSearch">查询</el-button>
     </div>
     <div style="padding:1em;margin-bottom:1em;background:#fff">
@@ -132,11 +134,13 @@
           if(that.hasNextPage){
             const name = that.form.name
             const brand = that.form.brand
+            const proName = that.form.proName
+            const model = that.form.model
             //请求接口的代码
             request.request({
               url: '/pool/findByParams?pageNum='+that.currentPage,
               method: 'get',
-              params: {name: name, brand: brand}
+              params: {name: name, brand: brand, proName: proName, model: model}
             }).then( response => {
               //将请求回来的数据和当前展示的数据合并在一起
               that.pools = that.pools.concat(response.data.list)
@@ -175,7 +179,7 @@
         request.request({
           url: '/pool/findByParams',
           method: 'get',
-          params: {'name': this.form.name, 'brand': this.form.brand}
+          params: {'name': this.form.name, 'brand': this.form.brand, 'model': this.form.model, 'proName': this.form.proName}
         })
         .then(response => {
           this.pools = response.data.list

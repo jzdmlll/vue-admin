@@ -1,5 +1,5 @@
 <template>
-  <!-- 询价管理 -->
+  <!-- 报价管理 -->
   <div class="pro_quote_list">
     <el-tabs type="border-card" @tab-click="tabClick">
       <el-tab-pane label="报价管理">
@@ -10,6 +10,8 @@
           <el-select v-model="searchForm.proDetailId" style="margin-right: 6px" filterable clearable placeholder="请选择项目" value-key="name">
             <el-option v-for="item in projects" :key="item.id" :label="item.name" :value="item.id" />
           </el-select>
+          <el-input v-model="searchForm.name"  placeholder="请输入设备名"></el-input>
+          <el-input v-model="searchForm.model" placeholder="请输入型号"></el-input>
           <el-button style="margin-right: 6px" type="primary" icon="el-icon-search" size="small" @click="toSearch">查询</el-button>
         </div>
         <div style="padding:1em;margin-bottom:1em;background:#fff">
@@ -441,7 +443,11 @@
       },
       toSearch() {
         if(this.searchForm.proDetailId) {
-          request.get('/inquiry/findByProDetailId?proDetailId='+this.searchForm.proDetailId)
+          request.request({
+            url: '/inquiry/findByProDetailId',
+            method: 'get',
+            params: this.searchForm
+          })
             .then(response => {
               response.data.map(item => {
                 item.detailList = []

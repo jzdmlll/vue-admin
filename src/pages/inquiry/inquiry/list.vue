@@ -5,6 +5,9 @@
       <el-tooltip class="item" v-if="selectedId.length > 0" effect="dark" content="批量删除" placement="bottom-start">
         <el-button type="danger" size="small" icon="el-icon-delete" @click="batchDelete">批量删除</el-button>
       </el-tooltip>
+      <el-tooltip class="item" v-if="selectedId.length > 0" effect="dark" content="批量删除" placement="bottom-start">
+        <el-button type="primary" icon="el-icon-document" size="small" :loading="downloadLoading" @click="handleDownload">导出Excel</el-button>
+      </el-tooltip>
       <!--<el-tooltip class="item" v-if="selectedId.length > 0" effect="dark" content="无需询价" placement="bottom-start">
         <el-button type="success" size="small" @click="setIsNotInquiry(0)">无需询价</el-button>
       </el-tooltip>
@@ -17,7 +20,7 @@
       <el-button style="margin-right: 6px" type="primary" icon="el-icon-search" size="small" @click="toSearch">查询</el-button>
     </div>
     <div style="padding:1em;margin-bottom:1em;background:#fff">
-      <el-table class="table" v-loading="loading" :default-sort = "{prop: 'sort', order: 'ascending'}"
+      <el-table ref="inquiryList" class="table" v-loading="loading" :default-sort = "{prop: 'sort', order: 'ascending'}"
                 :data="inquiryList" :row-class-name="tableRowClassName" @selection-change="handleSelectionChange" size="small" stripe>
         <el-table-column
           type="selection"
@@ -228,6 +231,7 @@
   import qs from 'querystring'
   import { dateFormat,nullFormat } from '@/utils/format'
   import { getUser } from '@/utils/auth'
+  import { sortBykey } from '@/utils/sort'
 
   export default {
     data() {
@@ -235,6 +239,7 @@
       return {
         searchForm: {},
         inquiryVisible: false,
+        downloadLoading: false,
         loading1: true,
         poolData: [],
         visible: false,
@@ -252,6 +257,62 @@
       this.init()
     },
     methods: {
+      sortBykey,
+      handleDownload() {
+        if (this.selectedId.length) {
+          this.downloadLoading = true
+          import('@/vendor/Export2Excel').then(excel => {
+            const tHeader = [
+              '序号','供应商', '设备名称', '品牌', '型号', '技术要求', '单位', '报价型号', '报价品牌', '实际技术参数',
+              '设备单价','设备总价','货期','质保期/售后','图片','备注'
+            ]
+            const filterVal = ['sort', 'supplier', 'name', 'realBrand', 'model', 'params', 'unit', 'suModel', 'suBrand',
+              'suParams', 'price', 'totalPrice', 'delivery', 'warranty', 'image', 'remark']
+            let list = []
+            this.inquiryList.map(item=>{
+              if(this.selectedId.includes(item.id)){
+                list.push({
+                  sort: item.sort,
+                  supplier: '',
+                  name: item.name,
+                  realBrand: item.realBrand,
+                  model: item.model,
+                  params: item.params,
+                  unit: item.unit,
+                  suModel: '',
+                  suBrand: '',
+                  suParams: '',
+                  price: item.price,
+                  totalPrice: item.totalPrice,
+                  delivery: '',
+                  warranty: '',
+                  image: '',
+                  remark: '',
+                })
+              }
+            })
+
+            list = this.sortBykey(list, 'sort')
+            const data = this.formatJson(filterVal, list)
+            excel.export_json_to_excel({
+              header: tHeader,
+              data,
+              filename: this.filename
+            })
+            this.downloadLoading = false
+            this.$ref.inquiryList.clearSelection()
+
+          })
+        } else {
+          this.$message({
+            message: 'Please select at least one item',
+            type: 'warning'
+          })
+        }
+      },
+      formatJson(filterVal, jsonData) {
+        return jsonData.map(v => filterVal.map(j => v[j]))
+      },
       find(){
         if(this.searchForm.name || this.searchForm.model){
           console.log(this.searchForm)

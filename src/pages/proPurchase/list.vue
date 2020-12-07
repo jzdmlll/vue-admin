@@ -1,7 +1,9 @@
 <template>
   <!-- 采购管理 -->
   <div class="pro_purchase_list">
+    {{selectedRowKeys}}
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
+      <el-button v-if="selectedRowKeys.length>0" style="margin-right: 6px" type="primary" icon="el-icon-document" size="small" :loading="downloadLoading" @click="handleDownload">导出Excel</el-button>
      <!-- <el-tooltip class="item" v-if="selectedId.length > 0" effect="dark" content="批量删除" placement="bottom-start">
         <el-button type="danger" size="small" icon="el-icon-delete" @click="batchDelete">批量删除</el-button>
       </el-tooltip>-->
@@ -12,6 +14,7 @@
     </div>
     <div style="padding:1em;margin-bottom:1em;background:#fff">
       <a-table
+        ref="purchases"
         :rowKey="record => record.quote.id"
         :loading="loading"
         :data-source="purchases"
@@ -52,6 +55,7 @@
         searchForm: {},
         purchases: [],
         loading: true,
+        downloadLoading: false,
         selectedRowKeys: [],
         projects: []
       }
@@ -60,6 +64,47 @@
       this.init()
     },
     methods: {
+      handleDownload() {
+        if (this.selectedRowKeys.length) {
+          this.downloadLoading = true
+          import('@/vendor/Export2Excel').then(excel => {
+            const tHeader = ['规格型号', '名称', '单位', '数量', '单价', '总价', '产品描述/备注']
+            const filterVal = ['suModel', 'name', 'unit', 'number', 'price',
+              'totalPrice', 'params']
+            let list = []
+            this.purchases.map(item=>{
+              if(this.selectedRowKeys.includes(item.quote.id)){
+                list.push({
+                  suModel: item.quote.suModel,
+                  name: item.inquiry.name,
+                  unit: item.inquiry.unit,
+                  number: item.inquiry.number,
+                  price: item.inquiry.price,
+                  totalPrice: item.inquiry.totalPrice,
+                  params: item.inquiry.params,
+                })
+              }
+            })
+            const data = this.formatJson(filterVal, list)
+            excel.export_json_to_excel({
+              header: tHeader,
+              data,
+              filename: this.filename
+            })
+            this.downloadLoading = false
+            this.selectedRowKeys = []
+
+          })
+        } else {
+          this.$message({
+            message: 'Please select at least one item',
+            type: 'warning'
+          })
+        }
+      },
+      formatJson(filterVal, jsonData) {
+        return jsonData.map(v => filterVal.map(j => v[j]))
+      },
       onSelectChange(selectedRowKeys, selectedRows) {
         const rows = selectedRows.map(item => {
           if (item.quote.id) {

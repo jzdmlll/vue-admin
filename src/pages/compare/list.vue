@@ -11,7 +11,7 @@
       <el-button style="margin-right: 6px" type="primary" icon="el-icon-search" size="small" @click="toSearch">查询</el-button>
     </div>
     <div style="padding:1em;margin-bottom:1em;background:#fff;position: relative">
-      <el-table :height="compares.length>8?400:undefined" v-loading="loading" :data="compares"
+      <el-table :max-height="compares.length>8?400:undefined" v-loading="loading" :data="compares"
                 size="small" @selection-change="handleSelectionChange" ref="multipleTable">
         <el-table-column type="selection" width="55"></el-table-column>
         <el-table-column type="index" prop="index" label="序号" width="120" />
@@ -66,7 +66,7 @@
             </div>-->
             <div></div>
             <div class="compare-item my-transition" v-for="item in item.inquiryCompareVMS" :key="item.id">
-              <el-radio v-if="item.id && (item['businessAudit']==1 && item['technicalAudit']==1)" border @change="radioChange(item, index)" v-model="compareForm[index].compareId" class="item-body my-transition"
+              <el-radio :style="item['dataSource'] == 0?{background: '#eae2c5'}:{}" v-if="item.id && (item['businessAudit']==1 && item['technicalAudit']==1)" border @change="radioChange(item, index)" v-model="compareForm[index].compareId" class="item-body my-transition"
                         :class="{'item-body-select':(compareForm[index] && item.compareId == compareForm[index].compareId)}">
                 <div class="check-div my-transition"><a-icon type="check" style="font-size: 18px;font-size: 20px;font-weight: 600;
                 transform: rotate(-45deg);margin-top: 5px;"/></div>
@@ -198,8 +198,7 @@ export default {
   methods: {
     async init() {
       await this.loadProjects()
-      this.loadCompares()
-
+      //this.loadCompares()
       if(this.projects.length > 0){
         if(!this.form.proDetailId) {
           this.$set(this.form, 'proDetailId', this.projects[0].id)
@@ -552,8 +551,9 @@ export default {
           .then(response => {
             this.compares = response.data
             this.loading = false
-          })
-      this.loading = false
+          }).catch(()=>{
+          this.loading = false
+        })
       /*if (!this.form.proDetailId) {
         delete this.form.proDetailId
       }

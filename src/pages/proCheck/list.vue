@@ -19,6 +19,7 @@
         :columns="realColumns"
         :data-source="proChecks"
         class="childTable"
+        :row-class-name="tableRowClassName"
         :rowKey="record => record.id"
         :row-selection="{ selectedRowKeys: selectedRowKeys, onChange: onSelectChange }"
       >
@@ -158,6 +159,12 @@ export default {
 
   },
   methods: {
+    tableRowClassName(row, index){
+      if (row.quote.dataSource == 0) {
+        return 'warning-row';
+      }
+      return '';
+    },
     submitHandler(form) {
       const key = this.form.key
       let status = ''
@@ -329,6 +336,9 @@ export default {
       margin-left:90px!important
     }
     .childTable{
+      .warning-row {
+        background: #eae2c5;
+      }
       th, td, .ant-table-column-sorters {
         overflow: hidden;
         white-space: nowrap;
