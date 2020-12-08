@@ -1,5 +1,6 @@
 <template>
   <div class="compare_list">
+    {{selected}}
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
       <el-button :style="hasSelected?{display: 'inline-block'}:{display: 'none'}" type="primary" size="small" @click="batchCompare()">批量比价</el-button>
       <el-select v-model="form.proDetailId" style="margin-right: 6px" filterable clearable placeholder="请选择项目" value-key="name">
@@ -67,7 +68,7 @@
             <div></div>
             <div class="compare-item my-transition" v-for="item in item.inquiryCompareVMS" :key="item.id">
               <el-radio :style="item['dataSource'] == 0?{background: '#eae2c5'}:{}" v-if="item.id && (item['businessAudit']==1 && item['technicalAudit']==1)" border @change="radioChange(item, index)" v-model="compareForm[index].compareId" class="item-body my-transition"
-                        :class="{'item-body-select':(compareForm[index] && item.compareId == compareForm[index].compareId)}">
+                        style="border-color: #42B983" :class="{'item-body-select':(compareForm[index] && item.compareId == compareForm[index].compareId)}">
                 <div class="check-div my-transition"><a-icon type="check" style="font-size: 18px;font-size: 20px;font-weight: 600;
                 transform: rotate(-45deg);margin-top: 5px;"/></div>
                 <a-popover title="备注" trigger="click" placement="right" v-if="item.compareId == compareForm[index].compareId">
@@ -97,6 +98,17 @@
                 </div>
               </el-radio>
               <div v-else-if="item.id && (item['businessAudit']==2 || item['technicalAudit']==2)" style="border-color: red" class="item-body my-transition">
+                <div class="el-radio__label">
+                  <span v-for="key in compareColumns" :key="key" class="ellipsis"
+                        v-if="compareColumns.includes(key)">
+                    <el-tooltip :content="item[key]" placement="top" effect="light">
+                        <div>{{compareColumnsValue[key]}}：{{(key==='warranty' || key==='suDelivery')?item[key]:nullFormat(item[key])}}</div>
+                      </el-tooltip>
+                  </span>
+                </div>
+              </div>
+
+              <div v-else-if="item.id && (item['businessAudit']==0 || item['technicalAudit']==0)" style="border-color: rgba(0, 0, 0, 0.65);opacity: .5;" class="item-body my-transition">
                 <div class="el-radio__label">
                   <span v-for="key in compareColumns" :key="key" class="ellipsis"
                         v-if="compareColumns.includes(key)">
@@ -249,7 +261,10 @@ export default {
     },
     addPrice(row){
       this.visible = true
+      console.log(row)
       this.dialogForm = JSON.parse(JSON.stringify(row))
+      this.$set(this.poolForm, this.dialogForm.id, {name: row.name, model: row.model})
+      //this.poolForm[this.dialogForm.id].name = row.name
     },
     getUser,
     cardLeft() {
@@ -489,6 +504,10 @@ export default {
      * @param row
      */
     compareDetail (row) {
+      //this.selected
+      console.log(row)
+      this.$refs.multipleTable.clearSelection()
+      this.$refs.multipleTable.toggleRowSelection(row)
       this.priceInquiries = []
       this.suppliersTotal = {}
       if(this.currentInquiry != row.id){
@@ -531,7 +550,6 @@ export default {
             this.countCost()
           })
 
-        this.$refs.multipleTable.clearSelection()
       }
     },
     /**
@@ -628,7 +646,7 @@ export default {
         margin: 1em 0;
         padding: 1em 0;
         border-radius: 8px;
-        border: 1px dotted #d9d9d9;
+        border: 2px dotted #d9d9d9;
         overflow: hidden;
         .el-radio__inner, .el-radio__input {
           display: none
