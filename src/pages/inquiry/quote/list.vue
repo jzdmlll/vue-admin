@@ -22,13 +22,19 @@
               slot-scope="scope"
               class="childTable"
               :class="scope.detailList.length > 0 ? { noData: false}:{noData: true}"
-              :scroll="{x: 1180}"
+              :scroll="{x: 1580}"
               :columns="innerColumns"
               :data-source="scope.detailList"
               :pagination="false"
               :loading="childLoading[scope.id]"
               :row-class-name="tableRowClassName2"
             >
+              <span slot="technicalAudit" slot-scope="text, record, index">
+                <el-tag :type="text === 0 ? 'info':(text === 1? 'success':'danger')">{{ statu(text) }}</el-tag>
+              </span>
+              <span slot="businessAudit" slot-scope="text, record, index">
+                <el-tag :type="text === 0 ? 'info':(text === 1? 'success':'danger')">{{ statu(text) }}</el-tag>
+              </span>
               <template
                 v-for="col in ['supplier','suBrand','suParams','suModel','brand','suPrice','suTotalPrice','suDelivery',
                            'warranty','suRemark']"
@@ -229,6 +235,10 @@
 
     { title: '供应商', dataIndex: 'supplier', scopedSlots: { customRender: 'supplier' }, fixed: 'left', width: 110,
       sorter: (a, b) => a.supplier.length - b.supplier.length, sortDirections: ['descend', 'ascend'] },
+    { title: '技审', dataIndex: 'technicalAudit', scopedSlots: { customRender: 'technicalAudit' }, width: 110,
+      sorter: (a, b) => a.technicalAudit.length - b.technicalAudit.length, sortDirections: ['descend', 'ascend'] },
+    { title: '商审', dataIndex: 'businessAudit', scopedSlots: { customRender: 'businessAudit' }, width: 110,
+      sorter: (a, b) => a.businessAudit.length - b.businessAudit.length, sortDirections: ['descend', 'ascend'] },
     { title: '商家技术参数', dataIndex: 'suParams', scopedSlots: { customRender: 'suParams' }, width: 100,
       sorter: (a, b) => a.suParams.length - b.suParams.length, sortDirections: ['descend', 'ascend'] },
     { title: '商家品牌', dataIndex: 'suBrand', scopedSlots: { customRender: 'suBrand' }, width: 110,
@@ -244,6 +254,8 @@
     { title: '质保期', dataIndex: 'warranty', scopedSlots: { customRender: 'warranty' }, width: 100, ellipsis: true,
       sorter: (a, b) => a.warranty - b.warranty, sortDirections: ['descend', 'ascend'] },
     { title: '商家备注', dataIndex: 'suRemark', scopedSlots: { customRender: 'suRemark' }, width: 100, ellipsis: true },
+    { title: '技审备注', dataIndex: 'technicalRemark', scopedSlots: { customRender: 'technicalRemark' }, width: 100, ellipsis: true },
+    { title: '商审备注', dataIndex: 'businessRemark', scopedSlots: { customRender: 'businessRemark' }, width: 100, ellipsis: true },
     {
       title: '操作',
       dataIndex: 'operation',
@@ -257,6 +269,7 @@
     data() {
       const fileUploadUrl = process.env.VUE_APP_BASE_API + 'file/uploadCache'
       return {
+        status: ['未审核', '通过', '拒绝'],
         hasNextPage: false,
         currentPage: 1,
         tableHeight: document.documentElement.clientHeight-83-220,
@@ -300,7 +313,6 @@
         newInquiry: [],
         cacheInquiry: [],
         active: 1,
-        deviceType: [],
         fileUploadUrl,
         fileList: [],
         fileList1: [],
@@ -353,6 +365,9 @@
       })
     },
     methods: {
+      statu(text) {
+        return this.status[parseInt(text)]
+      },
       tableRowClassName2(row, index) {
         if(row.dataSource == 0){
           return 'warning-row';
@@ -366,9 +381,9 @@
         return '';
       },
       tableRowClassName(row, index){
-        if (row.isinquiry == 0) {
+        if (row.poolNum != 0 && !(row.veto == 1 || row.refuseNum != 0)) {
           return 'warning-row';
-        }else if(row.veto == 1){
+        }else if(row.veto == 1 || row.refuseNum != 0){
           return 'danger-row';
         }
         return '';
@@ -468,7 +483,6 @@
         this.fileList = []
         this.fileList1 = []
         this.title = '编辑询价'
-        this.loadDeviceType()
         //this.loadProChecks()
       },
       clickFileInput() {
@@ -565,7 +579,6 @@
         this.visible2 = true
         this.submitLoading = false
         this.importData = ''
-        this.loadDeviceType()
         //this.loadProChecks()
       },
       removeCheck(role) {
@@ -621,12 +634,6 @@
           })
           this.fileList1 = fileList
         }
-      },
-      loadDeviceType() {
-        request.get('/deviceType/findAllLike')
-          .then(response => {
-            this.deviceType = response.data
-          })
       },
       handleChange(value, record, column) {
         this.inquiryList.forEach((item, index) => {
@@ -772,7 +779,6 @@
         this.visible = true
         this.fileList = []
         this.fileList1 = []
-        this.loadDeviceType()
         this.loadProChecks()
       },
       expandChange(expanded, record) {
