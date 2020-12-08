@@ -74,8 +74,11 @@
                 <el-tooltip class="item" effect="dark" content="编辑" placement="bottom-start">
                   <el-button type="primary" icon="el-icon-upload" size="mini" @click="toEdit(record)" />
                 </el-tooltip>
-                <el-tooltip class="item" effect="dark" content="行内编辑" placement="bottom-start">
+                <el-tooltip v-if="record.technicalAudit==0 && record.businessAudit==0" class="item" effect="dark" content="行内编辑" placement="bottom-start">
                   <el-button type="primary" icon="el-icon-edit" size="mini" @click="edit(record)" />
+                </el-tooltip>
+                <el-tooltip v-if="record.technicalAudit==2 || record.businessAudit==2" class="item" effect="dark" content="新增报价" placement="bottom-start">
+                  <el-button type="primary" icon="el-icon-plus" size="mini" @click="addQuote(record)" />
                 </el-tooltip>
               </span>
                 </div>
@@ -212,6 +215,71 @@
         </div>
       </el-tab-pane>
     </el-tabs>
+
+    <!-- 模态框 -->
+    <el-dialog title="新增报价" :visible.sync="quoteVisible">
+      <el-form :model="quoteForm" status-icon>
+        <el-row>
+          <el-col :sm="24" :lg="12">
+            <el-form-item size="mini" label="供应商" label-width="80px" prop="supplier">
+              <el-input v-model="quoteForm.supplier" autocomplete="off" size="small" />
+            </el-form-item>
+          </el-col>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="型号" label-width="80px" prop="suModel">
+              <el-input v-model="quoteForm.suModel" autocomplete="off" size="small" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="品牌" label-width="80px" prop="suBrand">
+              <el-input v-model="quoteForm.suBrand" autocomplete="off" size="small" />
+            </el-form-item>
+          </el-col>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="技术参数" label-width="80px" prop="suParams">
+              <el-input v-model="quoteForm.suParams" autocomplete="off" size="small" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="单价" label-width="80px" prop="suPrice">
+              <el-input v-model="quoteForm.suPrice" autocomplete="off" size="small" />
+            </el-form-item>
+          </el-col>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="总价" label-width="80px" prop="suTotalPrice">
+              <el-input v-model="quoteForm.suTotalPrice" autocomplete="off" size="small" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="货期" label-width="80px" prop="suDelivery">
+              <el-input v-model="quoteForm.suDelivery" autocomplete="off" size="small" />
+            </el-form-item>
+          </el-col>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="质保期" label-width="80px" prop="warranty">
+              <el-input v-model="quoteForm.warranty" autocomplete="off" size="small" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="备注" label-width="80px" prop="suRemark">
+              <el-input v-model="quoteForm.suRemark" autocomplete="off" size="small" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button size="small" @click="inquiryVisible = false">取消</el-button>
+        <el-button type="primary" size="small" @click="addQuoteSubmit">提交</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 <script>
@@ -269,6 +337,8 @@
     data() {
       const fileUploadUrl = process.env.VUE_APP_BASE_API + 'file/uploadCache'
       return {
+        quoteForm: {},
+        quoteVisible: false,
         status: ['未审核', '通过', '拒绝'],
         hasNextPage: false,
         currentPage: 1,
@@ -365,6 +435,27 @@
       })
     },
     methods: {
+      addQuoteSubmit() {
+        if(this.quoteForm.id){
+          this.quoteForm.operator = parseInt(getUser())
+          request.request({
+            url: '/quote/addQuote',
+            method: 'post',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            data: qs.stringify(this.quoteForm)
+          }).then(resp => {
+            this.$message({ message: resp.message, type: 'success' })
+            this.quoteVisible = false
+            this.loadChildTable({id: this.quoteForm.inquiryId})
+          })
+        }
+      },
+      addQuote(row) {
+        this.quoteVisible = true
+        this.quoteForm = row
+      },
       statu(text) {
         return this.status[parseInt(text)]
       },
@@ -781,19 +872,22 @@
         this.fileList1 = []
         this.loadProChecks()
       },
+      loadChildTable(record) {
+        request.request({
+          url: '/quote/findByInquiryId?inquiryId=' + record.id,
+          method: 'get'
+        }).then(response => {
+          this.inquiryList.forEach((item, index) => {
+            if (item.id === record.id) {
+              this.inquiryList[index].detailList = response.data
+              this.childLoading[record.id] = false
+            }
+          })
+        })
+      },
       expandChange(expanded, record) {
         if (expanded) {
-          request.request({
-            url: '/quote/findByInquiryId?inquiryId=' + record.id,
-            method: 'get'
-          }).then(response => {
-            this.inquiryList.forEach((item, index) => {
-              if (item.id === record.id) {
-                this.inquiryList[index].detailList = response.data
-                this.childLoading[record.id] = false
-              }
-            })
-          })
+          this.loadChildTable(record)
         }else {
           this.childLoading[record.id] = true
         }
@@ -810,6 +904,11 @@
 
 <style lang="scss">
   .pro_quote_list {
+    /deep/.el-form-item__content{
+      height:auto;
+      line-height:32px;
+      margin-left:90px!important
+    }
     .parentTable {
       .warning-row {
         background: #eae2c5;

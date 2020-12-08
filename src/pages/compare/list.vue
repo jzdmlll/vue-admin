@@ -1,6 +1,5 @@
 <template>
   <div class="compare_list">
-    {{selected}}
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
       <el-button :style="hasSelected?{display: 'inline-block'}:{display: 'none'}" type="primary" size="small" @click="batchCompare()">批量比价</el-button>
       <el-select v-model="form.proDetailId" style="margin-right: 6px" filterable clearable placeholder="请选择项目" value-key="name">
@@ -504,8 +503,6 @@ export default {
      * @param row
      */
     compareDetail (row) {
-      //this.selected
-      console.log(row)
       this.$refs.multipleTable.clearSelection()
       this.$refs.multipleTable.toggleRowSelection(row)
       this.priceInquiries = []

@@ -67,10 +67,10 @@ import { getUser } from '@/utils/auth'
 let checkStatusCol = ''
 
 let columns = [
-  { title: '供应商', dataIndex: 'quote.supplier', key: 'quote.supplier', ellipsis: true,
-    sorter: (a, b) => a.quote.supplier.length - b.quote.supplier.length, sortDirections: ['descend', 'ascend'] },
   { title: '设备名', dataIndex: 'inquiry.name', key: 'inquiry.name', ellipsis: true,
     sorter: (a, b) => a.inquiry.name.length - b.inquiry.name.length, sortDirections: ['descend', 'ascend'] },
+  { title: '供应商', dataIndex: 'quote.supplier', key: 'quote.supplier', ellipsis: true,
+    sorter: (a, b) => a.quote.supplier.length - b.quote.supplier.length, sortDirections: ['descend', 'ascend'] },
   { title: '设备型号', dataIndex: 'inquiry.model', key: 'inquiry.model', ellipsis: true,
     sorter: (a, b) => a.inquiry.model.length - b.inquiry.model.length, sortDirections: ['descend', 'ascend'] },
   { title: '商家设备型号', dataIndex: 'quote.suModel', key: 'quote.suModel', ellipsis: true,
@@ -104,6 +104,8 @@ let columns = [
     sorter: (a, b) => a.checkStatus - b.checkStatus, sortDirections: ['descend', 'ascend'] },
   { title: '备注', dataIndex: 'technicalRemark', scopedSlots: { customRender: 'technicalRemark' }, key: 'technicalRemark',
     sorter: (a, b) => a.checkStatus - b.checkStatus, sortDirections: ['descend', 'ascend'] },
+  { title: '商家备注', dataIndex: 'suRemark', scopedSlots: { customRender: 'suRemark' }, key: 'suRemark',
+    sorter: (a, b) => a.suRemark - b.suRemark, sortDirections: ['descend', 'ascend'] },
   {
     title: '操作',
     dataIndex: 'operation',
@@ -126,10 +128,10 @@ export default {
       columns,
       prop: {
         '技术审核': ['quote.supplier', 'inquiry.name',
-          'inquiry.model', 'quote.suModel', 'inquiry.params', 'quote.suParams', 'checkStatus', 'quote.image', 'files', 'technicalAudit', 'technicalRemark'
+          'inquiry.model', 'quote.suModel', 'inquiry.params', 'quote.suParams', 'checkStatus', 'quote.image', 'files', 'technicalAudit', 'technicalRemark', 'suRemark'
         ],
         '商务审核': ['quote.supplier', 'inquiry.name', 'inquiry.params',
-          'quote.suPrice', 'quote.suTotalPrice', 'inquiry.suWarranties', 'checkStatus', 'files', 'businessAudit', 'businessRemark'
+          'quote.suPrice', 'quote.suTotalPrice', 'inquiry.suWarranties', 'checkStatus', 'files', 'businessAudit', 'businessRemark', 'suRemark'
         ],
       },
       realColumns: [],
@@ -243,7 +245,9 @@ export default {
     getUser,
     toCheck(key) {
       this.visible = true
+      this.form = {}
       this.form.key = key
+
     },
     onSelectChange(selectedRowKeys, selectedRows) {
       const rows = selectedRows.map(item => {

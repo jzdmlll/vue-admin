@@ -5,8 +5,11 @@
       <el-tooltip class="item" v-if="selectedId.length > 0" effect="dark" content="批量删除" placement="bottom-start">
         <el-button type="danger" size="small" icon="el-icon-delete" @click="batchDelete">批量删除</el-button>
       </el-tooltip>
-      <el-tooltip class="item" v-if="selectedId.length > 0" effect="dark" content="批量删除" placement="bottom-start">
+      <el-tooltip class="item" v-if="selectedId.length > 0" effect="dark" content="导出excel" placement="bottom-start">
         <el-button type="primary" icon="el-icon-document" size="small" :loading="downloadLoading" @click="handleDownload">导出Excel</el-button>
+      </el-tooltip>
+      <el-tooltip class="item" v-if="selectedId.length > 0" effect="dark" content="选择设备类型" placement="bottom-start">
+        <el-button type="primary" icon="el-icon-s-help" size="small" @click="handleSetDevice">选择设备类型</el-button>
       </el-tooltip>
       <!--<el-tooltip class="item" v-if="selectedId.length > 0" effect="dark" content="无需询价" placement="bottom-start">
         <el-button type="success" size="small" @click="setIsNotInquiry(0)">无需询价</el-button>
@@ -172,7 +175,7 @@
     </el-dialog>
 
     <!-- 模态框 -->
-    <el-dialog title="重新询价" :visible.sync="inquiryVisible">
+    <el-dialog title="重新询价" :visible.sync="quoteVisible">
       <el-form :model="form" status-icon>
         <el-row>
           <el-col :sm="24" :lg="12">
@@ -224,8 +227,20 @@
         </el-row>
       </el-form>
       <div slot="footer" class="dialog-footer">
-        <el-button size="small" @click="inquiryVisible = false">取消</el-button>
+        <el-button size="small" @click="quoteVisible = false">取消</el-button>
         <el-button type="primary" size="small" @click="addInquirySubmit">提交</el-button>
+      </div>
+    </el-dialog>
+    <!-- 模态框 -->
+    <el-dialog title="选择设备类型" :visible.sync="deviceVisible">
+      <el-form :model="deviceForm" status-icon>
+        <el-form-item label="设备类型" label-width="80px" prop="device">
+          <el-cascader size="small" v-model="deviceForm.id" :options="devices" :props="props" clearable />
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button size="small" @click="quoteVisible = false">取消</el-button>
+        <el-button type="primary" size="small" @click="setDeviceSubmit">提交</el-button>
       </div>
     </el-dialog>
   </div>
@@ -242,8 +257,12 @@
     data() {
       const fileUploadUrl = process.env.VUE_APP_BASE_API + 'file/uploadCache'
       return {
+        props: { multiple: false, value: 'id', label: 'name', emitPath: false },
+        devices: [],
+        deviceVisible: false,
+        deviceForm: {},
         searchForm: {},
-        inquiryVisible: false,
+        quoteVisible: false,
         downloadLoading: false,
         loading1: true,
         poolData: [],
@@ -262,6 +281,32 @@
       this.init()
     },
     methods: {
+      loadDevice() {
+        request.get('/deviceType/findDeviceTypeTree')
+          .then(resp => {
+            this.devices = resp.data
+          })
+      },
+      setDeviceSubmit() {
+        //console.log(this.selectedId)
+        request.request({
+          url: '/inquiry/modifyDeviceType',
+          method: 'post',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          data: qs.stringify({inquiryIds: this.selectedId, code: this.deviceForm.id})
+        }).then(resp => {
+          this.$message({ message: resp.message, type: 'success' })
+          this.deviceVisible = false
+        })
+      },
+      handleSetDevice() {
+        this.deviceVisible = true
+        if(this.devices.length == 0){
+          this.loadDevice()
+        }
+      },
       sortBykey,
       handleDownload() {
         if (this.selectedId.length) {
@@ -346,14 +391,14 @@
           data: qs.stringify(this.form)
         }).then(resp => {
           this.$message({ message: resp.message, type: 'success' })
-          this.inquiryVisible = false
+          this.quoteVisible = false
           this.form = {}
           this.init()
         })
       },
       addInquiry(row) {
         this.form = row
-        this.inquiryVisible = true
+        this.quoteVisible = true
       },
       tableRowClassName({row, index}) {
         if (row.veto == 1 || row.refuseNum != 0) {
@@ -375,6 +420,7 @@
           }).then(resp => {
             this.$message({ message: resp.message, type: 'success' })
             this.visible = false
+            this.init()
           })
         }
 
