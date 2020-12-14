@@ -4,7 +4,7 @@ import Cookies from 'js-cookie'
 
 import 'normalize.css/normalize.css' // a modern alternative to CSS resets
 
-import { Table, Popconfirm, Input, Upload, Icon, Empty, Popover, Timeline, Tabs, Row, Col, InputNumber } from 'ant-design-vue'
+import { Table, Popconfirm, Input, Upload, Icon, Empty, Popover, Timeline, Tabs, Row, Col, InputNumber, Tooltip } from 'ant-design-vue'
 import 'ant-design-vue/dist/antd.css'
 
 import Element from 'element-ui'
@@ -19,7 +19,7 @@ import router from './router'
 import './icons' // icon
 import './permission' // permission control
 import './utils/error-log' // error log
-
+import './utils/directives'
 import * as filters from './filters' // global filters
 
 /**
@@ -35,7 +35,11 @@ import * as filters from './filters' // global filters
 //   mockXHR()
 // }
 
+
 Vue.use(Element, {
+  size: Cookies.get('size') || 'medium' // set element-ui default size
+})
+Vue.use(Tooltip, {
   size: Cookies.get('size') || 'medium' // set element-ui default size
 })
 Vue.use( InputNumber, {

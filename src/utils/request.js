@@ -52,7 +52,6 @@ service.interceptors.response.use(
 
     // if the custom code is not 20000, it is judged as an error.
     if (res.status === 200) {
-      console.log(response.headers.refresh)
       if (response.headers.refresh === 'true') {
         refleshToken()
       }

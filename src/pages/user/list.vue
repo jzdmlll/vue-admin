@@ -14,7 +14,7 @@
           <template slot-scope="scope">
             <el-tag
               v-for="role in scope.row.roles"
-              :key="role"
+              :key="role.id"
               :type="role.name === '管理员' ? 'success':'info'"
             >
               {{ role.name }}

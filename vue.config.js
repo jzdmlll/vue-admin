@@ -1,6 +1,7 @@
 'use strict'
 const path = require('path')
 const defaultSettings = require('./src/settings.js')
+const CompressionPlugin = require("compression-webpack-plugin")
 
 function resolve(dir) {
   return path.join(__dirname, dir)
@@ -59,8 +60,8 @@ module.exports = {
     resolve: {
       alias: {
         '@': resolve('src')
-      }
-    }
+      },
+    },
   },
   chainWebpack(config) {
     config.plugins.delete('preload') // TODO: need test
@@ -136,6 +137,19 @@ module.exports = {
               }
             })
           config.optimization.runtimeChunk('single')
+
+          const CompressionPlugin = require('compression-webpack-plugin')
+          const productionGzipExtensions = /\.(js|css|json|txt|html|ico|svg)(\?.*)?$/i
+          config.resolve.alias.set('@', resolve('src'))
+          config.plugin('compressionPlugin')
+            .use(new CompressionPlugin({
+              filename: '[path].gz[query]',
+              algorithm: 'gzip',
+              test: productionGzipExtensions,
+              threshold: 10240,
+              minRatio: 0.8,
+              deleteOriginalAssets: false
+            }))
         }
       )
   }

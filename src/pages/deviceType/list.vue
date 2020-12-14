@@ -37,11 +37,16 @@
     <!-- 模态框 -->
     <el-dialog :title="title" :visible.sync="visible">
       <el-form :model="form">
-        <el-form-item label="设备类型" label-width="80px">
+        <el-form-item label="设备类型名" label-width="80px">
           <el-input v-model="form.name" autocomplete="off" />
         </el-form-item>
         <el-form-item label="设备类型编码" label-width="80px">
           <el-input v-model="form.code" autocomplete="off" />
+        </el-form-item>
+        <el-form-item label="父类型" label-width="80px">
+          <el-select v-model="form.parentId" style="margin-right: 6px" filterable clearable placeholder="请选择父类型" value-key="name">
+            <el-option v-for="item in devices" :key="item.id" :label="item.name" :value="item.id" />
+          </el-select>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -88,10 +93,12 @@ export default {
         params: { name: this.searchForm.name, code: this.searchForm.code }
       })
         .then(response => {
-          response.data.forEach(item => {
-            item.hasChildren = !item.parentId
-          })
+
           this.devices = response.data
+          this.devices.forEach(item => {
+            item.hasChildren = !item.parentId
+            this.$set(this.devices, item, item)
+          })
           this.loading = false
         }).catch(()=>{
         this.loading = false
@@ -102,6 +109,7 @@ export default {
     },
     toEdit() {},
     toAdd() {
+      this.toSearch()
       this.visible = true
     },
     deleteHandler() {},
@@ -117,7 +125,7 @@ export default {
         .then(response => {
           this.visible = false
           this.$message({ message: response.message, type: 'success' })
-          this.loadDevices()
+          this.init()
         })
     },
   }

@@ -141,38 +141,6 @@
         </el-table-column>
       </el-table>
     </div>
-    <!-- 模态框 -->
-    <el-dialog title="选择产品池产品" class="importDialog" :visible.sync="visible">
-      <el-input type="text"
-                v-model="searchForm.name"
-                placeholder="设备名" size="small" style="max-width: 200px;"></el-input>
-      <el-input type="text"
-                v-model="searchForm.model"
-                placeholder="型号" size="small" style="max-width: 200px;"></el-input>
-      <el-button type="primary" size="small" @click="find">查询</el-button>
-      <el-form :model="form" status-icon>
-        <el-table :data="poolData" v-loading="loading1" size="small">
-          <el-table-column label width="35">
-            <template slot-scope="scope">
-              <el-radio :label="scope.row.id" v-model="form.id">&nbsp;</el-radio>
-            </template>
-          </el-table-column>
-          <el-table-column :show-overflow-tooltip="true" prop="name" label="设备名称" />
-          <el-table-column :show-overflow-tooltip="true" prop="supplier" label="供应商" />
-          <el-table-column :show-overflow-tooltip="true" prop="params" label="技术参数" />
-          <el-table-column :show-overflow-tooltip="true" prop="model" label="品牌型号" />
-          <el-table-column :show-overflow-tooltip="true" prop="price" label="单价" />
-          <el-table-column :show-overflow-tooltip="true" prop="number" label="数量" />
-          <el-table-column :show-overflow-tooltip="true" prop="delivery" label="货期" />
-          <el-table-column :show-overflow-tooltip="true" prop="remark" label="备注" />
-        </el-table>
-
-      </el-form>
-      <div slot="footer" class="dialog-footer">
-        <el-button size="small" @click="visible = false">取消</el-button>
-        <el-button type="primary" size="small" @click="submitHandler">提交</el-button>
-      </div>
-    </el-dialog>
 
     <!-- 模态框 -->
     <el-dialog title="重新询价" :visible.sync="quoteVisible">
@@ -249,7 +217,7 @@
   import '@/styles/auto-style.css'
   import request from '@/utils/request'
   import qs from 'querystring'
-  import { dateFormat,nullFormat } from '@/utils/format'
+  import { dateFormat,nullFormat,nullToEmpty } from '@/utils/format'
   import { getUser } from '@/utils/auth'
   import { sortBykey } from '@/utils/sort'
 
@@ -261,7 +229,6 @@
         devices: [],
         deviceVisible: false,
         deviceForm: {},
-        searchForm: {},
         quoteVisible: false,
         downloadLoading: false,
         loading1: true,
@@ -363,23 +330,6 @@
       formatJson(filterVal, jsonData) {
         return jsonData.map(v => filterVal.map(j => v[j]))
       },
-      find(){
-        if(this.searchForm.name || this.searchForm.model){
-          console.log(this.searchForm)
-          request.request({
-            url: '/pool/fuzzyQueryByNameOrModel',
-            method: 'get',
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            params: {name: this.searchForm.name, model: this.searchForm.model}
-          }).then(resp => {
-            this.poolData = resp.data
-          })
-        }else {
-          this.$message({ message: "请输入查询条件", type: 'warning' })
-        }
-      },
       addInquirySubmit(){
         this.form.operator = getUser()
         request.request({
@@ -408,41 +358,7 @@
         }
         return '';
       },
-      submitHandler(){
-        if(this.form.id){
-          request.request({
-            url: '/inquiry/inquiryChoosePool',
-            method: 'post',
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            data: qs.stringify({'inquiryId': this.form.inquiryId, 'proPoolId': this.form.id, 'operator': getUser()})
-          }).then(resp => {
-            this.$message({ message: resp.message, type: 'success' })
-            this.visible = false
-            this.init()
-          })
-        }
-
-      },
-      loadPool(name) {
-        request.request({
-          url: '/pool/findHistoryPrices',
-          method: 'get',
-          params: {'name': name}
-        }).then(resp => {
-          this.poolData = resp.data
-          this.loading1 = false
-        }).catch(() => {
-          this.loading1 = false
-        })
-      },
-      poolChoose(row) {
-        this.visible = true
-        this.form.inquiryId = row.id
-        this.loadPool(row.name)
-      },
-      switchChange(id, status) {
+      /*switchChange(id, status) {
         console.log(id,status)
         const ids = []
         ids.push(id)
@@ -460,7 +376,7 @@
           }).catch(()=>{
           this.init()
         })
-      },
+      },*/
       setIsNotInquiry(status) {
         if (this.selectedId.length > 0) {
           request.request({

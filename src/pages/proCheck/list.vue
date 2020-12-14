@@ -5,16 +5,17 @@
       <el-button :style="hasSelected?{display: 'inline-block'}:{display: 'none'}" type="primary" size="small" @click="toCheck(key=1)">通过</el-button>
       <el-button :style="hasSelected?{display: 'inline-block'}:{display: 'none'}" type="danger" size="small" @click="toCheck(key=2)">拒绝</el-button>
       <el-button :style="hasSelected?{display: 'inline-block'}:{display: 'none'}" type="info" size="small" @click="toCheck(key=0)">撤销</el-button>
-      <el-select v-model="form.proDetailId" style="margin-right: 6px" filterable clearable placeholder="请选择项目" value-key="name">
+      <el-select v-model="searchForm.proDetailId" style="margin-right: 6px" filterable clearable placeholder="请选择项目" value-key="name">
         <el-option v-for="item in projects" :key="item.id" :label="item.name" :value="item.id" />
       </el-select>
-      <el-select v-model="form.status" style="margin-right: 6px" :style="form.status.length >2 ? {width:'250px'}:{}" clearable placeholder="请选择审核状态" value-key="name">
+      <el-select v-model="searchForm.status" style="margin-right: 6px" :style="searchForm.status.length >2 ? {width:'250px'}:{}" clearable placeholder="请选择审核状态" value-key="name">
         <el-option v-for="item in select" :key="item.status" :label="item.name" :value="item.status" />
       </el-select>
       <el-button style="margin-right: 6px" type="primary" icon="el-icon-search" size="small" @click="toSearch">查询</el-button>
     </div>
     <div style="padding:1em;margin-bottom:1em;background:#fff">
       <a-table
+        size="middle"
         :loading="loading"
         :columns="realColumns"
         :data-source="proChecks"
@@ -118,11 +119,10 @@ let columns = [
 export default {
   data() {
     return {
-      form: {},
+      searchForm: {status: ''},
       visible: false,
       checkStatusCol: '',
       fileType: -1,
-      visible: false,
       proChecks: [],
       loading: true,
       columns,
@@ -137,7 +137,7 @@ export default {
       realColumns: [],
       status: ['未审核', '通过', '拒绝'],
       select: [{ status: 0, name: '未审核' }, { status: 1, name: '通过' }, { status: 2, name: '拒绝' }],
-      form: { status: '' },
+      form: {},
       projects: [],
       selectedRowKeys: [],
       inquiryIds: [],
@@ -264,7 +264,7 @@ export default {
       }else if (this.$route.name == '商务审核') {
         url = '/proCheck/findBusinessCheck'
       }
-      this.form.proDetailId = parseInt(this.form.proDetailId)
+      this.searchForm.proDetailId = parseInt(this.searchForm.proDetailId)
 
       request.request({
         url: url,
@@ -272,7 +272,7 @@ export default {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         },
-        params: this.form
+        params: this.searchForm
       })
         .then(response => {
           this.proChecks = response.data
@@ -280,8 +280,8 @@ export default {
         }).catch(()=>{
           this.loading = false
         })
-      if (!this.form.proDetailId) {
-        delete this.form.proDetailId
+      if (!this.searchForm.proDetailId) {
+        delete this.searchForm.proDetailId
       }
     },
     loadProjects() {
@@ -309,7 +309,6 @@ export default {
         })
     },
     initColumns() {
-      console.log(this.prop[this.$route.name])
       // alert(this.$route.name)
       if (this.$route.name == '技术审核') {
         this.fileType = 2

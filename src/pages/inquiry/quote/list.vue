@@ -15,8 +15,31 @@
           <el-button style="margin-right: 6px" type="primary" icon="el-icon-search" size="small" @click="toSearch">查询</el-button>
         </div>
         <div style="padding:1em;margin-bottom:1em;background:#fff">
-          <a-table class="parentTable" :columns="columns" :loading="loading" size="default" :data-source="inquiryList" :scroll="{ x: 786 }"
-                   :row-class-name="tableRowClassName" @expand="expandChange">
+          <a-table class="parentTable" :loading="loading" size="default" :data-source="inquiryList" :scroll="{ x: 786 }"
+                   :row-class-name="tableRowClassName" @expand="expandChange" :rowKey="record => record.id">
+            <a-table-column v-for="item in columns"
+              :key="item.dataIndex"
+              :title="item.title"
+              :data-index="item.dataIndex"
+              :ellipsis="item.ellipsis">
+                <template slot-scope="text, record">
+                  <a-tooltip placement="topLeft" :title="text+''">
+                    <span @click="handleCopy(text, $event)">{{ text }}</span>
+                  </a-tooltip>
+                </template>
+            </a-table-column>
+            <a-table-column
+              key="operation"
+              title="操作"
+              data-index="operation"
+              align="center"
+              :width="180">
+              <template slot-scope="text, record, index">
+                <el-button type="success" icon="el-icon-star-on" size="mini" style="padding: 7px 10px;background: #faad14;border-color:#faad14" @click="poolChoose(record)">产品池</el-button>
+                <el-button type="success" size="mini" style="padding: 7px 10px;" @click="toCheck(record)">送审</el-button>
+              </template>
+            </a-table-column>
+
             <a-table
               slot="expandedRowRender"
               slot-scope="scope"
@@ -41,7 +64,7 @@
                 :slot="col"
                 slot-scope="text, record, index"
               >
-                <el-tooltip class="item" effect="dark" :content="text+''" placement="bottom-start">
+                <a-tooltip placement="topLeft" :title="text+''">
                   <div :key="col">
                     <a-input
                       v-if="record.editable"
@@ -49,11 +72,12 @@
                       :value="text"
                       @change="e => handleChange(e.target.value, record, col)"
                     />
-                    <template v-if="!record.editable">
-                      {{ text }}
+
+                    <template v-if="!record.editable" >
+                      <span @click="handleCopy(text, $event)">{{ text }}</span>
                     </template>
                   </div>
-                </el-tooltip>
+                </a-tooltip>
               </template>
               <template slot="operation" slot-scope="text, record, index">
                 <div class="editable-row-operations" style="text-align: center">
@@ -80,6 +104,7 @@
                 <el-tooltip v-if="record.technicalAudit==2 || record.businessAudit==2" class="item" effect="dark" content="新增报价" placement="bottom-start">
                   <el-button type="primary" icon="el-icon-plus" size="mini" @click="addQuote(record)" />
                 </el-tooltip>
+                    <el-button type="danger" icon="el-icon-delete" size="mini" @click="deleteQuote(record)"></el-button>
               </span>
                 </div>
               </template>
@@ -182,12 +207,45 @@
             <el-button type="primary" :loading="submitLoading" size="small" @click="importHandler('form1')">提交</el-button>
           </div>
         </el-dialog>
+        <!-- 模态框 -->
+        <el-dialog v-dialogDrag title="选择产品池产品" class="importDialog" :visible.sync="poolChooseVisible">
+          <el-input type="text"
+                    v-model="poolChooseSearchForm.name"
+                    placeholder="设备名" size="small" style="max-width: 200px;"></el-input>
+          <el-input type="text"
+                    v-model="poolChooseSearchForm.model"
+                    placeholder="型号" size="small" style="max-width: 200px;"></el-input>
+          <el-button type="primary" size="small" @click="find">查询</el-button>
+          <el-form :model="poolChooseForm" status-icon>
+            <el-table :data="poolData" v-loading="poolChooseLoading" size="small">
+              <el-table-column label width="35">
+                <template slot-scope="scope">
+                  <el-radio :label="scope.row.id" v-model="poolChooseForm.id">&nbsp;</el-radio>
+                </template>
+              </el-table-column>
+              <el-table-column :show-overflow-tooltip="true" prop="name" label="设备名称" />
+              <el-table-column :show-overflow-tooltip="true" prop="supplier" label="供应商" />
+              <el-table-column :show-overflow-tooltip="true" prop="params" label="技术参数" />
+              <el-table-column :show-overflow-tooltip="true" prop="model" label="品牌型号" />
+              <el-table-column :show-overflow-tooltip="true" prop="price" label="单价" />
+              <el-table-column :show-overflow-tooltip="true" prop="number" label="数量" />
+              <el-table-column :show-overflow-tooltip="true" prop="delivery" label="货期" />
+              <el-table-column :show-overflow-tooltip="true" prop="remark" label="备注" />
+            </el-table>
+
+          </el-form>
+          <div slot="footer" class="dialog-footer">
+            <el-button size="small" @click="visible = false">取消</el-button>
+            <el-button type="primary" size="small" @click="poolChooseSubmitHandler">提交</el-button>
+          </div>
+        </el-dialog>
       </el-tab-pane>
       <el-tab-pane label="供应商报价管理">
         <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
           <el-tooltip class="item" v-if="selectedId.length > 0" effect="dark" content="批量删除" placement="bottom-start">
             <el-button type="danger" size="small" icon="el-icon-delete" @click="batchDelete">批量删除</el-button>
           </el-tooltip>
+          <el-button v-if="selectedId.length>0" style="margin-right: 6px" type="primary" icon="el-icon-document" size="small" :loading="downloadLoading" @click="handleDownload">导出Excel</el-button>
           <el-select v-model="searchFormQuote.proDetailId" style="margin-right: 6px" filterable clearable placeholder="请选择项目" value-key="name">
             <el-option v-for="item in projects" :key="item.id" :label="item.name" :value="item.id" />
           </el-select>
@@ -289,11 +347,13 @@
   import { dateFormat } from '@/utils/format'
   import { getUser } from '@/utils/auth'
   import XLSX from 'xlsx'
+  import clip from '@/utils/clipboard'
 
   const columns = [
-    { title: '设备名', dataIndex: 'name', key: 'name', ellipsis: true },
-    { title: '技术参数', dataIndex: 'params', key: 'params', ellipsis: true },
-    { title: '设备型号', dataIndex: 'model', key: 'model', ellipsis: true },
+    { title: '设备名', dataIndex: 'name', scopedSlots: { customRender: 'name' }, ellipsis: true },
+    { title: '品牌', dataIndex: 'realBrand', scopedSlots: { customRender: 'realBrand' }, ellipsis: true },
+    { title: '技术参数', dataIndex: 'params', scopedSlots: { customRender: 'params' }, ellipsis: true },
+    { title: '设备型号', dataIndex: 'model', scopedSlots: { customRender: 'model' }, ellipsis: true },
     { title: '单位', dataIndex: 'unit', key: 'unit', ellipsis: true },
     { title: '数量', dataIndex: 'number', key: 'number', ellipsis: true },
     { title: '品牌推荐', dataIndex: 'brand', key: 'brand', ellipsis: true },
@@ -333,10 +393,13 @@
       align: 'center'
     }
   ]
+
+
   export default {
     data() {
       const fileUploadUrl = process.env.VUE_APP_BASE_API + 'file/uploadCache'
       return {
+        downloadLoading: false,
         quoteForm: {},
         quoteVisible: false,
         status: ['未审核', '通过', '拒绝'],
@@ -402,7 +465,12 @@
           name: [
             { required: true, message: '不能为空', trigger: 'blur' }
           ],
-        }
+        },
+        poolChooseVisible: false,
+        poolChooseLoading: false,
+        poolChooseForm: {},
+        poolChooseSearchForm: {},
+        poolData: [],
       }
     },
     created() {
@@ -435,6 +503,112 @@
       })
     },
     methods: {
+      handleDownload() {
+        if (this.selectedId.length) {
+          this.downloadLoading = true
+          import('@/vendor/Export2Excel').then(excel => {
+            const tHeader = ['序号', '设备名称', '品牌', '型号',   '单位', '数量', '报价型号', '报价品牌', '设备单价', '设备总价']
+            const filterVal = ['sort', 'name', 'brand', 'model', 'unit', 'number', 'suModel', 'suBrand', 'price',
+              'totalPrice']
+            let list = []
+            let sort = 0
+            this.quoteList.map(item=>{
+              sort ++
+              if(this.selectedId.includes(item.id)){
+                list.push({
+                  sort: sort,
+                  name: item.inquiry.name,
+                  brand: item.inquiry.realBrand,
+                  model: item.inquiry.model,
+                  unit: item.inquiry.unit,
+                  number: item.inquiry.number,
+                  suModel: item.suModel,
+                  suBrand: item.suBrand,
+                  price: item.suPrice,
+                  totalPrice: item.suTotalPrice,
+                })
+
+              }
+            })
+            const data = this.formatJson(filterVal, list)
+            excel.export_json_to_excel({
+              header: tHeader,
+              data,
+              filename: this.filename
+            })
+            this.downloadLoading = false
+            this.selectedId = []
+
+          })
+        } else {
+          this.$message({
+            message: 'Please select at least one item',
+            type: 'warning'
+          })
+        }
+      },
+      formatJson(filterVal, jsonData) {
+        return jsonData.map(v => filterVal.map(j => v[j]))
+      },
+      toCheck(row) {
+        request.get('/quote/initiateAudit?inquiryId='+row.id)
+          .then(resp=>{
+            this.$message({ message: resp.message, type: 'success' })
+          })
+      },
+      handleCopy(text, event) {
+        clip(text, event)
+      },
+      poolChooseSubmitHandler() {
+        if(this.poolChooseForm.id){
+          request.request({
+            url: '/inquiry/inquiryChoosePool',
+            method: 'post',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            data: qs.stringify({'inquiryId': this.poolChooseForm.inquiryId, 'proPoolId': this.poolChooseForm.id, 'operator': getUser()})
+          }).then(resp => {
+            this.$message({ message: resp.message, type: 'success' })
+            this.poolChooseVisible = false
+            this.init()
+          })
+        }
+      },
+      find(){
+        if(this.poolChooseSearchForm.name || this.poolChooseSearchForm.model){
+          request.request({
+            url: '/pool/fuzzyQueryByNameOrModel',
+            method: 'get',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            params: {name: this.poolChooseSearchForm.name, model: this.poolChooseSearchForm.model}
+          }).then(resp => {
+            this.poolData = resp.data
+          })
+        }else {
+          this.$message({ message: "请输入查询条件", type: 'warning' })
+        }
+      },
+      poolChoose(row) {
+        this.poolChooseVisible = true
+        this.poolChooseForm.inquiryId = row.id
+        this.loadPool(row.name)
+      },
+      loadPool(name) {
+        this.poolChooseLoading = true
+        request.request({
+          url: '/pool/findHistoryPrices',
+          method: 'get',
+          params: {'name': name}
+        }).then(resp => {
+          this.poolData = resp.data
+          this.poolChooseLoading = false
+        }).catch(() => {
+          this.poolChooseLoading = false
+        })
+      },
       addQuoteSubmit() {
         if(this.quoteForm.id){
           this.quoteForm.operator = parseInt(getUser())
@@ -451,6 +625,26 @@
             this.loadChildTable({id: this.quoteForm.inquiryId})
           })
         }
+      },
+      deleteQuote(row) {
+        this.$confirm('将删除选中报价, 是否删除?', '提示', {
+          confirmButtonText: '删除',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          request.request({
+            url: '/quote/batchSetInvalid',
+            method: 'post',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            data: qs.stringify({ids: [row.id]})
+          })
+            .then(response => {
+              this.$message({ message: response.message, type: 'success' })
+              this.loadChildTable({id: row.inquiryId})
+            })
+        })
       },
       addQuote(row) {
         this.quoteVisible = true
@@ -559,9 +753,9 @@
                 item.detailList = []
               })
               this.inquiryList = response.data
-              this.inquiryList.map(item => {
+              /*this.inquiryList.map(item => {
                 this.childLoading[item.id] = true
-              })
+              })*/
               this.loading = false
             })
         }
@@ -873,6 +1067,7 @@
         this.loadProChecks()
       },
       loadChildTable(record) {
+        this.childLoading[record.id] = true
         request.request({
           url: '/quote/findByInquiryId?inquiryId=' + record.id,
           method: 'get'
@@ -889,7 +1084,7 @@
         if (expanded) {
           this.loadChildTable(record)
         }else {
-          this.childLoading[record.id] = true
+          //this.childLoading[record.id] = true
         }
       },
      async loadProjects() {

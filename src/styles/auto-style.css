@@ -4,6 +4,10 @@
     辅：#72DCAD
     辅：#8EDCB9
  */
+
+.table-container {
+  padding:1em 1em 0 1em;margin-bottom:1em;background:#fff;
+}
 .btns .el-input,.btns .el-select  {
   width: 20%;
   max-width: 200px

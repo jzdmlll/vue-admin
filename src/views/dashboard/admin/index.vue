@@ -19,7 +19,7 @@
               :pagination="false"
               :scroll="{ y: 166 }"
               size="small"
-              :row-key="(r,i)=>{i.toString()}"
+              :rowKey="record => record.id"
             >
               <a-table-column ellipsis="true" key="proName" title="项目" data-index="proName"/>
               <a-table-column ellipsis="true" key="inquiryName" title="设备名" data-index="inquiryName"/>
@@ -44,7 +44,7 @@
               id="technicalLazyLoadTable"
               :scroll="{ y: 166 }"
               :pagination="false"
-              :row-key="(r,i)=>{i.toString()}"
+              :rowKey="record => record.id"
             >
               <a-table-column ellipsis="true" key="proName" title="项目" data-index="proName"/>
               <a-table-column ellipsis="true" key="inquiryName" title="设备名" data-index="inquiryName"/>
@@ -71,7 +71,7 @@
               id="businessLazyLoadTable"
               :scroll="{ y: 166 }"
               :pagination="false"
-              :row-key="(r,i)=>{i.toString()}"
+              :rowKey="record => record.id"
             >
               <a-table-column ellipsis="true" key="proName" title="项目" data-index="proName"/>
               <a-table-column ellipsis="true" key="inquiryName" title="设备名" data-index="inquiryName"/>
@@ -98,7 +98,7 @@
               id="compareLazyLoadTable"
               :scroll="{ y: 166 }"
               :pagination="false"
-              :row-key="(r,i)=>{i.toString()}"
+              :rowKey="record => record.id"
             >
               <a-table-column ellipsis="true" key="proName" title="项目" data-index="proName"/>
               <a-table-column ellipsis="true" key="inquiryName" title="设备名" data-index="inquiryName"/>
@@ -237,7 +237,6 @@ export default {
   methods: {
     lazyLoadListener(table, index) {
       const scrollDistance =table.scrollHeight - table.scrollTop - table.clientHeight;
-      console.log(table.scrollHeight + '-' +table.scrollTop +'-' +table.clientHeight+'='+scrollDistance)
       if(scrollDistance <= 0.5) {//等于0证明已经到底，可以请求接口
         let url = '/sysIndex/findCompareAuditDeal?pageNum='
         switch (index) {
@@ -279,12 +278,10 @@ export default {
       request.get('/sysIndex/findYearPro?year='+year)
         .then(resp => {
         this.allChartData.projects.actualData = resp.data
-        console.log(this.lineChartData)
       })
       request.get('/sysIndex/findYearSupplier?year='+year)
         .then(resp => {
           this.allChartData.suppliers.actualData = resp.data
-          console.log(this.lineChartData)
         })
       this.loadToDoList()
     },

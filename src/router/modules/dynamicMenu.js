@@ -45,7 +45,6 @@ async function parseMenu(id) {
     }
   }
   routes.push({ path: '*', redirect: '/404', hidden: true })
-  console.log(routes)
   return routes
 }
 // let routes = parseMenu();

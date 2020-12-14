@@ -81,7 +81,7 @@
                   </template>
 
                     <span v-for="key in compareColumns" :key="key" class="ellipsis" v-if="compareColumns.includes(key)">
-                      <el-tooltip :content="item[key]" placement="top" effect="light">
+                      <el-tooltip :content="item[key]+''" placement="top" effect="light">
                         <div>{{compareColumnsValue[key]}}：{{(key==='warranty' || key==='suDelivery')?item[key]:nullFormat(item[key])}}</div>
                       </el-tooltip>
                     </span>
@@ -90,7 +90,7 @@
                 <div v-else>
                   <span v-for="key in compareColumns" :key="key" class="ellipsis"
                         v-if="compareColumns.includes(key)">
-                    <el-tooltip :content="item[key]" placement="top" effect="light">
+                    <el-tooltip :content="item[key]+''" placement="top" effect="light">
                         <div>{{compareColumnsValue[key]}}：{{(key==='warranty' || key==='suDelivery')?item[key]:nullFormat(item[key])}}</div>
                       </el-tooltip>
                   </span>
@@ -100,7 +100,7 @@
                 <div class="el-radio__label">
                   <span v-for="key in compareColumns" :key="key" class="ellipsis"
                         v-if="compareColumns.includes(key)">
-                    <el-tooltip :content="item[key]" placement="top" effect="light">
+                    <el-tooltip :content="item[key]+''" placement="top" effect="light">
                         <div>{{compareColumnsValue[key]}}：{{(key==='warranty' || key==='suDelivery')?item[key]:nullFormat(item[key])}}</div>
                       </el-tooltip>
                   </span>
@@ -111,7 +111,7 @@
                 <div class="el-radio__label">
                   <span v-for="key in compareColumns" :key="key" class="ellipsis"
                         v-if="compareColumns.includes(key)">
-                    <el-tooltip :content="item[key]" placement="top" effect="light">
+                    <el-tooltip :content="item[key]+''" placement="top" effect="light">
                         <div>{{compareColumnsValue[key]}}：{{(key==='warranty' || key==='suDelivery')?item[key]:nullFormat(item[key])}}</div>
                       </el-tooltip>
                   </span>
