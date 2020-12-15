@@ -33,10 +33,11 @@
               title="操作"
               data-index="operation"
               align="center"
-              :width="180">
+              :width="230">
               <template slot-scope="text, record, index">
                 <el-button type="success" icon="el-icon-star-on" size="mini" style="padding: 7px 10px;background: #faad14;border-color:#faad14" @click="poolChoose(record)">产品池</el-button>
                 <el-button type="success" size="mini" style="padding: 7px 10px;" @click="toCheck(record)">送审</el-button>
+                <el-button type="success" size="mini" style="padding: 7px 10px;" @click="toCompare(record)">比价</el-button>
               </template>
             </a-table-column>
 
@@ -53,10 +54,10 @@
               :row-class-name="tableRowClassName2"
             >
               <span slot="technicalAudit" slot-scope="text, record, index">
-                <el-tag :type="text === 0 ? 'info':(text === 1? 'success':'danger')">{{ statu(text) }}</el-tag>
+                <el-tag :type="text!=null?(text === 0 ? 'info':(text === 1? 'success':'danger')):'warning'">{{ statu(text) }}</el-tag>
               </span>
               <span slot="businessAudit" slot-scope="text, record, index">
-                <el-tag :type="text === 0 ? 'info':(text === 1? 'success':'danger')">{{ statu(text) }}</el-tag>
+                <el-tag :type="text!=null?(text === 0 ? 'info':(text === 1? 'success':'danger')):'warning'">{{ statu(text) }}</el-tag>
               </span>
               <template
                 v-for="col in ['supplier','suBrand','suParams','suModel','brand','suPrice','suTotalPrice','suDelivery',
@@ -550,6 +551,12 @@
       formatJson(filterVal, jsonData) {
         return jsonData.map(v => filterVal.map(j => v[j]))
       },
+      toCompare(row) {
+        request.get('/quote/sendCompare?inquiryId='+row.id)
+          .then(resp=>{
+            this.$message({ message: resp.message, type: 'success' })
+          })
+      },
       toCheck(row) {
         request.get('/quote/initiateAudit?inquiryId='+row.id)
           .then(resp=>{
@@ -651,7 +658,7 @@
         this.quoteForm = row
       },
       statu(text) {
-        return this.status[parseInt(text)]
+        return text!=null?this.status[parseInt(text)]:'未送审'
       },
       tableRowClassName2(row, index) {
         if(row.dataSource == 0){

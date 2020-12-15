@@ -272,7 +272,8 @@ export default {
       }
     },
     cardRight() {
-      if (this.moveWidth > (this.realCompares.length - 7) * -238) {
+      const clientWidth = document.body.clientWidth
+      if (this.moveWidth > clientWidth - 200 - (this.compares.length ) * 238 ) {
         this.moveWidth -= 238
       }
     },
