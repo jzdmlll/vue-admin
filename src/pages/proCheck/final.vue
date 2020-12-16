@@ -346,8 +346,25 @@ export default {
           }
         })
       })
+      this.data.map(item => {
+        let key = 0
+        this.dynamicColumns.suppliers.map(s => {
+          if(item[s] && item[s].finallyAudit == 1){
+            key ++
+            allCompareIds.push(item[s].compareId)
+          }
+        })
+        if(key > 0) {
+          this.dynamicColumns.suppliers.map(s => {
+            if(item[s]){
+              allCompareIds.push(item[s].compareId)
+            }
+          })
+        }
+      })
       allCompareIds.map(item => {
         if (!submitForm.checkCompareIds.includes(item)){
+          alert(item)
           submitForm.uncheckCompareIds.push(item)
         }
       })
@@ -381,13 +398,14 @@ export default {
       const id = row.compareId
       const name = row.name
       const supplier = row.supplier
+      //console.log(row)
       if(id && name && supplier && veto == 0 && row.businessAudit == 1 && row.technicalAudit) {
         //alert(id + '  ' + name + '  ' + supplier)
         const data = [...this.data]
         const allCompareIds = []
         data.map(item => {
-          //console.log(item)
-          if (item.inquiry.name == name) {
+          console.log(item)
+          if (item.inquiry.name == name && row.inquiryId == item.inquiry.inquiryId) {
             this.dynamicColumns.suppliers.map(s => {
               if(item[s]){
                 item[s].finallyAudit = 0
@@ -395,13 +413,13 @@ export default {
               }
             })
             item[supplier].finallyAudit = 1
-          }else{
+          }/*else{
             this.dynamicColumns.suppliers.map(s => {
               if(item[s]){
                 allCompareIds.push(item[s].compareId)
               }
             })
-          }
+          }*/
         })
 
         this.data = data
@@ -473,11 +491,20 @@ export default {
           const allCompareIds = []
           const submitForm = { checkCompareIds: [], uncheckCompareIds: [], remarks: []}
           this.data.map(item => {
+            let key = 0
             this.dynamicColumns.suppliers.map(s => {
-              if(item[s]){
+              if(item[s] && item[s].finallyAudit == 1){
+                key ++
                 allCompareIds.push(item[s].compareId)
               }
             })
+            if(key > 0) {
+              this.dynamicColumns.suppliers.map(s => {
+                if(item[s]){
+                  allCompareIds.push(item[s].compareId)
+                }
+              })
+            }
           })
           this.priceChecks = {total: 0}
           this.cost = 0
