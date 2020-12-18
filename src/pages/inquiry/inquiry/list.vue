@@ -127,9 +127,9 @@
                 </a-popconfirm>
               </span>
               <span v-else>
-                 <el-tooltip class="item" effect="dark" content="选择历史产品" placement="bottom-start">
+                 <!--<el-tooltip class="item" effect="dark" content="选择历史产品" placement="bottom-start">
                   <el-button type="success" icon="el-icon-star-on" size="mini" style="padding: 7px 10px;background: #faad14;border-color:#faad14" @click="poolChoose(row)">产品池选择</el-button>
-                </el-tooltip>
+                </el-tooltip>-->
                 <el-tooltip v-if="row.veto==1" class="item" effect="dark" content="重新询价" placement="bottom-start">
                   <el-button type="primary" icon="el-icon-edit" size="mini" @click="addInquiry(row)">重新询价</el-button>
                 </el-tooltip>

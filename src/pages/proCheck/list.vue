@@ -124,7 +124,7 @@ export default {
       checkStatusCol: '',
       fileType: -1,
       proChecks: [],
-      loading: true,
+      loading: false,
       columns,
       prop: {
         '技术审核': ['quote.supplier', 'inquiry.name',
@@ -154,11 +154,10 @@ export default {
     }
   },
   created() {
-    this.loadChecks()
+    //this.loadChecks()
     this.initColumns()
     this.loadProjects()
-
-
+    this.searchForm.status = 0
   },
   methods: {
     tableRowClassName(row, index){
@@ -258,6 +257,7 @@ export default {
       this.selectedRowKeys = rows
     },
     toSearch() {
+      this.loading = true
       let url = ''
       if (this.$route.name == '技术审核') {
         url = '/proCheck/findTechnicalCheck'

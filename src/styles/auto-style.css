@@ -5,6 +5,9 @@
     辅：#8EDCB9
  */
 
+.ant-dropdown {
+  z-index: 9999!important;
+}
 .table-container {
   padding:1em 1em 0 1em;margin-bottom:1em;background:#fff;
 }

@@ -24,11 +24,15 @@ async function parseMenu(id) {
         for (const p of privilege.children) {
           if (p.type === 'menu') {
             let page = p.route
+            let hidden = false
+            if(p.remark == 'hidden') {
+              hidden = true
+            }
             if (privilege.name === '审核管理' && page!='/proCheck/final') {
               page = '/proCheck/list'
             }
             const son_route = {
-              hidden: false,
+              hidden: hidden,
               path: p.route,
               // component: () => import('@/pages'+p.route),
               component: function component(resolve) {
