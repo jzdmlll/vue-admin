@@ -1,20 +1,35 @@
 <template>
   <div class="compare_compare">
-    <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff;">
+    {{draftPrice}}
+    <div class="btns" style="margin-bottom:1em;background:#fff;position:absolute;">
       <span :style="opacity==1?{opacity: opacity}:{opacity: 0, display: 'none'}" class="draw-fixed-button el-icon-arrow-down my-transition" @click="()=>{this.drawer=true; this.loadInquiries()}"></span>
     </div>
     <div class="table-container">
       <el-card v-for="card in compares" shadow="never">
         <div slot="header" class="index-md-title">
+
           <span>【{{nullFormat(card.inquiry.name)}}】|【{{nullFormat(card.inquiry.model)}}】|【{{nullFormat(card.inquiry.realBrand)}}】|【{{nullFormat(card.inquiry.params)}}】|【{{nullFormat(card.inquiry.number)}}】</span>
+          <span style="color: red">【利率：<span>{{rate[card.inquiry.id]}}</span>%】</span>
+          <el-button icon="el-icon-plus" type="primary" size="mini" @click="addPrice(card.inquiry)" style="float: right"></el-button>
         </div>
         <a-table
+          class="compare-table"
           size="small"
           :rowKey="record => record.id"
-          :date-source="card.quoteList"
+          :data-source="card.quotes"
+          :pagination = false
           :loading="comparesLoading"
+          :row-class-name="tableRowClassName"
+          :row-selection="{ selectedRowKeys: selectedRowKey[card.inquiry.id], onChange: onSelectChange, type: 'radio' }"
           >
-
+          <a-table-column key="supplier" title="供应商" data-index="supplier" />
+          <a-table-column key="suModel" title="型号" data-index="suModel" />
+          <a-table-column key="suParams" title="参数" data-index="suParams" />
+          <a-table-column key="suPrice" title="单价" data-index="suPrice" />
+          <a-table-column key="suTotalPrice" title="总价" data-index="suTotalPrice" />
+          <a-table-column key="suBrand" title="品牌" data-index="suBrand" />
+          <a-table-column key="suDelivery" title="货期" data-index="suDelivery" />
+          <a-table-column key="warranty" title="质保期" data-index="warranty" />
         </a-table>
       </el-card>
     </div>
@@ -28,6 +43,7 @@
       <el-card shadow="never">
         <div slot="header" class="index-md-title">
           <span>询价表</span>
+          <el-button :style="hasSelected?{display: 'inline-block'}:{display: 'none'}" @click="batchCompare" type="primary"  size="mini">批量比价</el-button>
           <el-button @click="setInquiryRate" style="float:right;" type="primary"  size="mini">设置利率</el-button>
         </div>
         <a-table
@@ -37,6 +53,7 @@
           :rowKey="record => record.id"
           :loading="inquiriesLoading"
           :data-source="inquiries"
+          :row-selection="{ selectedRowKeys: selectedInquiryIds, onChange: onInquirySelectChange}"
         >
           <a-table-column title="序号" :width="50">
             <template slot-scope="text, record, index">
@@ -88,7 +105,7 @@
               <el-tag :type="text == 0 ? 'success':'danger'">{{ text == 0 ? '已完成':'未完成' }}</el-tag>
             </template>
           </a-table-column>
-          <a-table-column key="action" title="操作" align="center" :width="100">
+          <a-table-column key="action" title="操作" align="center" :width="170">
             <template slot-scope="text, record">
               <el-button @click="toCompare(record.id)" type="primary" size="mini" style="padding: 7px 10px;">比价</el-button>
             </template>
@@ -96,6 +113,60 @@
         </a-table>
       </el-card>
     </el-drawer>
+
+    <!-- 模态框 -->
+    <el-dialog title="添加拟定报价" :visible.sync="visible">
+      <el-form ref="dialogForm" :model="dialogForm"  status-icon>
+        <el-row>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="设备名" label-width="80px" size="small" prop="proOriginId">
+              {{dialogForm.name}}
+            </el-form-item>
+          </el-col>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="型号" label-width="80px" size="small" prop="proOriginId">
+              {{dialogForm.model}}
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="报价单价" label-width="80px" size="small" prop="price">
+              <el-input v-model="dialogForm.price" autocomplete="off" />
+            </el-form-item>
+          </el-col>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="报价总价" label-width="80px" size="small" prop="totalPrice">
+              <el-input v-model="dialogForm.totalPrice" autocomplete="off" :placeholder="dialogForm.price?(parseFloat(dialogForm.price)*dialogForm.number).toFixed(2):0"/>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <div style="margin-bottom: 12px">
+          <el-input type="text"
+                    v-model="dialogSearchForm.name"
+                    placeholder="设备名" size="small" style="max-width: 200px;"></el-input>
+          <el-input type="text"
+                    v-model="dialogSearchForm.model"
+                    placeholder="型号" size="small" style="max-width: 200px;"></el-input>
+          <el-button type="primary" size="small" @click="poolFind">查询</el-button>
+        </div>
+        <el-table :data="poolData" v-loading="poolLoading" size="small" @row-click="rowClick">
+          <el-table-column :show-overflow-tooltip="true" prop="name" label="设备名称" />
+          <el-table-column :show-overflow-tooltip="true" prop="supplier" label="供应商" />
+          <el-table-column :show-overflow-tooltip="true" prop="params" label="技术参数" />
+          <el-table-column :show-overflow-tooltip="true" prop="model" label="品牌型号" />
+          <el-table-column :show-overflow-tooltip="true" prop="price" label="单价" />
+          <el-table-column :show-overflow-tooltip="true" prop="number" label="数量" />
+          <el-table-column :show-overflow-tooltip="true" prop="delivery" label="货期" />
+          <el-table-column :show-overflow-tooltip="true" prop="remark" label="备注" />
+        </el-table>
+
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button size="small" @click="visible = false">取 消</el-button>
+        <el-button type="primary" size="small" @click="dialogSubmitHandler">确 定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -115,11 +186,18 @@
         customRender: 'customRender',
       }
       return {
+        poolData: [],
+        poolLoading: false,
+        dialogSearchForm: {},
+
+        dialogForm: {},
+        visible: false,
         drawer: false,
         opacity: 0,
 
         inquiriesLoading: false,
         inquiries: [],
+        selectedInquiryIds: [],
 
         proDetailId: null,
         scopedSlots,
@@ -131,24 +209,142 @@
 
         compares: [],
         comparesLoading: false,
+        selectedRowKey: {},
+
+        rate: {},
+        draftPrice: {}
+      }
+    },
+    computed: {
+      hasSelected() {
+        return this.selectedInquiryIds.length > 0
       }
     },
     created() {
       this.init()
     },
     methods: {
-      nullFormat,
-      toCompare(id) {
-        this.selectedKeys.push(id)
-        this.compareRequest()
+      getRate(suPrice, draftPrice, inquiryId) {
+        let rate = 0
+        if(suPrice && draftPrice) {
+          rate = ((parseFloat(draftPrice) - parseFloat(suPrice))/parseFloat(suPrice)).toFixed(2)
+        }
+        this.$set(this.rate, inquiryId, rate)
       },
-      compareRequest() {
+      dialogSubmitHandler() {
+        let form = this.dialogForm
+        form.operator = parseInt(getUser())
+        if(!form.totalPrice || form.totalPrice == 0) {
+          form.totalPrice = (parseFloat(form.price)*form.number).toFixed(2)
+        }
+        request.request({
+          url: '/compare/compareUpdateDraft',
+          method: 'post',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          data: JSON.stringify(form)
+        }).then(response => {
+          this.$message({ message: response.message, type: 'success' })
+          let arr = []
+          arr.push(form.price)
+          this.$set(this.draftPrice, form.id, arr)
+          this.getRate(form.suPrice, form.price, form.id)
+          this.visible = false
+        })
+      },
+      rowClick(row, column) {
+        this.dialogForm.price = row.price
+      },
+      loadPool(name) {
+        this.poolLoading = true
+        request.request({
+          url: '/pool/findHistoryPrices',
+          method: 'get',
+          params: {'name': name}
+        }).then(resp => {
+          this.poolData = resp.data
+          this.poolLoading = false
+        }).catch(() => {
+          this.poolLoading = false
+        })
+      },
+      poolFind() {
+        if(this.dialogSearchForm.name || this.dialogSearchForm.model){
+          request.request({
+            url: '/pool/fuzzyQueryByNameOrModel',
+            method: 'get',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            params: {name: this.dialogSearchForm.name, model: this.dialogSearchForm.model}
+          }).then(resp => {
+            this.poolData = resp.data
+          })
+        }else {
+          this.$message({ message: "请输入查询条件", type: 'warning' })
+        }
+      },
+      addPrice(row){
+        this.visible = true
+        row.totalPrice = null
+        this.dialogForm = row
+        this.loadPool(row.name)
+      },
+      batchCompare() {
+        this.compareRequest(this.selectedInquiryIds)
+        this.drawer = false
+      },
+      onInquirySelectChange(selectedRowKeys, selectedRows) {
+        const rows = selectedRows.map(item => {
+          if (item.id && item.businessAudit != 2 && item.technicalAudit != 2) {
+            return item.id
+          }
+        })
+        this.selectedInquiryIds = rows
+      },
+      onSelectChange(selectedRowKeys, selectedRows) {
+        const rows = selectedRows.map(item => {
+          if (item.id) {
+            return item.id
+          }
+        })
+        this.$set(this.selectedRowKey, selectedRows[0].inquiryId, rows)
+        this.dialogForm.suPrice = selectedRows[0].suPrice
+        this.getRate(selectedRows[0].suPrice, this.draftPrice[selectedRows[0].inquiryId], selectedRows[0].inquiryId)
+      },
+      tableRowClassName(row) {
+        if (row.dataSource == 0 && !(row.businessAudit == 2 || row.technicalAudit == 2)) {
+          return 'warning-row';
+        }else if(row.businessAudit == 2 || row.technicalAudit == 2) {
+          return 'danger-row'
+        }
+        return '';
+      },
+      nullFormat,
+      getUser,
+      toCompare(id) {
+        let selectedInquiryIds = []
+        selectedInquiryIds.push(id)
+        this.compareRequest(selectedInquiryIds)
+        this.drawer = false
+      },
+      compareRequest(selectedInquiryIds) {
+        this.compares = []
+        this.selectedRowKey = {}
         this.comparesLoading = true
         request.request({
           url: '/compare/findQuoteByInquiryId',
           method: 'post',
-          data: qs.stringify({inquiryIds: this.selectedKeys})
+          data: qs.stringify({inquiryIds: selectedInquiryIds})
         }).then(resp => {
+          resp.data.map( item => {
+            this.$set(this.selectedRowKey, item.inquiry.id, [])
+            let arr = []
+            arr.push(item.inquiry.price)
+            this.$set(this.draftPrice, item.inquiry.id, arr)
+            this.getRate(item.suPrice, item.inquiry.price, item.inquiry.id)
+          })
           this.compares = resp.data
           this.comparesLoading = false
         }).catch(()=>{
@@ -196,6 +392,7 @@
         this.loadInquiries()
       },
       loadInquiries() {
+        this.selectedInquiryIds = []
         if(this.proDetailId) {
           request.get("/compare/findInquiryByProDetailId?proDetailId="+this.proDetailId)
             .then(resp => {
@@ -226,6 +423,19 @@
       line-height: 60px;
       font-size: 20px;
       color: #909399;
+    }
+    .compare-table {
+      /deep/.warning-row {
+        background: #eae2c5;
+      }
+      /deep/.danger-row {
+        background: #f1b7b7;
+      }
+    }
+    /deep/.el-form-item__content{
+      height:auto;
+      line-height:32px;
+      margin-left:90px!important
     }
   }
 </style>
