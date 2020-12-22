@@ -364,7 +364,6 @@ export default {
       })
       allCompareIds.map(item => {
         if (!submitForm.checkCompareIds.includes(item)){
-          alert(item)
           submitForm.uncheckCompareIds.push(item)
         }
       })

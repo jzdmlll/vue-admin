@@ -1,6 +1,5 @@
 <template>
   <div class="compare_compare">
-    {{selectedRowKey}}
     <div class="btns" style="margin-bottom:1em;background:#fff;position:absolute;">
       <span :style="opacity==1?{opacity: opacity}:{opacity: 0, display: 'none'}" class="draw-fixed-button el-icon-arrow-down my-transition" @click="()=>{this.drawer=true; this.loadInquiries()}"></span>
     </div>
@@ -10,7 +9,9 @@
 
           <span>【{{nullFormat(card.inquiry.name)}}】|【{{nullFormat(card.inquiry.model)}}】|【{{nullFormat(card.inquiry.realBrand)}}】|【{{nullFormat(card.inquiry.params)}}】|【{{nullFormat(card.inquiry.number)}}】</span>
           <span style="color: red">【利率：<span>{{rate[card.inquiry.id]}}</span>%】</span>
-          <el-button icon="el-icon-plus" type="primary" size="mini" @click="addPrice(card.inquiry)" style="float: right"></el-button>
+          <span v-if="remark[card.inquiry.id]" style="color: #606266">【备注：<span>{{remark[card.inquiry.id]}}</span>】</span>
+          <el-button icon="el-icon-plus" type="primary" size="mini" @click="addPrice(card.inquiry)" style="float: right;margin-right:5px"></el-button>
+          <el-button type="primary" size="mini" @click="addRemark(card.inquiry)" style="float: right;margin-right:5px">备注</el-button>
         </div>
         <a-table
           class="compare-table"
@@ -174,6 +175,7 @@
       </div>
     </el-dialog>
 
+
     <div class="footer" :style="selectedRowKey[Object.keys(selectedRowKey)[0]] > 0?{display: 'block'}:{display: 'none'}">
       <el-button :loading="submitLoading"  style="right:0;margin: 0 2em 0 0" type="primary" size="small" @click="submitCompare">{{submitLoading?'':'选用'}}</el-button>
     </div>
@@ -222,6 +224,7 @@
         selectedRowKey: {},
 
         rate: {},
+        remark: {},
         draftPrice: {},
 
         submitLoading: false
@@ -236,18 +239,47 @@
       this.init()
     },
     methods: {
+      addRemark(inquiry) {
+        this.$prompt('请输入备注', '填写备注', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          //inputPattern: /^[1-9][0-9]*([\.][0-9]{1,2})?$/,
+          //inputErrorMessage: '格式不正确'
+        }).then(({ value }) => {
+          this.$set(this.remark, inquiry.id, value)
+        }).catch(() => {
+          this.$message({
+            type: 'info',
+            message: '取消输入'
+          })
+        })
+      },
       submitCompare() {
+
+        let quoteList = []
+        const selecteds = Object.keys(this.selectedRowKey)
+        selecteds.map(item => {
+          if (this.selectedRowKey[item][0]) {
+            quoteList.push({
+              id: this.selectedRowKey[item][0],
+              inquiryId: item,
+              operator: getUser(),
+              remark: this.remark[item]
+            })
+          }
+        })
         request.request({
-          url: '',
+          url: '/compare/compareResultCommit',
           method: 'post',
           headers: {
             'Content-Type': 'application/json'
           },
-          data: {}
+          data: JSON.stringify({quoteList: quoteList})
         }).then(resp => {
-
+          this.$message({ message: resp.message, type: 'success' })
         })
       },
+      getUser,
       getRate(suPrice, draftPrice, inquiryId) {
         let rate = 0
         if(suPrice && draftPrice) {
@@ -368,11 +400,21 @@
             let arr = []
             arr.push(item.inquiry.price)
             this.$set(this.draftPrice, item.inquiry.id, arr)
+            //this.$set(this.selectedRowKey, item.inquiry.id, )
             this.getRate(item.suPrice, item.inquiry.price, item.inquiry.id)
+            item.quotes.map(quote => {
+              console.log(quote.compareStatus)
+              if (quote.compareStatus == 1) {
+                let arr = []
+                arr.push(quote.id)
+                this.$set(this.selectedRowKey, item.inquiry.id, arr)
+              }
+            })
           })
           this.compares = resp.data
           this.comparesLoading = false
         }).catch(()=>{
+          alert('error')
           this.comparesLoading = false
         })
       },
