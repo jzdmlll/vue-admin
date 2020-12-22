@@ -1,6 +1,6 @@
 <template>
   <div class="compare_compare">
-    {{draftPrice}}
+    {{selectedRowKey}}
     <div class="btns" style="margin-bottom:1em;background:#fff;position:absolute;">
       <span :style="opacity==1?{opacity: opacity}:{opacity: 0, display: 'none'}" class="draw-fixed-button el-icon-arrow-down my-transition" @click="()=>{this.drawer=true; this.loadInquiries()}"></span>
     </div>
@@ -22,14 +22,20 @@
           :row-class-name="tableRowClassName"
           :row-selection="{ selectedRowKeys: selectedRowKey[card.inquiry.id], onChange: onSelectChange, type: 'radio' }"
           >
-          <a-table-column key="supplier" title="供应商" data-index="supplier" />
-          <a-table-column key="suModel" title="型号" data-index="suModel" />
-          <a-table-column key="suParams" title="参数" data-index="suParams" />
-          <a-table-column key="suPrice" title="单价" data-index="suPrice" />
-          <a-table-column key="suTotalPrice" title="总价" data-index="suTotalPrice" />
-          <a-table-column key="suBrand" title="品牌" data-index="suBrand" />
-          <a-table-column key="suDelivery" title="货期" data-index="suDelivery" />
-          <a-table-column key="warranty" title="质保期" data-index="warranty" />
+          <a-table-column  key="supplier" title="供应商" data-index="supplier" />
+          <a-table-column align="center" key="suModel" v-slot:title="title" data-index="suModel">
+            <span slot="title" >型号<p :class="{'table-column-p': card.inquiry.model?true:false}"><a-icon v-if="card.inquiry.model" type="like" />【{{card.inquiry.model}}】</p></span>
+          </a-table-column>
+          <a-table-column align="center" key="suParams" v-slot:title="title" data-index="suParams">
+            <span slot="title">参数<p :class="{'table-column-p': card.inquiry.params?true:false}"><a-icon v-if="card.inquiry.params" type="like" />【{{card.inquiry.params}}】</p></span>
+          </a-table-column>
+          <a-table-column align="center" key="suPrice" title="单价" data-index="suPrice" />
+          <a-table-column align="center" key="suTotalPrice" title="总价" data-index="suTotalPrice" />
+          <a-table-column align="center" key="suBrand" v-slot:title="title" data-index="suBrand">
+            <span slot="title">品牌<p :class="{'table-column-p': card.inquiry.realBrand?true:false}"><a-icon v-if="card.inquiry.realBrand" type="like" />【{{card.inquiry.realBrand}}】</p></span>
+          </a-table-column>
+          <a-table-column align="center" key="suDelivery" title="货期" data-index="suDelivery" />
+          <a-table-column align="center" key="warranty" title="质保期" data-index="warranty" />
         </a-table>
       </el-card>
     </div>
@@ -167,6 +173,10 @@
         <el-button type="primary" size="small" @click="dialogSubmitHandler">确 定</el-button>
       </div>
     </el-dialog>
+
+    <div class="footer" :style="selectedRowKey[Object.keys(selectedRowKey)[0]] > 0?{display: 'block'}:{display: 'none'}">
+      <el-button :loading="submitLoading"  style="right:0;margin: 0 2em 0 0" type="primary" size="small" @click="submitCompare">{{submitLoading?'':'选用'}}</el-button>
+    </div>
   </div>
 </template>
 
@@ -212,7 +222,9 @@
         selectedRowKey: {},
 
         rate: {},
-        draftPrice: {}
+        draftPrice: {},
+
+        submitLoading: false
       }
     },
     computed: {
@@ -224,6 +236,18 @@
       this.init()
     },
     methods: {
+      submitCompare() {
+        request.request({
+          url: '',
+          method: 'post',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          data: {}
+        }).then(resp => {
+
+        })
+      },
       getRate(suPrice, draftPrice, inquiryId) {
         let rate = 0
         if(suPrice && draftPrice) {
@@ -330,6 +354,7 @@
         this.drawer = false
       },
       compareRequest(selectedInquiryIds) {
+        this.draftPrice = {}
         this.compares = []
         this.selectedRowKey = {}
         this.comparesLoading = true
@@ -431,11 +456,27 @@
       /deep/.danger-row {
         background: #f1b7b7;
       }
+      .table-column-p {
+        color: #1890ff
+      }
     }
     /deep/.el-form-item__content{
       height:auto;
       line-height:32px;
       margin-left:90px!important
+    }
+    .footer {
+      height: 60px;
+      line-height: 60px;
+      width: calc(100% + 1em);
+      position: fixed;
+      z-index: 999;
+      background: #fff;
+      bottom: 0;
+      left: 0;
+      box-shadow: 1px 1px 4px #9e9e9e;
+      text-align: right;
+      padding: 0 4%;
     }
   }
 </style>
