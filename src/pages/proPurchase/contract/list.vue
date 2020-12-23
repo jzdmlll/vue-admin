@@ -137,17 +137,17 @@
               sort ++
               if(this.selectedRowKeys.includes(item.quote.id)){
                 list.push({
-                  sort: sort,
-                  name: item.inquiry.name,
-                  suModel: item.quote.suModel,
-                  params: item.inquiry.params,
-                  unit: item.inquiry.unit,
-                  number: item.inquiry.number,
-                  price: item.inquiry.price,
-                  totalPrice: item.inquiry.totalPrice,
-                  supplier: item.quote.supplier,
-                  delivery: item.quote.suDelivery,
-                  remark: item.inquiry.remark,
+                    sort: sort,
+                    name: item.inquiry.name,
+                    suModel: item.quote.suModel,
+                    params: item.inquiry.params,
+                    unit: item.inquiry.unit,
+                    number: item.inquiry.number,
+                    price: item.inquiry.price,
+                    totalPrice: item.inquiry.totalPrice,
+                    supplier: item.quote.supplier,
+                    delivery: item.quote.suDelivery,
+                    remark: item.inquiry.remark,
                 })
               }
             })
