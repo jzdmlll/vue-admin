@@ -1,38 +1,33 @@
 <template>
-    <!--合同首页-->
-  <div class="contract_index">
+  <!--采购项目-->
+  <div class="purchase_index">
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
-      <el-tooltip class="item" effect="dark" content="" placement="bottom-start">
-        <el-button type="primary" icon="el-icon-plus" size="mini" @click="toAdd">添加采购合同</el-button>
-      </el-tooltip>
+        <el-button type="primary" icon="el-icon-plus" size="mini" @click="toAdd">添加</el-button>
     </div>
-    <div style="padding:1em;margin-bottom:1em;background:#fff">
-      <el-table v-loading="loading" :data="projects" size="small">
-        <el-table-column type="index" prop="" label="序号" width="120" />
-        <el-table-column prop="name" label="采购项目名称" />
-        <el-table-column prop="contract" label="合同编号" />
-        <el-table-column label="操作" align="center" width="180">
-          <template slot-scope="scope">
-            <el-tooltip class="item" effect="dark" content="删除" placement="bottom-start">
-              <el-button type="danger" icon="el-icon-delete" size="mini" @click="deleteHandler(scope.row.id)" />
-            </el-tooltip>
-            <el-tooltip class="item" effect="dark" content="修改" placement="bottom-start">
-              <el-button type="success" icon="el-icon-edit" size="mini" @click="editHandler(scope.row)" />
-            </el-tooltip>
+    <el-card shadow="never">
+      <div slot="header" class="index-md-title">
+        <span>采购项目</span>
+      </div>
+      <a-table :loading="loading" :data-source="projects" size="small" :rowKey="record => record.id">
+        <a-table-column title="序号">
+          <template slot-scope="text, record, index">
+            {{index+1}}
           </template>
-        </el-table-column>
-      </el-table>
-    </div>
+        </a-table-column>
+        <a-table-column key="projectName" title="采购项目名称" data-index="projectName" />
+        <a-table-column key="action" title="操作" :width="120" align="center">
+          <template slot-scope="text, record">
+            <el-button type="danger" icon="el-icon-delete" size="mini" @click="deleteHandler(scope.row.id)" />
+            <el-button type="success" icon="el-icon-edit" size="mini" @click="editHandler(scope.row)" />
+          </template>
+        </a-table-column>
+      </a-table>
+    </el-card>
     <!-- 模态框 -->
     <el-dialog :title="title" :visible.sync="visible">
       <el-form ref="form" status-icon :model="form">
-        <el-form-item label="采购项目" label-width="80px">
-          <el-select v-model="form.projectId" clearable placeholder="请选择">
-            <el-option v-for="p in projects" :key="p.id" :label="p.project_name" :value="p.id" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="采购合同编号">
-          <el-input v-model="form.number" autocomplete="off" />
+        <el-form-item label="采购项目名称">
+          <el-input v-model="form.projectName" autocomplete="off" />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -53,7 +48,7 @@
       return {
         form: {},
         visible: false,
-        title: '新增采购合同',
+        title: '新增采购项目',
         projects: [],
         loading: true
       }
@@ -66,7 +61,7 @@
         this.$refs[form].validate((valid) => {
           if (valid) {
             request.request({
-              url: '/project/type/saveOrUpdate',
+              url: '/purchase/project/saveOrUpdate',
               method: 'post',
               headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
@@ -88,11 +83,11 @@
       toAdd() {
         this.visible = true
         this.form = {}
-        this.title = '新增采购合同'
+        this.title = '新增采购项目'
       },
 
       loadProjects() {
-        request.get('/project/type/findAll')
+        request.get('/purchase/project/findAllLike')
           .then(response => {
             this.projects = response.data
             this.loading = false
@@ -105,12 +100,12 @@
           type: 'warning'
         }).then(() => {
           request.request({
-            url: '/project/type/logicDeleteById',
+            url: '/purchase/project/deleteById',
             method: 'post',
             headers: {
               'Content-Type': 'application/x-www-form-urlencoded'
             },
-            data: qs.stringify({ 'proTypeId': id })
+            data: qs.stringify({ id: id })
           })
             .then(response => {
               this.$message({ type: 'success', message: response.message })
@@ -119,9 +114,8 @@
         })
       },
       editHandler(row) {
-        console.log()
         this.visible = true
-        this.title = '修改采购合同'
+        this.title = '修改采购项目'
         this.form = row
       }
     }

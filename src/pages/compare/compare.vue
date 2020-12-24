@@ -4,7 +4,7 @@
       <span :style="opacity==1?{opacity: opacity}:{opacity: 0, display: 'none'}" class="draw-fixed-button el-icon-arrow-down my-transition" @click="()=>{this.drawer=true; this.loadInquiries()}"></span>
     </div>
     <div class="table-container">
-      <el-card v-for="card in compares" shadow="never">
+      <el-card v-for="card in compares" :key="card.inquiry.id" shadow="never">
         <div slot="header" class="index-md-title">
 
           <span>【{{nullFormat(card.inquiry.name)}}】|【{{nullFormat(card.inquiry.model)}}】|【{{nullFormat(card.inquiry.realBrand)}}】|【{{nullFormat(card.inquiry.params)}}】|【{{nullFormat(card.inquiry.number)}}】</span>
@@ -353,7 +353,7 @@
       },
       onInquirySelectChange(selectedRowKeys, selectedRows) {
         const rows = selectedRows.map(item => {
-          if (item.id && item.businessAudit != 2 && item.technicalAudit != 2) {
+          if (item.id) {
             return item.id
           }
         })
@@ -361,13 +361,15 @@
       },
       onSelectChange(selectedRowKeys, selectedRows) {
         const rows = selectedRows.map(item => {
-          if (item.id) {
+          if (item.id && item.businessAudit != 2 && item.technicalAudit != 2) {
             return item.id
           }
         })
-        this.$set(this.selectedRowKey, selectedRows[0].inquiryId, rows)
-        this.dialogForm.suPrice = selectedRows[0].suPrice
-        this.getRate(selectedRows[0].suPrice, this.draftPrice[selectedRows[0].inquiryId], selectedRows[0].inquiryId)
+        if(rows && rows!='') {
+          this.$set(this.selectedRowKey, selectedRows[0].inquiryId, rows)
+          this.dialogForm.suPrice = selectedRows[0].suPrice
+          this.getRate(selectedRows[0].suPrice, this.draftPrice[selectedRows[0].inquiryId], selectedRows[0].inquiryId)
+        }
       },
       tableRowClassName(row) {
         if (row.dataSource == 0 && !(row.businessAudit == 2 || row.technicalAudit == 2)) {

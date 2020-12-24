@@ -2,12 +2,16 @@
   <!-- 合同管理 -->
   <div class="contract_list">
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
-      <el-select v-model="searchForm.purchaseProId" style="margin-right: 6px" filterable clearable placeholder="请选择项目" value-key="name">
-        <el-option v-for="item in purchasePros" :key="item.id" :label="item.name" :value="item.id" />
+      <el-button type="primary" icon="el-icon-plus" size="mini" @click="toAdd">添加</el-button>
+      <el-select v-model="searchForm.purProjectId" style="margin-right: 6px" filterable clearable placeholder="请选择项目" value-key="name">
+        <el-option v-for="item in purchasePros" :key="item.id" :label="item.projectName" :value="item.id" />
       </el-select>
-      <el-button style="margin-right: 6px" type="primary" icon="el-icon-search" size="small" @click="toSearch">查询</el-button>
+      <el-button type="primary" icon="el-icon-search" size="mini" @click="toSearch">查询</el-button>
     </div>
-    <div class="table-container">
+    <el-card shadow="never">
+      <div slot="header" class="index-md-title">
+        <span>采购合同表</span>
+      </div>
       <a-table
         size="small"
         ref="contracts"
@@ -20,13 +24,14 @@
             {{index+1}}
           </template>
         </a-table-column>
+        <a-table-column key="contractName" title="合同名" data-index="contractName" />
         <a-table-column key="contractNo" title="合同编号" data-index="contractNo" />
         <a-table-column key="time" title="生成时间" data-index="time">
           <template slot-scope="text, record, index">
             {{dateTimeFormat(text)}}
           </template>
         </a-table-column>
-        <a-table-column v-for="item in audits" :key="item.key" :title="item.title" :data-index="item.key">
+        <a-table-column :width="100" align="center" v-for="item in audits" :key="item.key" :title="item.title" :data-index="item.key">
           <template slot-scope="text, record, index">
             <el-switch
               v-model.string="text"
@@ -46,21 +51,18 @@
           </template>
         </a-table-column>
       </a-table>
-    </div>
-    <div class="table-container">
-      <a-row type="flex" justify="start" :gutter="3">
-        <a-col :sm="24" :lg="6" style="padding: 12px">
+    </el-card>
+    <el-card shadow="never" style="margin-top: 1em">
+      <div slot="header" class="index-md-title">
+        <span>合同供货表</span>
+      </div>
+      <a-table
+        size="small"
+        ref=""
+      >
 
-        </a-col>
-        <a-col :sm="24" :lg="18" style="padding: 12px">
-          <a-table
-            size="small"
-            ref=""
-          >
-
-          </a-table>
-        </a-col>
-      </a-row>
+      </a-table>
+    </el-card>
       <!--<a-table
         size="middle"
         ref="purchases"
@@ -85,7 +87,24 @@
         <a-table-column key="quote.suDelivery" title="货期" data-index="inquiry.suDelivery" />
         <a-table-column key="inquiry.remark" title="备注" data-index="inquiry.remark" />
       </a-table>-->
-    </div>
+
+    <!-- 模态框 -->
+    <el-dialog :title="title" :visible.sync="dialogVisible">
+      <el-form ref="form" status-icon :model="form">
+        <el-form-item label="采购项目" label-width="80px">
+          <el-select v-model="form.projectId" clearable placeholder="请选择">
+            <el-option v-for="p in purchasePros" :key="p.id" :label="p.projectName" :value="p.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="采购合同编号">
+          <el-input v-model="form.number" autocomplete="off" />
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button size="small" @click="visible = false">取 消</el-button>
+        <el-button type="primary" size="small" @click="saveRecordHandler('form')">确 定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 <script>
@@ -101,20 +120,41 @@
       return {
         searchForm: {},
         contracts: [],
-        contractsLoading: true,
+        contractsLoading: false,
         purchasePros: [],
 
         audits: [
           { key: 'firstAudit', title: '一级审核' },
           { key: 'secondAudit', title: '二级审核' },
           { key: 'threeAudit', title: '三级审核'}
-        ]
+        ],
+
+        title: '',
+        dialogVisible: false,
+        form: {}
       }
     },
     created() {
-      this.init()
+      this.loadProjects()
     },
     methods: {
+      toAdd() {
+        this.dialogVisible = true
+        this.form = {}
+        this.title = '新增采购合同'
+      },
+      toSearch() {
+        let projectId = ''
+        if (this.searchForm.purProjectId) {
+          projectId = this.searchForm.purProjectId
+        }
+        this.contractsLoading = true
+        request.get('/purchase/contract/findByProjectId?projectId='+projectId)
+          .then(resp => {
+            this.contracts = resp.data
+            this.contractsLoading = false
+          })
+      },
       switchChange(text, index, key) {
         if(text == 1){
           this.contracts[index][key] = 1
@@ -179,43 +219,12 @@
         })
         this.selectedRowKeys = rows
       },
-      toSearch() {
-        if(this.searchForm.purchaseProId) {
-          /*request.get('/proPurchase/findProPurchase?proDetailId='+this.searchForm.proDetailId)
-            .then(response => {
-              this.contracts = response.data
-              this.contractsLoading = false
-            }).catch(()=> {
-              this.contractsLoading = false
-            })*/
-          this.contracts = [
-            {id: 1, contractNo: 'Nk1283247', time: 1606701683024, firstAudit:'0', secondAudit:'0', threeAudit:'0', remark: '备注：XXXX'},
-            {id: 2, contractNo: 'Nk1283247', time: 1606701683024, firstAudit:'0', secondAudit:'0', threeAudit:'0', remark: '备注：XXXX'},
-            {id: 3, contractNo: 'Nk1283247', time: 1606701683024, firstAudit:'0', secondAudit:'0', threeAudit:'0', remark: '备注：XXXX'},
-            {id: 4, contractNo: 'Nk1283247', time: 1606701683024, firstAudit:'0', secondAudit:'0', threeAudit:'0', remark: '备注：XXXX'},
-            {id: 5, contractNo: 'Nk1283247', time: 1606701683024, firstAudit:'0', secondAudit:'0', threeAudit:'0', remark: '备注：XXXX'},
-          ]
-
-          this.contractsLoading = false
-        }
-      },
-      async init() {
-        await this.loadProjects()
-        if(this.purchasePros.length > 0){
-          if(!this.searchForm.purchaseProId) {
-            this.$set(this.searchForm, 'purchaseProId', this.purchasePros[0].id)
-          }
-          this.toSearch()
-        }else {
-          this.loading = false
-        }
-      },
-      async loadProjects() {
-        await request.get('/project/detail/findByAll')
+      loadProjects() {
+        request.get('/purchase/project/findAllLike')
           .then(response => {
             this.purchasePros = response.data
           })
-      }
+      },
     }
   }
 </script>
