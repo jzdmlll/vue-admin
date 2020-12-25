@@ -11,6 +11,7 @@
       <el-select v-model="searchForm.status" style="margin-right: 6px" :style="searchForm.status.length >2 ? {width:'250px'}:{}" clearable placeholder="请选择审核状态" value-key="name">
         <el-option v-for="item in select" :key="item.status" :label="item.name" :value="item.status" />
       </el-select>
+      <el-input v-if="$route.name == '商务审核'" v-model="searchForm.supplier"  placeholder="请输入供应商名"></el-input>
       <el-button style="margin-right: 6px" type="primary" icon="el-icon-search" size="small" @click="toSearch">查询</el-button>
     </div>
     <div style="padding:1em;margin-bottom:1em;background:#fff">

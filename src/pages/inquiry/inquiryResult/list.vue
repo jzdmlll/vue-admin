@@ -2,7 +2,7 @@
   <!-- 询价结果 -->
   <div class="inquiry-result">
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
-      <el-button v-if="selectedRowKeys.length>0" style="margin-right: 6px" type="primary" icon="el-icon-document" size="small" :loading="downloadLoading" @click="handleDownload">生成采购合同</el-button>
+      <el-button v-if="selectedRowKeys.length>0" style="margin-right: 6px" type="primary" icon="el-icon-document" size="small" :loading="downloadLoading" @click="handleDownload">导出Excel</el-button>
      <!-- <el-tooltip class="item" v-if="selectedId.length > 0" effect="dark" content="批量删除" placement="bottom-start">
         <el-button type="danger" size="small" icon="el-icon-delete" @click="batchDelete">批量删除</el-button>
       </el-tooltip>-->
@@ -89,9 +89,9 @@
         if (this.selectedRowKeys.length) {
           this.downloadLoading = true
           import('@/vendor/Export2Excel').then(excel => {
-            const tHeader = ['序号', '设备名称', '型号', '配置需求',  '单位', '数量', '单价', '总价', '设备厂家', '货期', '备注']
+            const tHeader = ['序号', '设备名称', '型号', '配置需求',  '单位', '数量', '单价', '总价', '品牌', '货期', '备注']
             const filterVal = ['sort', 'name', 'suModel', 'params', 'unit', 'number', 'price',
-              'totalPrice', 'supplier', 'delivery', 'remark']
+              'totalPrice', 'brand', 'delivery', 'remark']
             let list = []
             let sort = 0
             this.purchases.map(item=>{
@@ -106,7 +106,7 @@
                   number: item.inquiry.number,
                   price: item.inquiry.price,
                   totalPrice: item.inquiry.totalPrice,
-                  supplier: item.quote.supplier,
+                  brand: item.quote.suBrand,
                   delivery: item.quote.suDelivery,
                   remark: item.inquiry.remark,
                 })

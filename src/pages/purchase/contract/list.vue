@@ -18,20 +18,21 @@
         :rowKey="record => record.id"
         :loading="contractsLoading"
         :data-source="contracts"
+        :scroll="windowWidth< 1000 && contracts.length > 0 ?{ x: 1000}:{}"
         >
-        <a-table-column title="序号">
+        <a-table-column title="序号" align="center" :width="60">
           <template slot-scope="text, record, index">
             {{index+1}}
           </template>
         </a-table-column>
-        <a-table-column key="contractName" title="合同名" data-index="contractName" />
-        <a-table-column key="contractNo" title="合同编号" data-index="contractNo" />
-        <a-table-column key="time" title="生成时间" data-index="time">
+        <a-table-column align="center" :width="120" key="contractName" title="合同名" data-index="contractName" />
+        <a-table-column align="center" :width="160" key="contractNo" title="合同编号" data-index="contractNo" />
+        <a-table-column align="center" :width="160"  key="time" title="生成时间" data-index="time">
           <template slot-scope="text, record, index">
             {{dateTimeFormat(text)}}
           </template>
         </a-table-column>
-        <a-table-column :width="100" align="center" v-for="item in audits" :key="item.key" :title="item.title" :data-index="item.key">
+        <!--<a-table-column :width="100" align="center" v-for="item in audits" :key="item.key" :title="item.title" :data-index="item.key">
           <template slot-scope="text, record, index">
             <el-switch
               v-model.string="text"
@@ -43,9 +44,31 @@
             >
             </el-switch>
           </template>
+        </a-table-column>-->
+        <a-table-column title="审核进度" align="center" :width="260">
+          <template slot-scope="text, record">
+            <a-tooltip destroyTooltipOnHide="true">
+              <div slot="title">
+                <el-row style="width: 260px;">
+                  <el-col v-for="(item, index) in audits" :key="index" class="progress-tooltip-col" :span="8">
+                    <div class="progress-tooltip-col-div"><a-icon theme="filled" :style="{color: checkIcon[record[item['key']]].color}" :type="checkIcon[record[item['key']]].type" /></div>
+                    <div class="progress-tooltip-col-div">{{record[item['remark']]}}</div>
+                  </el-col>
+                </el-row>
+              </div>
+            <a-progress
+              :stroke-color="{
+                from: '#108ee9',
+                to: '#87d068',
+              }"
+              :percent="record.threeAudit == 1?100:record.secondAudit == 1?67:record.firstAudit == 1?33:0"
+              status="active"
+            />
+            </a-tooltip>
+          </template>
         </a-table-column>
-        <a-table-column key="remark" title="备注" data-index="remark" />
-        <a-table-column key="action" title="操作">
+        <a-table-column align="center" :width="120" key="remark" title="备注" data-index="remark" />
+        <a-table-column fixed="right" align="center" :width="120" key="action" title="操作">
           <template slot-scope="text, record">
             <el-button type="primary" size="mini" style="padding: 7px 10px;">送审</el-button>
           </template>
@@ -123,19 +146,37 @@
         contractsLoading: false,
         purchasePros: [],
 
+        checkIcon: [
+          { color: '#909399', type: 'question-circle' },
+          { color: '#13ce66', type: 'check-circle' },
+          { color: '#ff4949', type: 'close-circle'},
+        ],
+
         audits: [
-          { key: 'firstAudit', title: '一级审核' },
-          { key: 'secondAudit', title: '二级审核' },
-          { key: 'threeAudit', title: '三级审核'}
+          { key: 'firstAudit', title: '一级审核', remark: 'firstRemark' },
+          { key: 'secondAudit', title: '二级审核', remark: 'secondRemark' },
+          { key: 'threeAudit', title: '三级审核', remark: 'threeRemark'}
         ],
 
         title: '',
         dialogVisible: false,
-        form: {}
+        form: {},
+
+        windowWidth: document.documentElement.clientWidth, // 屏幕实时宽度
       }
     },
     created() {
       this.loadProjects()
+    },
+    mounted() {
+      var that = this;
+      // <!--把window.onresize事件挂在到mounted函数上-->
+      window.onresize = () => {
+        return (() => {
+          window.fullWidth = document.documentElement.clientWidth;
+          that.windowWidth = window.fullWidth; // 宽
+        })()
+      };
     },
     methods: {
       toAdd() {
@@ -235,6 +276,14 @@
     height:auto;
     line-height:32px;
     margin-left:90px!important
+  }
+}
+.progress-tooltip-col {
+  .progress-tooltip-col-div {
+    text-align: center;
+    .anticon {
+
+    }
   }
 }
 </style>
