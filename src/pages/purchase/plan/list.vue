@@ -7,6 +7,12 @@
         <el-option v-for="item in purchasePros" :key="item.id" :label="item.name" :value="item.id" />
       </el-select>
       <el-button style="margin-right: 6px" type="primary" icon="el-icon-search" size="small" @click="toSearch">查询</el-button>
+      <el-button style="margin-right: 6px" type="primary" size="small" @click="toAddItems">新增采购项</el-button>
+      <el-button @click="clickFileInput" type="primary" size="small"><a-icon type="file-excel" style="font-size: 12px;margin-right: 5px"/>excel导入</el-button>
+      <input type="file" ref="upload" accept=".xls,.xlsx" @change="readExcel" class="outputlist_upload">
+      <div v-if="excelRows>0" style="display: inline-block;padding: 4px 0;font-size: 12px;color: #909399">从Excel读取到
+        <span style="color: #42b983">{{excelRows}}</span>条数据
+      </div>
     </div>
       <el-card shadow="never">
         <div slot="header" class="index-md-title">
@@ -28,9 +34,7 @@
           <a-table-column key="name" title="设备名" data-index="name" />
           <a-table-column key="action" title="操作" fixed="right">
             <template slot-scope="text, record">
-              <el-tooltip class="item" effect="dark" content="选择历史产品" placement="bottom-start">
-                <el-button @click="poolChoose(record)" type="success" icon="el-icon-star-on" size="mini" style="padding: 7px 10px;background: #faad14;border-color:#faad14">产品池选择</el-button>
-              </el-tooltip>
+                <el-button v-if="record.isInquiry == 0" @click="poolChoose(record)" type="success" icon="el-icon-star-on" size="mini" style="padding: 7px 10px;background: #faad14;border-color:#faad14">产品池</el-button>
             </template>
           </a-table-column>
         </a-table>
@@ -88,6 +92,83 @@
         <el-button type="primary" size="small" @click="poolSubmit">提交</el-button>
       </div>
     </el-dialog>
+
+    <!-- 新增采购项模态框 -->
+    <el-dialog title="新增采购项" class="itemDialog" :visible.sync="itemDialogVisible">
+      <el-form :model="addItemsForm" status-icon>
+        <el-row>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="采购序号" label-width="80px" prop="suModel">
+              <el-input v-model="addItemsForm.serialNumber" autocomplete="off" size="small" />
+            </el-form-item>
+          </el-col>
+          <el-col :sm="24" :lg="12">
+          <el-form-item size="mini" label="设备名称" label-width="80px" prop="supplier">
+              <el-input v-model="addItemsForm.item" autocomplete="off" size="small" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="型号" label-width="80px" prop="suModel">
+              <el-input v-model="addItemsForm.model" autocomplete="off" size="small" />
+            </el-form-item>
+          </el-col>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="配置需求" label-width="80px" prop="suBrand">
+              <el-input v-model="addItemsForm.params" autocomplete="off" size="small" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="单位" label-width="80px" prop="suParams">
+              <el-input v-model="addItemsForm.unit" autocomplete="off" size="small" />
+            </el-form-item>
+          </el-col>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="数量" label-width="80px" prop="suParams">
+              <el-input v-model="addItemsForm.number" autocomplete="off" size="small" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="销售单价(元)" label-width="80px" prop="suPrice">
+              <el-input v-model="addItemsForm.sale_price" autocomplete="off" size="small" />
+            </el-form-item>
+          </el-col>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="销售总价(元)" label-width="80px" prop="suTotalPrice">
+              <el-input v-model="addItemsForm.sale_totalPrice" autocomplete="off" size="small" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="品牌" label-width="80px" prop="suDelivery">
+              <el-input v-model="addItemsForm.brand" autocomplete="off" size="small" />
+            </el-form-item>
+          </el-col>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="要求货期" label-width="80px" prop="suDelivery">
+              <el-input v-model="addItemsForm.requiredDelivery" autocomplete="off" size="small" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="备注" label-width="80px" prop="suRemark">
+              <el-input v-model="addItemsForm.suRemark" autocomplete="off" size="small" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button size="small" @click="inquiryVisible = false">取消</el-button>
+        <el-button type="primary" size="small" @click="addItemsSubmit">提交</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 <script>
@@ -100,6 +181,10 @@
   export default {
     data() {
       return {
+        outputs: [],
+        excelRows: {},
+        addItemsForm: {},
+        itemDialogVisible: false,
         searchForm: {},
         purchasePros: [],
 
@@ -121,6 +206,59 @@
       this.init()
     },
     methods: {
+      addItemsSubmit(){},
+      clickFileInput(){
+        this.$refs.upload.dispatchEvent(new MouseEvent('click'))
+      },
+      readExcel(e) {
+        const files = e.target.files;
+        //console.log(files);
+        if(files.length<=0){//如果没有文件名
+          return false;
+        }else if(!/\.(xls|xlsx)$/.test(files[0].name.toLowerCase())){
+          this.$message.error('上传格式不正确，请上传xls或者xlsx格式');
+          return false;
+        }
+        this.excelRows = 0
+        const fileReader = new FileReader();
+        fileReader.onload = (ev) => {
+          try {
+            const data = ev.target.result;
+            const workbook = XLSX.read(data, {
+              type: 'binary'
+            });
+            const wsname = workbook.SheetNames[0];//取第一张表
+            const ws = XLSX.utils.sheet_to_json(workbook.Sheets[wsname]);//生成json表格内容
+            console.log(ws)
+            this.outputs = [];//清空接收数据
+            ws.map(item => {
+              if(item['序号']&&item['设备名称']){
+                this.outputs.push(item);
+                this.excelRows ++
+              }
+            })
+            request.request({
+              url: '',
+              method: 'post',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              data: JSON.stringify({items: this.outputs})
+
+            }).then(resp => {
+
+            })
+            this.$refs.upload.value = '';
+          } catch (e) {
+            console.log(e)
+            return false;
+          }
+        };
+        fileReader.readAsBinaryString(files[0]);
+      },
+      toAddItems(row){
+        this.itemDialogVisible = true
+      },
       rowClick(row, index) {
         return {
           on: {
@@ -217,5 +355,10 @@
     line-height:32px;
     margin-left:90px!important
   }
+}
+.outputlist_upload {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
 }
 </style>
