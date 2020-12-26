@@ -4,7 +4,7 @@
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
       <el-button v-if="selectedRowKeys.length>0" style="margin-right: 6px" type="primary" icon="el-icon-document" size="small" @click="handleAddInquiry">发起询价</el-button>
       <el-select v-model="searchForm.purchaseProId" style="margin-right: 6px" filterable clearable placeholder="请选择采购项目" value-key="name">
-        <el-option v-for="item in purchasePros" :key="item.id" :label="item.name" :value="item.id" />
+        <el-option v-for="item in purchasePros" :key="item.id" :label="item.projectName" :value="item.id" />
       </el-select>
       <el-button style="margin-right: 6px" type="primary" icon="el-icon-search" size="small" @click="toSearch">查询</el-button>
     </div>
@@ -29,7 +29,7 @@
           <a-table-column key="action" title="操作" fixed="right">
             <template slot-scope="text, record">
               <el-tooltip class="item" effect="dark" content="选择历史产品" placement="bottom-start">
-                <el-button @click="poolChoose(record)" type="success" icon="el-icon-star-on" size="mini" style="padding: 7px 10px;background: #faad14;border-color:#faad14">产品池选择</el-button>
+                <el-button @click="poolChoose(record)" type="success" icon="el-icon-star-on" size="mini" style="padding: 7px 10px;background: #faad14;border-color:#faad14">产品池</el-button>
               </el-tooltip>
             </template>
           </a-table-column>
@@ -104,13 +104,13 @@
         purchasePros: [],
 
         plans: [],
-        plansLoading: true,
+        plansLoading: false,
         selectedRowKeys: [],
         purchaseSupplier: [],
         purchaseSupplierLoading: false,
 
         poolData: [],
-        poolLoading: true,
+        poolLoading: false,
 
         dialogSearchForm: {},
         poolDialogVisible: false,
@@ -180,11 +180,11 @@
       },
       init() {
         this.loadPurchasePros()
-        this.loadPlans()
+        //this.loadPlans()
       },
-      loadPlans() {
+      loadPlans(projectId) {
         this.plansLoading = true
-        setTimeout(()=>{
+        /*setTimeout(()=>{
           this.plans = [
             {id: 1, name: 'xxx采购'},
             {id: 2, name: 'xxx采购'},
@@ -193,18 +193,23 @@
             {id: 5, name: 'xxx采购'},
           ]
           this.plansLoading = false
-        },500)
+        },500)*/
+        request.get("/purchase/purchasePlan/findItemsByProjectId?projectId="+projectId)
+          .then( resp => {
+            this.plans = resp.data
+            this.plansLoading = false
+          })
       },
       loadPurchasePros() {
-        this.purchasePros = [
-          {id: 1, name: '项目1'},
-          {id: 2, name: '项目2'},
-          {id: 3, name: '项目3'},
-          {id: 4, name: '项目4'},
-        ]
+        request.get('/purchase/project/findAllLike')
+          .then(response => {
+            this.purchasePros = response.data
+          })
       },
       toSearch() {
-        this.loadPlans()
+        if(this.searchForm.purchaseProId) {
+          this.loadPlans(this.searchForm.purchaseProId)
+        }
       },
     }
   }
