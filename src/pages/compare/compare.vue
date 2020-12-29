@@ -62,13 +62,9 @@
           :data-source="inquiries"
           :row-selection="{ selectedRowKeys: selectedInquiryIds, onChange: onInquirySelectChange}"
         >
-          <a-table-column title="序号" :width="50">
-            <template slot-scope="text, record, index">
-              {{index+1}}
-            </template>
-          </a-table-column>
+          <a-table-column ellipsis="true" key="sort" title="询价序号" :width="150" data-index="sort" />
           <a-table-column :sorter="(a, b) => a.name.localeCompare(b.name)" ellipsis="true"
-                          key="name" title="设备名" data-index="name"
+                          key="name" title="设备名" data-index="name" :width="150"
                           @filter="onFilter" @filterDropdownVisibleChange="onFilterDropdownVisibleChange" :scopedSlots="scopedSlots">
             <template slot="filterDropdown" slot-scope="{ setSelectedKeys, selectedKeys, confirm, clearFilters, column }"
                       style="padding: 8px">
@@ -94,25 +90,25 @@
               </el-button>
             </template>
           </a-table-column>
-          <a-table-column ellipsis="true" key="model" title="型号" data-index="model" />
-          <a-table-column ellipsis="true" key="params" title="参数" data-index="params" />
+          <a-table-column ellipsis="true" key="model" title="型号" :width="150" data-index="model" />
+          <a-table-column ellipsis="true" key="params" title="参数" :width="150" data-index="params" />
           <a-table-column ellipsis="true" key="number" align="center" :width="60" title="数量" data-index="number" />
           <a-table-column ellipsis="true" key="unit" align="center" :width="50" title="单位" data-index="unit" />
-          <a-table-column ellipsis="true" key="inquiryRate" :width="60" align="center" title="利率" data-index="inquiryRate">
+          <a-table-column ellipsis="true" key="inquiryRate" :width="80" align="center" title="利率" data-index="inquiryRate">
             <template slot-scope="text, record, index">
               {{text?parseFloat(text)/1000:0}}%
             </template>
           </a-table-column>
-          <a-table-column ellipsis="true" key="price" title="拟定报价单价" data-index="price" />
-          <a-table-column ellipsis="true" key="totalPrice" title="拟定报价总价" data-index="totalPrice" />
-          <a-table-column ellipsis="true" key="realBrand" title="品牌" data-index="realBrand" />
-          <a-table-column ellipsis="true" key="remark" title="备注" data-index="remark" />
+          <a-table-column ellipsis="true" key="price" :width="100" title="拟定报价单价" data-index="price" />
+          <a-table-column ellipsis="true" key="totalPrice" :width="100" title="拟定报价总价" data-index="totalPrice" />
+          <a-table-column ellipsis="true" key="realBrand" :width="100" title="品牌" data-index="realBrand" />
+          <a-table-column ellipsis="true" key="remark" :width="150" title="备注" data-index="remark" />
           <a-table-column :sorter="(a, b) => a.unCompareNum - b.unCompareNum" defaultSortOrder="descend" key="unCompareNum" title="状态" :width="100" data-index="unCompareNum" align="center">
             <template slot-scope="text, record, index">
               <el-tag :type="text == 0 ? 'success':'danger'">{{ text == 0 ? '已完成':'未完成' }}</el-tag>
             </template>
           </a-table-column>
-          <a-table-column key="action" title="操作" align="center" :width="170">
+          <a-table-column key="action" title="操作" fixed="right" align="center" :width="170">
             <template slot-scope="text, record">
               <el-button @click="toCompare(record.id)" type="primary" size="mini" style="padding: 7px 10px;">比价</el-button>
             </template>
@@ -123,7 +119,7 @@
 
     <!-- 模态框 -->
     <el-dialog title="添加拟定报价" :visible.sync="visible">
-      <el-form ref="dialogForm" :model="dialogForm"  status-icon>
+      <el-form ref="dialogForm" :model="dialogForm" :rules="rules" status-icon>
         <el-row>
           <el-col :sm="24" :lg="12">
             <el-form-item label="设备名" label-width="80px" size="small" prop="proOriginId">
@@ -144,7 +140,7 @@
           </el-col>
           <el-col :sm="24" :lg="12">
             <el-form-item label="报价总价" label-width="80px" size="small" prop="totalPrice">
-              <el-input v-model="dialogForm.totalPrice" autocomplete="off" :placeholder="dialogForm.price?(parseFloat(dialogForm.price)*dialogForm.number).toFixed(2):0"/>
+              <el-input disabled v-model="dialogForm.totalPrice" autocomplete="off" :placeholder="dialogForm.price?(parseFloat(dialogForm.price)*dialogForm.number).toFixed(2):0"/>
             </el-form-item>
           </el-col>
         </el-row>
@@ -228,7 +224,11 @@
         remark: {},
         draftPrice: {},
 
-        submitLoading: false
+        submitLoading: false,
+
+        rules: {
+          price: [ { required: true, pattern: /^(\-|\+)?\d+(\.\d+)?$/, message: '格式不正确', trigger: 'blur' } ],
+        }
       }
     },
     computed: {
@@ -284,32 +284,37 @@
       getRate(suPrice, draftPrice, inquiryId) {
         let rate = 0
         console.log(suPrice +'|'+ draftPrice)
-        if(suPrice && draftPrice) {
+        if(suPrice && draftPrice && draftPrice!='' && suPrice!='') {
           rate = ((parseFloat(draftPrice) - parseFloat(suPrice))/parseFloat(suPrice)*100).toFixed(2)
         }
         this.$set(this.rate, inquiryId, rate)
       },
       dialogSubmitHandler() {
-        let form = this.dialogForm
-        form.operator = parseInt(getUser())
-        if(!form.totalPrice || form.totalPrice == 0) {
-          form.totalPrice = (parseFloat(form.price)*form.number).toFixed(2)
-        }
-        request.request({
-          url: '/compare/compareUpdateDraft',
-          method: 'post',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          data: JSON.stringify(form)
-        }).then(response => {
-          this.$message({ message: response.message, type: 'success' })
-          console.log(form)
-          let arr = []
-          arr.push(form.price)
-          this.$set(this.draftPrice, form.id, arr)
-          this.getRate(form.suPrice, form.price, form.id)
-          this.visible = false
+        this.$refs['dialogForm'].validate((valid) => {
+          if (valid) {
+            let form = this.dialogForm
+            form.operator = parseInt(getUser())
+            if(!form.totalPrice || form.totalPrice == 0) {
+              form.totalPrice = (parseFloat(form.price)*form.number).toFixed(2)
+            }
+            request.request({
+              url: '/compare/compareUpdateDraft',
+              method: 'post',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              data: JSON.stringify(form)
+            }).then(response => {
+              this.$message({ message: response.message, type: 'success' })
+              let arr = []
+              arr.push(form.price)
+              this.$set(this.draftPrice, form.id, arr)
+              this.getRate(form.suPrice, form.price, form.id)
+              this.visible = false
+            })
+          } else{
+            return false
+          }
         })
       },
       rowClick(row, column) {

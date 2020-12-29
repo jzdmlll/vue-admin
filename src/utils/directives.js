@@ -2,7 +2,7 @@
 import Vue from 'vue';
 
 // v-dialogDrag: 弹窗拖拽
-Vue.directive('dialogDrag', {
+/*Vue.directive('dialogDrag', {
   bind(el, binding, vnode, oldVnode) {
     // 获取拖拽内容头部
     const dialogHeaderEl = el.querySelector('.el-dialog__header');
@@ -68,4 +68,4 @@ Vue.directive('dialogDrag', {
       };
     }
   }
-})
+})*/

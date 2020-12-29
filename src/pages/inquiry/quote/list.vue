@@ -113,7 +113,7 @@
           </a-table>
         </div>
         <!-- 模态框 -->
-        <el-dialog :title="title" :visible.sync="visible">
+        <el-dialog v-el-drag-dialog :title="title" :visible.sync="visible">
           <el-steps :active="active" simple style="background: #d8f1e3;margin-bottom: 8px;padding: 13px 4%;height: 36px">
             <el-step title="上传询价文件" icon="el-icon-upload" />
             <el-step title="上传技术文件" icon="el-icon-upload" />
@@ -179,7 +179,7 @@
             <el-button type="primary" :loading="submitLoading" size="small" @click="saveRecordHandler('form')">{{ this.active === 2?'确定':'下一步' }}</el-button>
           </div>
         </el-dialog>
-        <el-dialog title="批量导入报价" class="importDialog" :visible.sync="visible2">
+        <el-dialog v-el-drag-dialog title="批量导入报价" class="importDialog" :visible.sync="visible2">
           <el-form ref="form1" :model="form1" :rules="codeRules" status-icon>
             <div>
               <el-form-item label="" label-width="0px" size="small" prop="proDetailId">
@@ -209,7 +209,7 @@
           </div>
         </el-dialog>
         <!-- 模态框 -->
-        <el-dialog v-dialogDrag title="选择产品池产品" class="importDialog" :visible.sync="poolChooseVisible">
+        <el-dialog v-el-drag-dialog title="选择产品池产品" class="importDialog" :visible.sync="poolChooseVisible">
           <el-input type="text"
                     v-model="poolChooseSearchForm.name"
                     placeholder="设备名" size="small" style="max-width: 200px;"></el-input>
@@ -276,7 +276,7 @@
     </el-tabs>
 
     <!-- 模态框 -->
-    <el-dialog title="新增报价" :visible.sync="quoteVisible">
+    <el-dialog v-el-drag-dialog title="新增报价" :visible.sync="quoteVisible">
       <el-form :model="quoteForm" status-icon>
         <el-row>
           <el-col :sm="24" :lg="12">
@@ -349,6 +349,7 @@
   import { getUser } from '@/utils/auth'
   import XLSX from 'xlsx'
   import clip from '@/utils/clipboard'
+  import elDragDialog from '@/directive/el-drag-dialog'
 
   const columns = [
     { title: '设备名', dataIndex: 'name', scopedSlots: { customRender: 'name' }, ellipsis: true },
@@ -397,6 +398,7 @@
 
 
   export default {
+    directives: { elDragDialog },
     data() {
       const fileUploadUrl = process.env.VUE_APP_BASE_API + 'file/uploadCache'
       return {

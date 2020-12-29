@@ -23,11 +23,11 @@
                 :max-height="tableHeight" :row-class-name="tableRowClassName" style="width: 100%" >
         <el-table-column
           prop="inquiry"
-          label="询价序号"
+          label="序号"
           :fixed="dynamicColumns.suppliers.length > 6?'left':false"
           v-if="data.length>0"
           align="center"
-          width="70">
+          width="50">
           <template style="width: 100%" slot-scope="scope">
             <p>{{scope.row['inquiry'].sort}}</p>
           </template>
@@ -41,10 +41,13 @@
           <template style="width: 100%" slot-scope="scope">
             <div style="position:relative;">
             <el-tooltip :content="scope.row['inquiry'].name" placement="top" effect="light">
-              <p class="ellipsis">设备名：{{scope.row['inquiry'].name}}</p>
+              <p class="ellipsis">设备：{{scope.row['inquiry'].name}}</p>
             </el-tooltip>
+              <el-tooltip :content="scope.row['inquiry'].model" placement="top" effect="light">
+                <p class="ellipsis">型号：{{scope.row['inquiry'].model}}</p>
+              </el-tooltip>
             <el-tooltip :content="scope.row['inquiry'].params" placement="top" effect="light">
-              <p class="ellipsis">技术参数：{{scope.row['inquiry'].params}}</p>
+              <p class="ellipsis">技术要求：{{scope.row['inquiry'].params}}</p>
             </el-tooltip>
               <p class="ellipsis">单位：{{scope.row['inquiry'].unit}}</p>
               <p class="ellipsis">数量：{{scope.row['inquiry'].number}}</p>
@@ -61,7 +64,8 @@
             <div style="position:relative;cursor: pointer">
             <div style="position: relative" @click="draftClick(scope.row['inquiry'], scope.row['draft'])">
               <p :style="scope.row['draft'].totalPrice < priceChecks[scope.row['inquiry'].inquiryId]?{color: 'red'}:scope.row['draft'].totalPrice > 2*priceChecks[scope.row['inquiry'].inquiryId]?{color: '#faad14'}:{}">报价单价：{{scope.row['draft'].price}}</p>
-              <p :style="scope.row['draft'].totalPrice < priceChecks[scope.row['inquiry'].inquiryId]?{color: 'red'}:scope.row['draft'].totalPrice > 2*priceChecks[scope.row['inquiry'].inquiryId]?{color: '#faad14'}:{}">报价总价：{{scope.row['draft'].totalPrice}}</p>
+              <!--<p :style="scope.row['draft'].totalPrice < priceChecks[scope.row['inquiry'].inquiryId]?{color: 'red'}:scope.row['draft'].totalPrice > 2*priceChecks[scope.row['inquiry'].inquiryId]?{color: '#faad14'}:{}">报价总价：{{scope.row['draft'].totalPrice}}</p>-->
+              <p>最终报价单价：{{scope.row['inquiry'].finallyPrice}}</p>
             </div>
             </div>
           </template>
@@ -182,8 +186,61 @@
       已选择<span style="margin: 0 4px;color: #1682e6;">{{submitForm.checkCompareIds.length}}</span>家供应商
       <el-button :loading="submitLoading"  style="right:0;margin: 0 2em 0 0" type="primary" size="small" @click="submitCheck">{{submitLoading?'':'终审'}}</el-button>
     </div>
+    <!-- 模态框 -->
+    <el-dialog v-el-drag-dialog title="修改拟定报价" :visible.sync="draftDialogVisible">
+      <el-form ref="form1" :model="form1" :rules="rules" status-icon>
+        <el-row>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="设备名" label-width="80px" size="small" prop="proOriginId">
+              {{form1.inquiry?form1.inquiry.name:''}}
+            </el-form-item>
+          </el-col>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="型号" label-width="80px" size="small" prop="proOriginId">
+              {{form1.inquiry?form1.inquiry.model:''}}
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="报价单价" label-width="80px" size="small" prop="price">
+              <el-input v-if="!form1.inquiry||!form1.inquiry.finallyPrice" v-model="form1.price" autocomplete="off" />
+              <el-input v-else v-model="form1.inquiry.finallyPrice" autocomplete="off" />
+            </el-form-item>
+          </el-col>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="报价总价" label-width="80px" size="small" prop="totalPrice">
+              <el-input type="text" v-if="form1.inquiry" :value="form1.inquiry.finallyPrice?(form1.inquiry.finallyPrice*form1.inquiry.number).toFixed(2):(form1.price*form1.inquiry.number).toFixed(2)" disabled></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <div style="margin-bottom: 12px">
+          <el-input type="text"
+                    v-model="dialogSearchForm.name"
+                    placeholder="设备名" size="small" style="max-width: 200px;"></el-input>
+          <el-input type="text"
+                    v-model="dialogSearchForm.model"
+                    placeholder="型号" size="small" style="max-width: 200px;"></el-input>
+          <el-button type="primary" size="small" @click="poolFind">查询</el-button>
+        </div>
+        <el-table :data="poolData" v-loading="poolLoading" size="small" @row-click="rowClick">
+          <el-table-column :show-overflow-tooltip="true" prop="name" label="设备名称" />
+          <el-table-column :show-overflow-tooltip="true" prop="supplier" label="供应商" />
+          <el-table-column :show-overflow-tooltip="true" prop="params" label="技术参数" />
+          <el-table-column :show-overflow-tooltip="true" prop="model" label="品牌型号" />
+          <el-table-column :show-overflow-tooltip="true" prop="price" label="单价" />
+          <el-table-column :show-overflow-tooltip="true" prop="number" label="数量" />
+          <el-table-column :show-overflow-tooltip="true" prop="delivery" label="货期" />
+          <el-table-column :show-overflow-tooltip="true" prop="remark" label="备注" />
+        </el-table>
 
-    <el-dialog
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button size="small" @click="draftDialogVisible = false">取 消</el-button>
+        <el-button size="small" type="primary" @click="draftDialogHandler('form1')">确 定</el-button>
+      </div>
+    </el-dialog>
+    <!--<el-dialog
       title="修改拟定报价"
       :visible.sync="draftDialogVisible"
       >
@@ -206,7 +263,7 @@
         <el-button size="small" @click="draftDialogVisible = false">取 消</el-button>
         <el-button size="small" type="primary" @click="draftDialogHandler('form1')">确 定</el-button>
       </span>
-    </el-dialog>
+    </el-dialog>-->
   </div>
 </template>
 <script>
@@ -215,11 +272,15 @@ import qs from 'querystring'
 import '@/styles/auto-style.css'
 import { getUser } from '@/utils/auth'
 import { dateFormat, nullFormat } from '@/utils/format'
+import elDragDialog from '@/directive/el-drag-dialog'
 
 export default {
-
+  directives: { elDragDialog },
   data() {
     return {
+      poolData: [],
+      poolLoading: false,
+      dialogSearchForm: {},
       searchLoading: false,
       draftDialogVisible: false,
       tableHeight: document.documentElement.clientHeight-83-196,
@@ -232,7 +293,6 @@ export default {
       form1: {},
       visible: false,
       data: [],
-      loading: 'true',
       dynamicColumns: {suppliers: [], columns: [], compareIds: []},
       selectedRowKeys: [],
       form: {
@@ -258,16 +318,58 @@ export default {
     this.loadProjects()
   },
   methods: {
+    loadPool(name) {
+      this.poolLoading = true
+      request.request({
+        url: '/pool/findHistoryPrices',
+        method: 'get',
+        params: {'name': name}
+      }).then(resp => {
+        this.poolData = resp.data
+        this.poolLoading = false
+      }).catch(() => {
+        this.poolLoading = false
+      })
+    },
+    rowClick(row, column) {
+      if(this.form1.inquiry.finallyPrice) {
+        this.form1.inquiry.finallyPrice = row.price
+      }else {
+        this.form1.price = row.price
+      }
+    },
+    poolFind() {
+      if(this.dialogSearchForm.name || this.dialogSearchForm.model){
+        request.request({
+          url: '/pool/fuzzyQueryByNameOrModel',
+          method: 'get',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          params: {name: this.dialogSearchForm.name, model: this.dialogSearchForm.model}
+        }).then(resp => {
+          this.poolData = resp.data
+        })
+      }else {
+        this.$message({ message: "请输入查询条件", type: 'warning' })
+      }
+    },
     draftDialogHandler(form) {
       this.$refs[form].validate((valid) => {
         if (valid) {
+          let finallyPrice = ''
+          if(this.form1.inquiry.finallyPrice) {
+            finallyPrice = this.form1.inquiry.finallyPrice
+          }else {
+            finallyPrice = this.form1.price
+          }
           request.request({
             url: '/inquiry/finallyUpdateDraft',
             method: 'post',
             headers: {
               'Content-Type': 'application/json'
             },
-            data: JSON.stringify({id: this.form1.id, price: this.form1.price, totalPrice: (this.form1.price*this.form1.inquiry.number).toFixed(2), operator: getUser()})
+            data: JSON.stringify({id: this.form1.id, finallyPrice: finallyPrice, operator: getUser()})
           }).then(response => {
             this.loadData()
             this.draftDialogVisible = false
@@ -281,6 +383,7 @@ export default {
       })
     },
     draftClick(inquiry, draft) {
+      this.loadPool(inquiry.name)
       this.draftDialogVisible = true
       this.form1 = {id: inquiry.inquiryId, inquiry: inquiry, price: draft.price, totalPrice: draft.totalPrice}
     },
@@ -361,7 +464,7 @@ export default {
     submitCheck() {
       const submitForm = { checkCompareIds: [], uncheckCompareIds: [], remarks: []}
       const allCompareIds = []
-      console.log(this.data)
+      //console.log(this.data)
       this.data.map(item => {
 
         this.dynamicColumns.suppliers.map(s => {
@@ -428,7 +531,7 @@ export default {
         const data = [...this.data]
         const allCompareIds = []
         data.map(item => {
-          console.log(item)
+          //console.log(item)
           if (item.inquiry.name == name && row.inquiryId == item.inquiry.inquiryId) {
             this.dynamicColumns.suppliers.map(s => {
               if(item[s]){
@@ -448,7 +551,7 @@ export default {
 
         this.data = data
         const submitForm = { checkCompareIds: [], uncheckCompareIds: [], remarks: []}
-        console.log(this.data)
+        //console.log(this.data)
         this.priceChecks = {total: 0}
         this.cost = 0
         let total = 0
@@ -466,7 +569,7 @@ export default {
           })
 
           if(key > 0){
-            this.cost += parseFloat(item['draft'].totalPrice)
+            this.cost += parseFloat(item['inquiry'].finallyPrice) * parseInt(item['inquiry'].number)
           }
         })
         this.$set(this.priceChecks, 'total', total)
@@ -546,7 +649,7 @@ export default {
               }
             })
             if(key > 0){
-              this.cost += parseFloat(item['draft'].totalPrice)
+              this.cost += parseFloat(item['inquiry'].finallyPrice) * parseInt(item['inquiry'].number)
             }
           })
           this.$set(this.priceChecks, 'total', total)
