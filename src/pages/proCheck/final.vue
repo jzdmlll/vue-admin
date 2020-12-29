@@ -187,23 +187,24 @@
       title="修改拟定报价"
       :visible.sync="draftDialogVisible"
       >
-      <el-form ref="form1" :model="form1" status-icon>
-        <el-form-item label="拟定报价单价" label-width="80px">
+      <el-form ref="form1" :model="form1" :rules="rules" status-icon>
+        <el-form-item label="拟定报价单价" label-width="80px" prop="price">
           <el-autocomplete
             v-model="form1.price"
             :fetch-suggestions="querySearchAsync"
             placeholder="请输入拟定单价"
             @select="handleSelect"
             style="width: 100%"
+            status-icon
           ></el-autocomplete>
         </el-form-item>
         <el-form-item label="拟定报价总价" label-width="80px">
-          <el-input type="text" v-model="form1.totalPrice"></el-input>
+          <el-input type="text" :value="form1.inquiry?(form1.price*form1.inquiry.number).toFixed(2):0" disabled></el-input>
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
         <el-button size="small" @click="draftDialogVisible = false">取 消</el-button>
-        <el-button size="small" type="primary" @click="draftDialogHandler">确 定</el-button>
+        <el-button size="small" type="primary" @click="draftDialogHandler('form1')">确 定</el-button>
       </span>
     </el-dialog>
   </div>
@@ -238,7 +239,10 @@ export default {
       },
       projects: [],
       submitForm:{ checkCompareIds: [], uncheckCompareIds: [], allInquiryIds: [], remarks: []},
-      submitLoading: false
+      submitLoading: false,
+      rules: {
+        price: [ { required: true, pattern: /^(\-|\+)?\d+(\.\d+)?$/, message: '格式不正确', trigger: 'blur' } ],
+      },
     }
   },
   computed: {
@@ -254,7 +258,28 @@ export default {
     this.loadProjects()
   },
   methods: {
-    draftDialogHandler() {},
+    draftDialogHandler(form) {
+      this.$refs[form].validate((valid) => {
+        if (valid) {
+          request.request({
+            url: '/inquiry/finallyUpdateDraft',
+            method: 'post',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            data: JSON.stringify({id: this.form1.id, price: this.form1.price, totalPrice: (this.form1.price*this.form1.inquiry.number).toFixed(2), operator: getUser()})
+          }).then(response => {
+            this.loadData()
+            this.draftDialogVisible = false
+            this.$message({ message: response.message, type: 'success' })
+          }).catch(()=> {
+            this.loadData()
+          })
+        }else {
+          return false
+        }
+      })
+    },
     draftClick(inquiry, draft) {
       this.draftDialogVisible = true
       this.form1 = {id: inquiry.inquiryId, inquiry: inquiry, price: draft.price, totalPrice: draft.totalPrice}
@@ -301,7 +326,7 @@ export default {
       }
       return '';
     },
-    draftDialogHandler(form1) {
+    /*draftDialogHandler(form1) {
       let form = this.form1
 
       form.operator = parseInt(getUser())
@@ -331,7 +356,7 @@ export default {
       }).catch(()=> {
         this.loadData()
       })
-    },
+    },*/
     nullFormat,
     submitCheck() {
       const submitForm = { checkCompareIds: [], uncheckCompareIds: [], remarks: []}

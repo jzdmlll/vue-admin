@@ -18,7 +18,7 @@
         :rowKey="record => record.id"
         :loading="contractsLoading"
         :data-source="contracts"
-        :scroll="windowWidth< 1000 && contracts.length > 0 ?{ x: 1000}:{}"
+        :scroll="windowWidth < 768 && contracts.length > 0 ?{ x: 1000}:{}"
         >
         <a-table-column title="序号" align="center" :width="60">
           <template slot-scope="text, record, index">
@@ -47,7 +47,7 @@
         </a-table-column>-->
         <a-table-column title="审核进度" align="center" :width="260">
           <template slot-scope="text, record">
-            <a-tooltip destroyTooltipOnHide="true">
+            <a-tooltip :destroyTooltipOnHide="true">
               <div slot="title">
                 <el-row style="width: 260px;">
                   <el-col v-for="(item, index) in audits" :key="index" class="progress-tooltip-col" :span="8">

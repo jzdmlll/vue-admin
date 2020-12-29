@@ -1,6 +1,6 @@
 <template>
   <!-- 采购计划 -->
-  <div class="purchase_plan_list">
+  <div class="purchase_plan_list" ref="purchase">
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
       <el-button v-if="selectedRowKeys.length>0" style="margin-right: 6px" type="primary" icon="el-icon-document" size="small" @click="handleAddInquiry">发起询价</el-button>
       <el-select v-model="searchForm.purchaseProId" style="margin-right: 6px" filterable clearable placeholder="请选择采购项目" value-key="name">
@@ -25,14 +25,16 @@
           :loading="plansLoading"
           :data-source="plans"
           :row-selection="{ selectedRowKeys: selectedRowKeys, onChange: onSelectChange }"
-          :customRow="rowClick">
-          <a-table-column title="序号">
-            <template slot-scope="text, record, index">
-              {{index+1}}
-            </template>
-          </a-table-column>
-          <a-table-column key="name" title="设备名" data-index="name" />
-          <a-table-column key="action" title="操作" fixed="right">
+          :customRow="rowClick"
+          :scroll="windowWidth< 870 + 34*2 && plans.length > 0 ?{ x: 870}:{}">
+          <a-table-column :width="60" align="center" key="serialNumber" title="序号" data-index="serialNumber" />
+          <a-table-column :width="120" align="center" ellipsis="true" key="item" title="采购项" data-index="item" />
+          <a-table-column :width="120" align="center" ellipsis="true" key="brand" title="品牌" data-index="brand" />
+          <a-table-column :width="120" align="center" ellipsis="true" key="model" title="型号" data-index="model" />
+          <a-table-column :width="120" align="center" ellipsis="true" key="params" title="技术要求" data-index="params" />
+          <a-table-column :width="60" align="center" key="unit" title="单位" data-index="unit" />
+          <a-table-column :width="60" align="center" key="number" title="数量" data-index="number" />
+          <a-table-column :width="150" align="center" flex="right" key="action" title="操作" fixed="right">
             <template slot-scope="text, record">
                 <el-button v-if="record.isInquiry == 0" @click="poolChoose(record)" type="success" icon="el-icon-star-on" size="mini" style="padding: 7px 10px;background: #faad14;border-color:#faad14">产品池</el-button>
             </template>
@@ -199,11 +201,24 @@
 
         dialogSearchForm: {},
         poolDialogVisible: false,
-        poolForm: {}
+        poolForm: {},
+        windowWidth: document.documentElement.clientWidth, // 屏幕实时宽度
       }
+    },
+    mounted() {
+      var that = this;
+      // <!--把window.onresize事件挂在到mounted函数上-->
+      window.onresize = () => {
+        return (() => {
+
+          //window.fullWidth = document.documentElement.clientWidth;
+          that.windowWidth = that.$refs.purchase.clientWidth ; // 宽
+        })()
+      };
     },
     created() {
       this.init()
+
     },
     methods: {
       addItemsSubmit(){},
@@ -347,6 +362,8 @@
       toSearch() {
         if(this.searchForm.purchaseProId) {
           this.loadPlans(this.searchForm.purchaseProId)
+        }else {
+          this.$message({message: '请选择项目', type: 'warning'})
         }
       },
     }
@@ -360,10 +377,10 @@
     line-height:32px;
     margin-left:90px!important
   }
-}
-.outputlist_upload {
-  opacity: 0;
-  width: 0;
-  overflow: hidden;
+  .outputlist_upload {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+  }
 }
 </style>

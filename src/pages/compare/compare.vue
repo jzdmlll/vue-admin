@@ -100,14 +100,14 @@
           <a-table-column ellipsis="true" key="unit" align="center" :width="50" title="单位" data-index="unit" />
           <a-table-column ellipsis="true" key="inquiryRate" :width="60" align="center" title="利率" data-index="inquiryRate">
             <template slot-scope="text, record, index">
-              {{parseFloat(text)/1000}}%
+              {{text?parseFloat(text)/1000:0}}%
             </template>
           </a-table-column>
           <a-table-column ellipsis="true" key="price" title="拟定报价单价" data-index="price" />
           <a-table-column ellipsis="true" key="totalPrice" title="拟定报价总价" data-index="totalPrice" />
           <a-table-column ellipsis="true" key="realBrand" title="品牌" data-index="realBrand" />
           <a-table-column ellipsis="true" key="remark" title="备注" data-index="remark" />
-          <a-table-column :sorter="(a, b) => a.unCompare - b.unCompare" defaultSortOrder="descend" key="unCompare" title="状态" :width="100" data-index="unCompare" align="center">
+          <a-table-column :sorter="(a, b) => a.unCompareNum - b.unCompareNum" defaultSortOrder="descend" key="unCompareNum" title="状态" :width="100" data-index="unCompareNum" align="center">
             <template slot-scope="text, record, index">
               <el-tag :type="text == 0 ? 'success':'danger'">{{ text == 0 ? '已完成':'未完成' }}</el-tag>
             </template>
@@ -222,6 +222,7 @@
         compares: [],
         comparesLoading: false,
         selectedRowKey: {},
+        selectedPrice: {},
 
         rate: {},
         remark: {},
@@ -282,8 +283,9 @@
       getUser,
       getRate(suPrice, draftPrice, inquiryId) {
         let rate = 0
+        console.log(suPrice +'|'+ draftPrice)
         if(suPrice && draftPrice) {
-          rate = ((parseFloat(draftPrice) - parseFloat(suPrice))/parseFloat(suPrice)).toFixed(2)
+          rate = ((parseFloat(draftPrice) - parseFloat(suPrice))/parseFloat(suPrice)*100).toFixed(2)
         }
         this.$set(this.rate, inquiryId, rate)
       },
@@ -302,6 +304,7 @@
           data: JSON.stringify(form)
         }).then(response => {
           this.$message({ message: response.message, type: 'success' })
+          console.log(form)
           let arr = []
           arr.push(form.price)
           this.$set(this.draftPrice, form.id, arr)
@@ -342,10 +345,13 @@
         }
       },
       addPrice(row){
-        this.visible = true
         row.totalPrice = null
         this.dialogForm = row
+        if(this.selectedPrice[row.id]) {
+          this.$set(this.dialogForm, 'suPrice', this.selectedPrice[row.id])
+        }
         this.loadPool(row.name)
+        this.visible = true
       },
       batchCompare() {
         this.compareRequest(this.selectedInquiryIds)
@@ -360,13 +366,16 @@
         this.selectedInquiryIds = rows
       },
       onSelectChange(selectedRowKeys, selectedRows) {
+        let suPrice = ''
         const rows = selectedRows.map(item => {
           if (item.id && item.businessAudit != 2 && item.technicalAudit != 2) {
+            suPrice = item.suPrice
             return item.id
           }
         })
         if(rows && rows!='') {
           this.$set(this.selectedRowKey, selectedRows[0].inquiryId, rows)
+          this.$set(this.selectedPrice, selectedRows[0].inquiryId, suPrice)
           this.dialogForm.suPrice = selectedRows[0].suPrice
           this.getRate(selectedRows[0].suPrice, this.draftPrice[selectedRows[0].inquiryId], selectedRows[0].inquiryId)
         }
@@ -405,11 +414,11 @@
             //this.$set(this.selectedRowKey, item.inquiry.id, )
             this.getRate(item.suPrice, item.inquiry.price, item.inquiry.id)
             item.quotes.map(quote => {
-              console.log(quote.compareStatus)
               if (quote.compareStatus == 1) {
                 let arr = []
                 arr.push(quote.id)
                 this.$set(this.selectedRowKey, item.inquiry.id, arr)
+                this.$set(this.selectedPrice, item.inquiry.id, quote.suPrice)
               }
             })
           })
@@ -436,6 +445,7 @@
             data: qs.stringify({rate: parseFloat(value)*1000, proDetailId: this.proDetailId})
           }).then(resp => {
             this.$message({ message: resp.message, type: 'success' })
+            this.loadInquiries()
           })
         }).catch(() => {
           this.$message({
@@ -467,7 +477,7 @@
             .then(resp => {
             setTimeout(() => {
                 this.opacity = 1
-              }, 1000)
+              }, 500)
               this.inquiries = resp.data
             })
         }
