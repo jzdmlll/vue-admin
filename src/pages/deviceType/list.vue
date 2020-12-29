@@ -28,7 +28,7 @@
               <el-button icon="el-icon-edit" type="success" size="mini" @click="toEdit(scope.row)" />
             </el-tooltip>
             <el-tooltip class="item" effect="dark" content="删除设备类型" placement="bottom-start">
-              <el-button icon="el-icon-delete" type="danger" size="mini" @click="deleteHandler(scope.row.id)" />
+              <el-button icon="el-icon-delete" type="danger" size="mini" @click="deleteHandler(scope.row)" />
             </el-tooltip>
           </template>
         </el-table-column>
@@ -60,6 +60,7 @@
 import request from '@/utils/request'
 import qs from 'querystring'
 import '@/styles/auto-style.css'
+import {getUser} from '@/utils/auth'
 
 export default {
   data() {
@@ -76,6 +77,7 @@ export default {
     this.init()
   },
   methods: {
+    getUser,
     lazyLoad(row, treeNode, resolve) {
       request.get('/deviceType/findByParentId?parentId=' + row.id)
         .then(response => {
@@ -93,7 +95,6 @@ export default {
         params: { name: this.searchForm.name, code: this.searchForm.code }
       })
         .then(response => {
-
           this.devices = response.data
           this.devices.forEach(item => {
             item.hasChildren = !item.parentId
@@ -107,13 +108,35 @@ export default {
     init() {
       this.toSearch()
     },
-    toEdit() {},
-    toAdd() {
+    toEdit(row) {
       this.toSearch()
+      this.title = '修改'
+      this.form = row
       this.visible = true
     },
-    deleteHandler() {},
+    toAdd() {
+      this.toSearch()
+      this.title = '新增'
+      this.form = {}
+      this.visible = true
+    },
+    deleteHandler(row) {
+      this.form = row
+      this.form.operator = getUser()
+      request.request({
+        url: '/deviceType/setInvalid',
+        method: 'post',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        data: qs.stringify(this.form)
+      }).then(response => {
+        this.$message({message: response.message, type: 'success' })
+        this.init();
+      })
+    },
     saveHandler() {
+      this.form.operator = getUser()
       request.request({
         url: '/deviceType/saveOrUpdate',
         method: 'post',
