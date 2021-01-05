@@ -11,7 +11,14 @@ export function onFilterDropdownVisibleChange(visible){
   }
 }
 export function onFilter(value, record) {
-  return record[this.searchedColumn]
+  let arr = this.searchedColumn.split('.')
+  let result = ''
+  switch (arr.length){
+    case 2: result = record[arr[0]][arr[1]];break
+    case 3: result = record[arr[0]][arr[1]][arr[2]];break
+    default: result = record[this.searchedColumn]
+  }
+  return result
     .toString()
     .toLowerCase()
     .includes(value.toLowerCase())

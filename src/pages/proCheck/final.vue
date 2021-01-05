@@ -526,7 +526,7 @@ export default {
       const name = row.name
       const supplier = row.supplier
       //console.log(row)
-      if(id && name && supplier && veto == 0 && row.businessAudit == 1 && row.technicalAudit) {
+      if(id && name && supplier && veto == 0 && row.businessAudit == 1 && row.technicalAudit == 1) {
         //alert(id + '  ' + name + '  ' + supplier)
         const data = [...this.data]
         const allCompareIds = []
