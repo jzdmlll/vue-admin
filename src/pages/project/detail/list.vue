@@ -9,9 +9,19 @@
     <div style="padding:1em;margin-bottom:1em;background:#fff">
       <el-table v-loading="loading" :data="projects" size="small">
         <el-table-column type="index" prop="" label="序号" width="120" />
-        <el-table-column prop="name" label="项目名称" />
-        <el-table-column prop="content" label="内容" />
+        <el-table-column prop="name" show-overflow-tooltip label="项目名称" ellipsis="true" />
+        <el-table-column prop="content" show-overflow-tooltip label="内容" ellipsis="true" />
+        <el-table-column prop="sysProOrigin.name" label="项目来源" />
+        <el-table-column prop="sysProType.name" label="项目类型" />
         <el-table-column prop="remark" label="批注" />
+        <el-table-column prop="sysUser.username" label="创建人" />
+        <el-table-column :width="100" show-overflow-tooltip label="创建时间">
+          <template slot-scope="scope">{{dateTimeFormat(scope.row.time)}}</template>
+        </el-table-column>
+        <el-table-column prop="sysUser1.username" label="修改人" />
+        <el-table-column :width="100" show-overflow-tooltip label="修改时间" align="center">
+          <template slot-scope="scope">{{dateTimeFormat(scope.row.updateTime)}}</template>
+        </el-table-column>
         <el-table-column label="操作" align="center" width="180">
           <template slot-scope="scope">
             <el-tooltip class="item" effect="dark" content="删除该项目" placement="bottom-start">
@@ -142,6 +152,7 @@ import qs from 'querystring'
 import '@/styles/auto-style.css'
 import { getUser } from '@/utils/auth'
 import XLSX from 'xlsx'
+import { dateTimeFormat } from '@/utils/format'
 
 export default {
   data() {
@@ -216,6 +227,7 @@ export default {
     this.loadProjects()
   },
   methods: {
+    dateTimeFormat,
     importHandler(form1) {
       this.$refs[form1].validate((valid) => {
         if (valid) {

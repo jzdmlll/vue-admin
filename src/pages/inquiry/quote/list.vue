@@ -352,6 +352,7 @@
   import elDragDialog from '@/directive/el-drag-dialog'
 
   const columns = [
+    { title: '序号', dataIndex: 'sort', scopedSlots: { customRender: 'sort' }, ellipsis: true },
     { title: '设备名', dataIndex: 'name', scopedSlots: { customRender: 'name' }, ellipsis: true },
     { title: '品牌', dataIndex: 'realBrand', scopedSlots: { customRender: 'realBrand' }, ellipsis: true },
     { title: '技术参数', dataIndex: 'params', scopedSlots: { customRender: 'params' }, ellipsis: true },
