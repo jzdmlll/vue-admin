@@ -13,6 +13,7 @@
       </el-select>
       <el-input v-if="$route.name == '商务审核'" v-model="searchForm.supplier"  placeholder="请输入供应商名"></el-input>
       <el-button style="margin-right: 6px" type="primary" icon="el-icon-search" size="small" @click="toSearch">查询</el-button>
+      <el-link v-for="item in files" type="primary" :href = "item.url">{{item.name}} | </el-link>
     </div>
     <div style="padding:1em;margin-bottom:1em;background:#fff">
       <a-table
@@ -65,6 +66,7 @@ import request from '@/utils/request'
 import qs from 'querystring'
 import '@/styles/auto-style.css'
 import { getUser } from '@/utils/auth'
+import { getAction } from '@/api/manage'
 
 let checkStatusCol = ''
 
@@ -120,6 +122,7 @@ let columns = [
 export default {
   data() {
     return {
+      files: [],
       searchForm: {status: ''},
       visible: false,
       checkStatusCol: '',
@@ -258,6 +261,14 @@ export default {
       this.selectedRowKeys = rows
     },
     toSearch() {
+
+      if (this.searchForm.proDetailId){
+        getAction('/file/findByProId',{proId : this.searchForm.proDetailId})
+          .then(resp => {
+            this.files = resp.data
+          })
+      }
+
       this.loading = true
       let url = ''
       if (this.$route.name == '技术审核') {
