@@ -2,15 +2,54 @@
   <!-- 询价结果 -->
   <div class="inquiry-result">
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
-      <el-button v-if="selectedRowKeys.length>0"  type="primary" icon="el-icon-document" size="small" :loading="downloadLoading" @click="handleDownload">导出Excel</el-button>
-      <el-button v-if="selectedRowKeys.length>0"  type="primary" size="small" @click="toPurchase">发往采购</el-button>
-      <!--<el-button v-if="selectedRowKeys.length>0"  type="primary" icon="el-icon-document" size="small" @click="addContract">生成采购合同</el-button>
--->   <el-select v-model="searchForm.proDetailId" style="margin-right: 6px" filterable clearable placeholder="请选择项目" value-key="name">
-        <el-option v-for="item in projects" :key="item.id" :label="item.name" :value="item.id" />
-      </el-select>
+      <el-input v-model="searchForm.name"  placeholder="请输入项目名"></el-input>
+      <el-date-picker
+        v-model="searchForm.time"
+        unlink-panels
+        value-format="timestamp"
+        type="daterange"
+        range-separator="至"
+        start-placeholder="开始日期"
+        end-placeholder="结束日期">
+      </el-date-picker>
       <el-button style="margin-right: 6px" type="primary" icon="el-icon-search" size="small" @click="toSearch">查询</el-button>
     </div>
-    <div style="padding:1em;margin-bottom:1em;background:#fff">
+    <el-card shadow="never" style="margin-bottom: 1em">
+      <div slot="header" class="index-md-title">
+        <span>招投标项目表</span>
+      </div>
+      <a-table
+        :pagination="{pageSize: 6}"
+        :data-source="purProjects"
+        size="small"
+        ref="purProjects"
+        :rowKey="record => record.id"
+        :loading="purProjectsLoading"
+        :customRow="rowClick"
+      >
+        <a-table-column title="序号" align="center" :width="60">
+          <template slot-scope="text, record, index">
+            {{index+1}}
+          </template>
+        </a-table-column>
+        <a-table-column :width="100" ellipsis="true" key="name" title="项目名" data-index="name" align="center"/>
+        <a-table-column :width="100" ellipsis="true" key="proNo" title="项目编号" data-index="proNo" align="center"/>
+        <a-table-column :width="100" ellipsis="true" key="remark" title="备注" data-index="remark" align="center"/>
+        <a-table-column :width="100" ellipsis="true" key="time" title="创建时间" data-index="time" align="center">
+          <template slot-scope="text, record">{{dateTimeFormat(text)}}</template>
+        </a-table-column>
+        <a-table-column :width="100" ellipsis="true" key="operator" title="创建者" data-index="operator" align="center"/>
+      </a-table>
+    </el-card>
+    <el-card shadow="never">
+      <div slot="header" class="index-md-title">
+        <span>询价结果表</span>
+        <div style="margin-left: 1em; display: inline-block">
+          <span v-if="currentPro!='' && currentPro">【{{currentPro}}】</span>
+          <el-button v-if="selectedRowKeys.length>0"  type="primary" icon="el-icon-document" size="small" :loading="downloadLoading" @click="handleDownload">导出Excel</el-button>
+          <el-button v-if="selectedRowKeys.length>0"  type="primary" size="small" @click="toPurchase">发往采购</el-button>
+        </div>
+      </div>
       <a-table
         size="small"
         ref="purchases"
@@ -80,7 +119,7 @@
           </template>
         </a-table-column>
       </a-table>
-    </div>
+    </el-card>
     <!-- 模态框 -->
     <!--<el-dialog title="生成采购合同" :visible.sync="visible">
       <el-form ref="form" :model="form"  status-icon>
@@ -93,6 +132,7 @@
         <el-button type="primary" size="small" @click="submitHandler('form')">提 交</el-button>
       </div>
     </el-dialog>-->
+
   </div>
 </template>
 <script>
@@ -104,7 +144,7 @@
   import XLSX from 'xlsx'
   import { onFilterDropdownVisibleChange, onFilter, handleSearch, handleReset } from '@/utils/column-search'
   import elDragDialog from '@/directive/el-drag-dialog'
-
+  import { dateTimeFormat } from '@/utils/format'
   export default {
     directives: { elDragDialog },
     data() {
@@ -114,12 +154,13 @@
         customRender: 'customRender',
       }
       return {
-        searchForm: {},
+        searchForm: { time: []},
         purchases: [],
-        loading: true,
+        loading: false,
         downloadLoading: false,
         selectedRowKeys: [],
-        projects: [],
+        purProjects: [],
+        purProjectsLoading: false,
         //visible: false,
         form: {},
         role: {},
@@ -130,6 +171,8 @@
         searchText: '',
         searchedColumn: '',
         searchInput: null,
+
+        currentPro: ''
       }
     },
     created() {
@@ -137,6 +180,18 @@
       this.role = this.$store.getters.roles[0]
     },
     methods: {
+      dateTimeFormat,
+      rowClick(row, index) {
+        return {
+          on: {
+            click: () => {
+              this.searchForm.proDetailId = row.id
+              this.currentPro = row.name
+              this.loadPurchases()
+            }
+          }
+        }
+      },
       /*addContract() {
         this.visible = true
       },*/
@@ -167,7 +222,7 @@
           postActionByQueryString(url[type], params[type])
             .then(resp => {
               this.$message({ message: resp.message, type: 'success' })
-              this.toSearch()
+              //this.toSearch()
             })
         }).catch(() => {
         });
@@ -226,44 +281,33 @@
         if(selectedRows.length == 0) {
           this.selectSupplier = null
         }
-        const rows = selectedRows.map(item => {
-          /*if(this.selectSupplier == null) {
-            this.selectSupplier = item.quote.supplier
+        let rows = []
+        selectedRows.map(item => {
+          if (!item.inquiry.itemId) {
+            rows.push(item.quote.id)
           }
-          if (item.quote.id && (item.quote.supplier == this.selectSupplier || !this.selectSupplier)) {
-            return item.quote.id
-          }*/
-          return item.quote.id
         })
         this.selectedRowKeys = rows
       },
       toSearch() {
+        postActionByQueryString('/inquiry/inquiryResultFindPro', { proName: this.searchForm.name, startTime: this.searchForm.time[0], overTime: this.searchForm.time[1]})
+          .then( resp => {
+            this.purProjects = resp.data
+          })
+      },
+      loadPurchases() {
         if(this.searchForm.proDetailId) {
           request.get('/inquiry/findProPurchase?proDetailId='+this.searchForm.proDetailId)
             .then(response => {
               this.purchases = response.data
               this.loading = false
             }).catch(()=> {
-              this.loading = false
-            })
-        }
-      },
-      async init() {
-        await this.loadProjects()
-        if(this.projects.length > 0){
-          if(!this.searchForm.proDetailId) {
-            this.$set(this.searchForm, 'proDetailId', this.projects[0].id)
-          }
-          this.toSearch()
-        }else {
-          this.loading = false
-        }
-      },
-      async loadProjects() {
-        await request.get('/project/detail/findByAll')
-          .then(response => {
-            this.projects = response.data
+            this.loading = false
           })
+        }
+      },
+      init() {
+
       },
       onFilterDropdownVisibleChange,
       onFilter,
@@ -279,6 +323,9 @@
     height:auto;
     line-height:32px;
     margin-left:90px!important
+  }
+  .el-date-editor {
+    border-color: #42B983;
   }
 }
 </style>

@@ -358,7 +358,7 @@ export default {
       if (this.active === 1) {
         this.visible = false
       } else {
-        this.active--
+        this.active --
       }
     },
     saveRecordHandler(form) {

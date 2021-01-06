@@ -1,6 +1,6 @@
 <template>
-  <!-- 询价结果 -->
-  <div class="inquiry-result">
+  <!-- 生成采购合同 -->
+  <div class="purchase-export">
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
       <el-button v-if="selectedRowKeys.length>0"  type="primary" icon="el-icon-document" size="small" :loading="downloadLoading" @click="handleDownload">导出Excel</el-button>
       <el-button v-if="selectedRowKeys.length>0"  type="primary" icon="el-icon-document" size="small" @click="addContract">生成采购合同</el-button>
@@ -19,6 +19,11 @@
         :data-source="purchases"
         :scroll="purchases.length > 0?{ x: 1500}:{}"
         :row-selection="{ selectedRowKeys: selectedRowKeys, onChange: onSelectChange }">
+        <a-table-column :width="80" align="center" title="状态" key="inquiry.itemId" data-index="contractId">
+          <template slot-scope="text, record">
+            <el-tag :type="text? 'success':'info'">{{ text?'有合同':'无合同' }}</el-tag>
+          </template>
+        </a-table-column>
         <a-table-column defaultSortOrder="ascend" :sorter="(a, b) => a.serialNumber-b.serialNumber" title="序号" key="serialNumber" data-index="serialNumber" align="center" :width="50" />
         <a-table-column :width="100" ellipsis="true" key="item" title="设备" data-index="item" align="center"/>
         <a-table-column
@@ -68,18 +73,23 @@
         <a-table-column :width="100" ellipsis="true" key="inquiry.remark" title="备注" data-index="inquiry.remark" align="center"/>
         <a-table-column :width="120" fixed="right" key="action" title="操作" align="center">
           <template slot-scope="text, record">
-            <!--<el-button v-if="role.name == '采购员' || role.name == '管理员'" @click="editPrice('供货价', record.quote)" type="success" icon="el-icon-edit" size="mini" style="padding: 7px 10px;">供货价</el-button>
-            <el-button v-if="role.name == '投标员' || role.name == '管理员'" @click="editPrice('报价', record.inquiry)" type="success" icon="el-icon-edit" size="mini" style="padding: 7px 10px;">报价</el-button>
--->       </template>
+            <el-button @click="editPrice('供货价', record.purchaseSupply)" type="success" icon="el-icon-edit" size="mini" style="padding: 7px 10px;">供货价</el-button>
+          </template>
         </a-table-column>
       </a-table>
     </div>
     <!-- 模态框 -->
-    <el-dialog title="生成采购合同" :visible.sync="visible">
-      <el-form ref="form" :model="form"  status-icon>
-        <!--<el-form-item label="备注" label-width="80px" size="small" prop="remark">
-          <el-input type="text" v-model="form.remark"></el-input>
-        </el-form-item>-->
+    <el-dialog v-el-drag-dialog title="生成采购合同" :visible.sync="visible">
+      <el-form ref="form" :model="form" :rules="rules" status-icon>
+        <el-form-item label="合同名" label-width="80px" size="small" prop="contractName">
+          <el-input type="text" v-model="form.contractName"></el-input>
+        </el-form-item>
+        <el-form-item label="合同编号" label-width="80px" size="small" prop="contractNo">
+          <el-input type="text" v-model="form.contractNo"></el-input>
+        </el-form-item>
+        <el-form-item label="备注" label-width="80px" size="small" prop="remark">
+          <el-input type="textarea" v-model="form.remark"></el-input>
+        </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button size="small" @click="visible = false">取 消</el-button>
@@ -106,6 +116,21 @@
         filterIcon: 'filterIcon',
         customRender: 'customRender',
       }
+      var validNo = (rule, value, callback) => {
+        if (!value) {
+          return callback(new Error('不能为空'));
+        }
+        request.get('/purchase/purchaseContractGenerate/findContractNo',{
+          params: { contractNo: value }
+        })
+          .then(response => {
+            if (response.data > 0) {
+              callback(new Error('合同编号已存在'))
+            }else {
+              callback()
+            }
+          })
+      };
       return {
         searchForm: {},
         purchases: [],
@@ -123,6 +148,15 @@
         searchText: '',
         searchedColumn: '',
         searchInput: null,
+
+        rules: {
+          contractNo: [
+            { validator: validNo, trigger: 'blur'}
+          ],
+          contractName: [
+            { required: true, message: '不能为空', trigger: 'blur'}
+          ]
+        }
       }
     },
     created() {
@@ -130,9 +164,15 @@
       this.role = this.$store.getters.roles[0]
     },
     methods: {
+      /**
+       * 弹出生成合同模态框
+       */
       addContract() {
         this.visible = true
       },
+      /**
+       * 修改供货价
+       */
       editPrice(type, row) {
         this.$prompt('请输入'+type, '提示', {
           confirmButtonText: '确定',
@@ -142,7 +182,7 @@
         }).then(({ value }) => {
           let url = { 供货价: '/inquiry/updateSupplyPrice', 报价: '/inquiry/updateCorrectPrice'}
           let params = {
-            供货价: { id: row.id, suPrice: value, operator: getUser()},
+            供货价: { id: row.id, price: value, operator: getUser()},
             报价: { id: row.id, correctPrice: value, operator: getUser()}
           }
           postActionByQueryString(url[type], params[type])
@@ -153,9 +193,30 @@
         }).catch(() => {
         });
       },
-      submitHandler() {
+      /**
+       * 生成采购合同提交 事件
+       */
+      submitHandler(form) {
+        this.$refs[form].validate((valid) => {
+          if (valid) {
+            let form = this.form
+            form.operator = getUser()
+            form.projectId = this.searchForm.proDetailId
 
+            postActionByJson('/purchase/purchaseContractGenerate/insertContractInfo', { purchaseContract: form, itemIds: this.selectedRowKeys })
+              .then( resp => {
+                this.$message({ message: resp.message, type: 'success' })
+                this.visible = false
+              })
+          }else {
+            console.log('error commit')
+            return false
+          }
+        })
       },
+      /**
+       * 导出excel
+       */
       handleDownload() {
         if (this.selectedRowKeys.length) {
           this.downloadLoading = true
@@ -200,23 +261,40 @@
           })
         }
       },
+      /**
+       * 格式化json 导出excel时 调用
+       */
       formatJson(filterVal, jsonData) {
         return jsonData.map(v => filterVal.map(j => v[j]))
       },
+      /**
+       * table多选触发事件
+       */
       onSelectChange(selectedRowKeys, selectedRows) {
         if(selectedRows.length == 0) {
           this.selectSupplier = null
         }
-        const rows = selectedRows.map(item => {
-          if(this.selectSupplier == null) {
-            this.selectSupplier = item.purchaseSupply.supplier
-          }
-          if (item.id && (item.purchaseSupply.supplier == this.selectSupplier || !this.selectSupplier)) {
-            return item.id
+        let rows = []
+        selectedRows.map(item => {
+
+          if (!item.contractId) {
+            if(this.selectSupplier == null) {
+              this.selectSupplier = item.purchaseSupply.supplier
+            }
+            if (item.id && (item.purchaseSupply.supplier == this.selectSupplier || !this.selectSupplier)) {
+              rows.push(item.id)
+            }else {
+              this.$message({type: 'info', message: '只能选同一个供应商'})
+            }
+          }else {
+            this.$message({type: 'info', message: '该采购项已生成过合同'})
           }
         })
         this.selectedRowKeys = rows
       },
+      /**
+       * 顶部 查询按钮 点击事件
+       */
       toSearch() {
         if(this.searchForm.proDetailId) {
           /*request.get('/inquiry/findProPurchase?proDetailId='+this.searchForm.proDetailId)
@@ -235,6 +313,9 @@
             })
         }
       },
+      /**
+       * 页面初始化 调用
+       */
       async init() {
         await this.loadProjects()
         if(this.projects.length > 0){
@@ -246,12 +327,18 @@
           this.loading = false
         }
       },
+      /**
+       * 查询所有采购项目
+       */
       async loadProjects() {
         await request.get('/purchase/project/findAllLike')
           .then(response => {
             this.projects = response.data
           })
       },
+      /**
+       * ant table 列筛选相关方法
+       */
       onFilterDropdownVisibleChange,
       onFilter,
       handleReset,
@@ -261,7 +348,7 @@
 </script>
 
 <style lang="scss" scoped>
-  .inquiry-result {
+  .purchase-export {
     /deep/.el-form-item__content{
       height:auto;
       line-height:32px;

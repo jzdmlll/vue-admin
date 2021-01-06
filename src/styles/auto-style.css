@@ -71,6 +71,7 @@
   background: #4bcb90;
   border-color: #4bcb90;
 }
+.el-textarea__inner:focus, .el-textarea__inner:hover,
 .el-input__inner:focus, .ant-table-row-expand-icon:hover,
 .ant-table-row-expand-icon:active, .ant-table-row-expand-icon:focus,
 .ant-input:hover, .ant-input:focus, .ant-input-number:hover, .ant-input-number:focus, .ant-input-number:active,

@@ -60,11 +60,17 @@
           :rowKey="record => record.id"
           :loading="inquiriesLoading"
           :data-source="inquiries"
+          :scroll="{x: 1400}"
           :row-selection="{ selectedRowKeys: selectedInquiryIds, onChange: onInquirySelectChange}"
         >
-          <a-table-column ellipsis="true" key="sort" title="询价序号" :width="150" data-index="sort" />
+          <a-table-column :sorter="(a, b) => a.unCompareNum - b.unCompareNum" defaultSortOrder="descend" key="unCompareNum" title="状态" :width="100" data-index="unCompareNum" align="center">
+            <template slot-scope="text, record, index">
+              <el-tag :type="text == 0 ? 'success':'danger'">{{ text == 0 ? '已完成':'未完成' }}</el-tag>
+            </template>
+          </a-table-column>
+          <a-table-column ellipsis="true" key="sort" title="序号" :width="60" align="center" data-index="sort" />
           <a-table-column :sorter="(a, b) => a.name.localeCompare(b.name)" ellipsis="true"
-                          key="name" title="设备名" data-index="name" :width="150"
+                          key="name" title="设备名" data-index="name" :width="150" align="center"
                           @filter="onFilter" @filterDropdownVisibleChange="onFilterDropdownVisibleChange" :scopedSlots="scopedSlots">
             <template slot="filterDropdown" slot-scope="{ setSelectedKeys, selectedKeys, confirm, clearFilters, column }"
                       style="padding: 8px">
@@ -90,25 +96,21 @@
               </el-button>
             </template>
           </a-table-column>
-          <a-table-column ellipsis="true" key="model" title="型号" :width="150" data-index="model" />
-          <a-table-column ellipsis="true" key="params" title="参数" :width="150" data-index="params" />
-          <a-table-column ellipsis="true" key="number" align="center" :width="60" title="数量" data-index="number" />
-          <a-table-column ellipsis="true" key="unit" align="center" :width="50" title="单位" data-index="unit" />
+          <a-table-column ellipsis="true" key="model" title="型号" :width="150" align="center" data-index="model" />
+          <a-table-column ellipsis="true" key="params" title="参数" :width="150" align="center" data-index="params" />
+          <a-table-column ellipsis="true" key="number" :width="60" align="center" title="数量" data-index="number" />
+          <a-table-column ellipsis="true" key="unit" :width="50" align="center" title="单位" data-index="unit" />
           <a-table-column ellipsis="true" key="inquiryRate" :width="80" align="center" title="利率" data-index="inquiryRate">
             <template slot-scope="text, record, index">
               {{text?parseFloat(text)/1000:0}}%
             </template>
           </a-table-column>
-          <a-table-column ellipsis="true" key="price" :width="100" title="拟定报价单价" data-index="price" />
-          <a-table-column ellipsis="true" key="totalPrice" :width="100" title="拟定报价总价" data-index="totalPrice" />
-          <a-table-column ellipsis="true" key="realBrand" :width="100" title="品牌" data-index="realBrand" />
-          <a-table-column ellipsis="true" key="remark" :width="150" title="备注" data-index="remark" />
-          <a-table-column :sorter="(a, b) => a.unCompareNum - b.unCompareNum" defaultSortOrder="descend" key="unCompareNum" title="状态" :width="100" data-index="unCompareNum" align="center">
-            <template slot-scope="text, record, index">
-              <el-tag :type="text == 0 ? 'success':'danger'">{{ text == 0 ? '已完成':'未完成' }}</el-tag>
-            </template>
-          </a-table-column>
-          <a-table-column key="action" title="操作" fixed="right" align="center" :width="170">
+          <a-table-column ellipsis="true" key="price" :width="100" align="center" title="拟定报价单价" data-index="price" />
+          <a-table-column ellipsis="true" key="totalPrice" :width="100" align="center" title="拟定报价总价" data-index="totalPrice" />
+          <a-table-column ellipsis="true" key="realBrand" :width="100" align="center" title="品牌" data-index="realBrand" />
+          <a-table-column ellipsis="true" key="remark" :width="150" align="center" title="备注" data-index="remark" />
+
+          <a-table-column key="action" title="操作" fixed="right" align="center" :width="120">
             <template slot-scope="text, record">
               <el-button @click="toCompare(record.id)" type="primary" size="mini" style="padding: 7px 10px;">比价</el-button>
             </template>

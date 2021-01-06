@@ -47,10 +47,10 @@
         </a-table-column>-->
         <a-table-column title="审核进度" align="center" :width="260">
           <template slot-scope="text, record">
-            <a-tooltip :destroyTooltipOnHide="true">
+            <a-tooltip v-if="!(record.firstAudit==null && record.secondAudit==null && record.threeAudit==null)" :destroyTooltipOnHide="true">
               <div slot="title">
                 <el-row style="width: 260px;">
-                  <el-col v-for="(item, index) in audits" :key="index" class="progress-tooltip-col" :span="8">
+                  <el-col v-if="record[item['key']]!=null" v-for="(item, index) in audits" :key="index" class="progress-tooltip-col" :span="24/countProgress(record.firstAudit, record.secondAudit, record.threeAudit)">
                     <div class="progress-tooltip-col-div"><a-icon theme="filled" :style="{color: checkIcon[record[item['key']]].color}" :type="checkIcon[record[item['key']]].type" /></div>
                     <div class="progress-tooltip-col-div">{{record[item['remark']]}}</div>
                   </el-col>
@@ -61,16 +61,17 @@
                 from: '#108ee9',
                 to: '#87d068',
               }"
-              :percent="record.threeAudit == 1?100:record.secondAudit == 1?67:record.firstAudit == 1?33:0"
+              :percent="calculateProgress(record.firstAudit, record.secondAudit, record.threeAudit)"
               status="active"
             />
             </a-tooltip>
+            <el-tag v-else type="info">{{'未送审'}}</el-tag>
           </template>
         </a-table-column>
         <a-table-column align="center" :width="120" key="remark" title="备注" data-index="remark" />
         <a-table-column fixed="right" align="center" :width="120" key="action" title="操作">
           <template slot-scope="text, record">
-            <el-button type="primary" size="mini" style="padding: 7px 10px;">送审</el-button>
+            <el-button v-if="record.firstAudit==null && record.secondAudit==null && record.threeAudit==null" @click="toCheck" type="primary" size="mini" style="padding: 7px 10px;">送审</el-button>
           </template>
         </a-table-column>
       </a-table>
@@ -113,14 +114,20 @@
 
     <!-- 模态框 -->
     <el-dialog :title="title" :visible.sync="dialogVisible">
-      <el-form ref="form" status-icon :model="form">
-        <el-form-item label="采购项目" label-width="80px">
+      <el-form ref="form" status-icon :model="form" :rules="rules">
+        <el-form-item label="采购项目" label-width="80px" prop="projectId">
           <el-select v-model="form.projectId" clearable placeholder="请选择">
             <el-option v-for="p in purchasePros" :key="p.id" :label="p.projectName" :value="p.id" />
           </el-select>
         </el-form-item>
-        <el-form-item label="采购合同编号">
-          <el-input v-model="form.number" autocomplete="off" />
+        <el-form-item label="合同名" label-width="80px" prop="contractName">
+          <el-input v-model="form.contractName" autocomplete="off" />
+        </el-form-item>
+        <el-form-item label="合同编号" label-width="80px" prop="contractNo">
+          <el-input v-model="form.contractNo" autocomplete="off" />
+        </el-form-item>
+        <el-form-item label="备注" label-width="80px" prop="remark">
+          <el-input type="textarea" v-model="form.remark" autocomplete="off" />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -128,6 +135,10 @@
         <el-button type="primary" size="small" @click="saveRecordHandler('form')">确 定</el-button>
       </div>
     </el-dialog>
+
+    <!--<el-dialog tile="">
+
+    </el-dialog>-->
 
   </div>
 </template>
@@ -138,9 +149,25 @@
   import { getUser } from '@/utils/auth'
   import XLSX from 'xlsx'
   import { dateTimeFormat } from '@/utils/format'
+  import { getAction, postActionByJson, postActionByQueryString } from '@/api/manage'
 
   export default {
     data() {
+      var validNo = (rule, value, callback) => {
+        if (!value) {
+          return callback(new Error('不能为空'));
+        }
+        request.get('/purchase/purchaseContractGenerate/findContractNo',{
+          params: { contractNo: value }
+        })
+          .then(response => {
+            if (response.data > 0) {
+              callback(new Error('合同编号已存在'))
+            }else {
+              callback()
+            }
+          })
+      };
       return {
         searchForm: {},
         contracts: [],
@@ -163,6 +190,18 @@
         dialogVisible: false,
         form: {},
 
+        rules: {
+          contractNo: [
+            { validator: validNo, trigger: 'blur'}
+          ],
+          contractName: [
+            { required: true, message: '不能为空', trigger: 'blur'}
+          ],
+          projectId: [
+            { required: true, message: '不能为空', trigger: 'blur'}
+          ]
+        },
+
         windowWidth: document.documentElement.clientWidth, // 屏幕实时宽度
       }
     },
@@ -180,6 +219,58 @@
       };
     },
     methods: {
+      toCheck() {
+
+      },
+      saveRecordHandler(form) {
+        let params = this.form
+        params.operator = getUser()
+        this.$refs[form].validate((valid) => {
+          if (valid) {
+            postActionByQueryString('/purchase/contract/saveOrUpdate', params)
+              .then( resp => {
+                this.$message({ message: resp.message, type: 'success' })
+                this.dialogVisible = false
+                this.toSearch()
+              })
+          }else {
+            console.log('error commit')
+            return false
+          }
+        })
+      },
+      countProgress(a, b, c) {
+        let m = 0
+        if (a!=null) {
+          m ++
+        }
+        if (b!=null) {
+          m ++
+        }
+        if (c!=null) {
+          m ++
+        }
+        return m
+      },
+      calculateProgress(a, b, c) {
+        let m = this.countProgress(a, b, c)
+        let n = 0
+
+        if (a == 1) {
+          n ++
+        }
+        if (b == 1) {
+          n ++
+        }
+        if (c == 1) {
+          n ++
+        }
+        if (m != 0) {
+          return parseFloat(parseFloat(n / m * 100).toFixed(2))
+        }else {
+          return 0
+        }
+      },
       toAdd() {
         this.dialogVisible = true
         this.form = {}
