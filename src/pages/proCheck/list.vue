@@ -6,7 +6,7 @@
       <el-button :style="hasSelected?{display: 'inline-block'}:{display: 'none'}" type="danger" size="small" @click="toCheck(key=2)">拒绝</el-button>
       <el-button :style="hasSelected?{display: 'inline-block'}:{display: 'none'}" type="info" size="small" @click="toCheck(key=0)">撤销</el-button>
       <el-select v-model="searchForm.proDetailId" style="margin-right: 6px" filterable clearable placeholder="请选择项目" value-key="name">
-        <el-option v-for="item in projects" :key="item.id" :label="item.name" :value="item.id" />
+        <el-option v-for="item in projects" :key="item.id" :label="item.name" :value="item.id" ></el-option>
       </el-select>
       <el-select v-model="searchForm.status" style="margin-right: 6px" :style="searchForm.status.length >2 ? {width:'250px'}:{}" clearable placeholder="请选择审核状态" value-key="name">
         <el-option v-for="item in select" :key="item.status" :label="item.name" :value="item.status" />
