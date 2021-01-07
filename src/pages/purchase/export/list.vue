@@ -67,10 +67,10 @@
         <a-table-column :width="80" key="purchaseSupply.totalPrice" title="总价" data-index="purchaseSupply.totalPrice" align="center"/>
         <a-table-column :width="50" key="unit" title="单位" data-index="unit" align="center"/>
         <a-table-column :width="70" key="number" title="数量" data-index="number" align="center"/>
-        <a-table-column :width="70" key="quote.suPrice" title="供应商单价" data-index="quote.suPrice" align="center"/>
-        <a-table-column :width="100" ellipsis="true" key="inquiry.params" title="技术要求" data-index="inquiry.params" align="center"/>
-        <a-table-column :width="100" ellipsis="true" key="quote.suDelivery" title="货期" data-index="quote.suDelivery" align="center"/>
-        <a-table-column :width="100" ellipsis="true" key="inquiry.remark" title="备注" data-index="inquiry.remark" align="center"/>
+        <a-table-column :width="100" ellipsis="true" key="params" title="技术要求" data-index="params" align="center"/>
+        <a-table-column :width="100" ellipsis="true" key="purchaseSupply.params" title="实际参数" data-index="purchaseSupply.params" align="center"/>
+        <a-table-column :width="100" ellipsis="true" key="purchaseSupply.warranty" title="货期" data-index="purchaseSupply.warranty" align="center"/>
+        <a-table-column :width="100" ellipsis="true" key="purchaseSupply.remark" title="备注" data-index="purchaseSupply.remark" align="center"/>
         <a-table-column :width="120" fixed="right" key="action" title="操作" align="center">
           <template slot-scope="text, record">
             <el-button @click="editPrice(record.purchaseSupply)" type="success" icon="el-icon-edit" size="mini" style="padding: 7px 10px;">供货价</el-button>

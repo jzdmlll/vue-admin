@@ -19,6 +19,7 @@
         <span>招投标项目表</span>
       </div>
       <a-table
+        class="status-table"
         :pagination="{pageSize: 6}"
         :data-source="purProjects"
         size="small"
@@ -26,6 +27,7 @@
         :rowKey="record => record.id"
         :loading="purProjectsLoading"
         :customRow="rowClick"
+        :row-class-name="tableRowClassName"
       >
         <a-table-column title="序号" align="center" :width="60">
           <template slot-scope="text, record, index">
@@ -172,7 +174,8 @@
         searchedColumn: '',
         searchInput: null,
 
-        currentPro: ''
+        currentPro: '',
+        selectKey: ''
       }
     },
     created() {
@@ -180,6 +183,13 @@
       this.role = this.$store.getters.roles[0]
     },
     methods: {
+      tableRowClassName(row, index){
+        if(this.selectKey == row.id) {
+          return 'selected'
+        }else {
+          return ''
+        }
+      },
       dateTimeFormat,
       rowClick(row, index) {
         return {
@@ -187,6 +197,7 @@
             click: () => {
               this.searchForm.proDetailId = row.id
               this.currentPro = row.name
+              this.selectKey = row.id
               this.loadPurchases()
             }
           }
@@ -326,6 +337,11 @@
   }
   .el-date-editor {
     border-color: #42B983;
+  }
+  /deep/.status-table {
+    .selected {
+      background: #e6f7ff;
+    }
   }
 }
 </style>

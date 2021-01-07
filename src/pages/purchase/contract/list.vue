@@ -13,12 +13,15 @@
         <span>采购合同表</span>
       </div>
       <a-table
+        class="status-table"
         size="small"
         ref="contracts"
         :rowKey="record => record.id"
         :loading="contractsLoading"
         :data-source="contracts"
+        :customRow="rowClick"
         :scroll="windowWidth < 768 && contracts.length > 0 ?{ x: 1000}:{}"
+        :row-class-name="tableRowClassName"
         >
         <a-table-column title="序号" align="center" :width="60">
           <template slot-scope="text, record, index">
@@ -49,9 +52,9 @@
           <template slot-scope="text, record">
             <a-tooltip v-if="!(record.firstAudit==null && record.secondAudit==null && record.threeAudit==null)" :destroyTooltipOnHide="true">
               <div slot="title">
-                <el-row style="width: 260px;">
+                <el-row style="width: 260px;padding-right:6px">
                   <el-col v-if="record[item['key']]!=null" v-for="(item, index) in audits" :key="index" class="progress-tooltip-col" :span="24/countProgress(record.firstAudit, record.secondAudit, record.threeAudit)">
-                    <div class="progress-tooltip-col-div"><a-icon theme="filled" :style="{color: checkIcon[record[item['key']]].color}" :type="checkIcon[record[item['key']]].type" /></div>
+                    <div class="progress-tooltip-col-div" style="border-color: #fff; border-bottom: 1px solid"><a-icon theme="filled" :style="{color: checkIcon[record[item['key']]].color}" :type="checkIcon[record[item['key']]].type" /></div>
                     <div class="progress-tooltip-col-div">{{record[item['remark']]}}</div>
                   </el-col>
                 </el-row>
@@ -71,7 +74,7 @@
         <a-table-column align="center" :width="120" key="remark" title="备注" data-index="remark" />
         <a-table-column fixed="right" align="center" :width="120" key="action" title="操作">
           <template slot-scope="text, record">
-            <el-button v-if="record.firstAudit==null && record.secondAudit==null && record.threeAudit==null" @click="toCheck" type="primary" size="mini" style="padding: 7px 10px;">送审</el-button>
+            <el-button v-if="record.firstAudit==null && record.secondAudit==null && record.threeAudit==null" @click="toCheck(record)" type="primary" size="mini" style="padding: 7px 10px;">送审</el-button>
           </template>
         </a-table-column>
       </a-table>
@@ -79,12 +82,34 @@
     <el-card shadow="never" style="margin-top: 1em">
       <div slot="header" class="index-md-title">
         <span>合同供货表</span>
+        <span v-if="currentContract!='' && currentContract">【{{currentContract}}】</span>
       </div>
       <a-table
         size="small"
-        ref=""
+        ref="contractSupplies"
+        :data-source="contractSupplies"
+        :rowKey="record => record.id"
+        :loading="contractSuppliesLoading"
+        :scroll="windowWidth < 768 && contractSupplies.length > 0 ?{ x: 1400}:{}"
       >
-
+        <a-table-column defaultSortOrder="ascend" :sorter="(a, b) => a.serialNumber-b.serialNumber" title="序号" key="serialNumber" data-index="serialNumber" align="center" :width="50" />
+        <a-table-column :width="100" ellipsis="true" key="item" title="设备" data-index="item" align="center"/>
+        <a-table-column :width="100" ellipsis="true" key="supplier" title="供应商" data-index="supplier" align="center" />
+        <a-table-column :width="100" ellipsis="true" key="brand" title="品牌" data-index="brand" align="center"/>
+        <a-table-column :width="100" ellipsis="true" key="model" title="规格型号" data-index="model" align="center"/>
+        <a-table-column :width="70" key="price" title="单价" data-index="price" align="center"/>
+        <a-table-column :width="80" key="totalPrice" title="总价" data-index="totalPrice" align="center"/>
+        <a-table-column :width="50" key="unit" title="单位" data-index="unit" align="center"/>
+        <a-table-column :width="70" key="number" title="数量" data-index="number" align="center"/>
+        <a-table-column :width="100" ellipsis="true" key="itemsParams" title="技术要求" data-index="itemsParams" align="center"/>
+        <a-table-column :width="100" ellipsis="true" key="supplyParams" title="实际参数" data-index="supplyParams" align="center"/>
+        <a-table-column :width="100" ellipsis="true" key="warranty" title="货期" data-index="warranty" align="center"/>
+        <a-table-column :width="100" ellipsis="true" key="remark" title="备注" data-index="remark" align="center"/>
+        <!--<a-table-column :width="120" fixed="right" key="action" title="操作" align="center">
+          <template slot-scope="text, record">
+            <el-button @click="editPrice('供货价', record.purchaseSupply)" type="success" icon="el-icon-edit" size="mini" style="padding: 7px 10px;">供货价</el-button>
+          </template>
+        </a-table-column>-->
       </a-table>
     </el-card>
       <!--<a-table
@@ -136,8 +161,27 @@
       </div>
     </el-dialog>
 
-    <el-dialog tile="送审">
+    <el-dialog title="送审" :visible.sync="checkDialogVisible">
+      {{toCheckDialogForm}}
+      <el-form :model="toCheckDialogForm" >
+        <el-form-item label="合同名" label-width="80px" prop="contractName">{{toCheckDialogForm.contractName}}</el-form-item>
+        <el-form-item label="合同编号" label-width="80px" prop="contractNo">{{toCheckDialogForm.contractNo}}</el-form-item>
+        <el-form-item label="审核流程" label-width="80px" prop="checkProcess">
+          <el-slider
+            v-model="toCheckDialogForm.checkProcess"
+            :marks="marks"
+            :show-tooltip="false"
+            :step="30"
+            show-stops
+            style="padding: 0 1em">
+          </el-slider>
+        </el-form-item>
+      </el-form>
 
+      <div slot="footer" class="dialog-footer">
+        <el-button size="small" @click="visible = false">取 消</el-button>
+        <el-button type="primary" size="small" @click="sendCheckHandler">确 定</el-button>
+      </div>
     </el-dialog>
 
   </div>
@@ -169,6 +213,12 @@
           })
       };
       return {
+        marks: {
+          0: '无审核',
+          30: '一级',
+          60: '二级',
+          90: '三级'
+        },
         searchForm: {},
         contracts: [],
         contractsLoading: false,
@@ -202,6 +252,15 @@
           ]
         },
 
+        toCheckDialogForm: {},
+        checkDialogVisible: false,
+
+        contractSupplies: [],
+        contractSuppliesLoading: false,
+
+        selectKey: '',
+        currentContract: '',
+
         windowWidth: document.documentElement.clientWidth, // 屏幕实时宽度
       }
     },
@@ -219,8 +278,51 @@
       };
     },
     methods: {
-      toCheck() {
+      tableRowClassName(row, index){
+        if(this.selectKey == row.id) {
+          return 'selected'
+        }else {
+          return ''
+        }
+      },
+      rowClick(row, index) {
+        return {
+          on: {
+            click: () => {
+              this.contractSuppliesLoading = true
+              getAction('/purchase/contractManagement/findItemsInfoByContractId', {contractId: row.id})
+                .then( resp => {
+                  this.contractSupplies = resp.data
+                  this.contractSuppliesLoading = false
+                  this.selectKey = row.id
+                  this.currentContract = row.contractName
+                })
+            }
+          }
+        }
+      },
+      sendCheckHandler() {
+        if (this.toCheckDialogForm.id) {
+          let form = {}
+          form.id = this.toCheckDialogForm.id
+          switch (this.toCheckDialogForm.checkProcess) {
+            case 0: break
+            case 30: form.firstAudit = 0;break
+            case 60: form.firstAudit = 0;form.secondAudit = 0;break
+            case 90: form.firstAudit = 0;form.secondAudit = 0;form.threeAudit = 0;break
+          }
+          postActionByQueryString('/purchase/contract/saveOrUpdate', form)
+            .then( resp => {
+              this.$message({ message: resp.message, type: 'success' })
+              this.checkDialogVisible = false
+              this.toSearch()
+            })
+        }
 
+      },
+      toCheck(record) {
+        this.checkDialogVisible = true
+        this.toCheckDialogForm = record
       },
       saveRecordHandler(form) {
         let params = this.form
@@ -369,13 +471,20 @@
     line-height:32px;
     margin-left:90px!important
   }
-}
-.progress-tooltip-col {
-  .progress-tooltip-col-div {
-    text-align: center;
-    .anticon {
+  .progress-tooltip-col {
+    .progress-tooltip-col-div {
+      text-align: center;
+      min-height: 16px;
+      .anticon {
 
+      }
+    }
+  }
+  /deep/.status-table {
+    .selected {
+      background: #e6f7ff;
     }
   }
 }
+
 </style>
