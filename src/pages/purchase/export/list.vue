@@ -19,7 +19,7 @@
         :data-source="purchases"
         :scroll="purchases.length > 0?{ x: 1500}:{}"
         :row-selection="{ selectedRowKeys: selectedRowKeys, onChange: onSelectChange }">
-        <a-table-column :width="80" align="center" title="状态" key="inquiry.itemId" data-index="contractId">
+        <a-table-column :width="80" align="center" title="状态" key="contractId" data-index="contractId">
           <template slot-scope="text, record">
             <el-tag :type="text? 'success':'info'">{{ text?'有合同':'无合同' }}</el-tag>
           </template>
@@ -73,7 +73,7 @@
         <a-table-column :width="100" ellipsis="true" key="inquiry.remark" title="备注" data-index="inquiry.remark" align="center"/>
         <a-table-column :width="120" fixed="right" key="action" title="操作" align="center">
           <template slot-scope="text, record">
-            <el-button @click="editPrice('供货价', record.purchaseSupply)" type="success" icon="el-icon-edit" size="mini" style="padding: 7px 10px;">供货价</el-button>
+            <el-button @click="editPrice(record.purchaseSupply)" type="success" icon="el-icon-edit" size="mini" style="padding: 7px 10px;">供货价</el-button>
           </template>
         </a-table-column>
       </a-table>
@@ -173,19 +173,16 @@
       /**
        * 修改供货价
        */
-      editPrice(type, row) {
-        this.$prompt('请输入'+type, '提示', {
+      editPrice(row) {
+        this.$prompt('请输入供货价', '提示', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
           inputPattern: /^[1-9][0-9]*([\.][0-9]{1,2})?$/,
           inputErrorMessage: '格式不正确'
         }).then(({ value }) => {
-          let url = { 供货价: '/inquiry/updateSupplyPrice', 报价: '/inquiry/updateCorrectPrice'}
-          let params = {
-            供货价: { id: row.id, price: value, operator: getUser()},
-            报价: { id: row.id, correctPrice: value, operator: getUser()}
-          }
-          postActionByQueryString(url[type], params[type])
+          row.price = value
+          row.updateOperator = getUser()
+          postActionByJson('/purchase/contract/updateSupplyPrice', row)
             .then(resp => {
               this.$message({ message: resp.message, type: 'success' })
               this.toSearch()
