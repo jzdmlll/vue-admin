@@ -360,7 +360,7 @@
     { title: '单位', dataIndex: 'unit', key: 'unit', ellipsis: true },
     { title: '数量', dataIndex: 'number', key: 'number', ellipsis: true },
     { title: '品牌推荐', dataIndex: 'brand', key: 'brand', ellipsis: true },
-    { title: '报价数量', dataIndex: 'quoteNum', key: 'quoteNum', ellipsis: true },
+    { title: '报价总数', dataIndex: 'quoteNum', key: 'quoteNum', ellipsis: true },
   ]
   const innerColumns = [
 

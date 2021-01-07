@@ -15,10 +15,26 @@
           </template>
         </a-table-column>
         <a-table-column key="projectName" title="采购项目名称" data-index="projectName" />
+        <a-table-column key="inquiryProjectName" title="询价项目名称" data-index="inquiryProjectName" />
+        <a-table-column key="purchaseProNo" title="采购项目编号" data-index="purchaseProNo" />
+        <a-table-column key="remark" title="备注" data-index="remark" />
+        <a-table-column key="operator" title="创建人" data-index="operator" />
+        <a-table-column key="time" title="时间" data-index="time">
+          <template slot-scope="text,reord">
+            {{dateFormat(text)}}
+          </template>
+        </a-table-column>
+        <a-table-column key="updateOperator" title="修改人" data-index="updateOperator" />
+        <a-table-column key="updateTime" title="修改时间" data-index="updateTime">
+          <template slot-scope="text,reord">
+            {{dateFormat(text)}}
+          </template>
+        </a-table-column>
+
         <a-table-column key="action" title="操作" :width="120" align="center">
           <template slot-scope="text, record">
-            <el-button type="danger" icon="el-icon-delete" size="mini" @click="deleteHandler(scope.row.id)" />
-            <el-button type="success" icon="el-icon-edit" size="mini" @click="editHandler(scope.row)" />
+            <el-button type="danger" icon="el-icon-delete" size="mini" @click="deleteHandler(record.id)" />
+            <el-button type="success" icon="el-icon-edit" size="mini" @click="editHandler(record)" />
           </template>
         </a-table-column>
       </a-table>
@@ -35,13 +51,14 @@
         <el-button type="primary" size="small" @click="saveRecordHandler('form')">确 定</el-button>
       </div>
     </el-dialog>
-
   </div>
 </template>
 <script>
   import request from '@/utils/request'
   import qs from 'querystring'
   import '@/styles/auto-style.css'
+  import { dateFormat } from '@/utils/format'
+  import { getUser } from '@/utils/auth'
 
   export default {
     data() {
@@ -57,7 +74,9 @@
       this.loadProjects()
     },
     methods: {
+      dateFormat,
       saveRecordHandler(form) {
+        this.form.updateOperator = getUser();
         this.$refs[form].validate((valid) => {
           if (valid) {
             request.request({
@@ -105,7 +124,7 @@
             headers: {
               'Content-Type': 'application/x-www-form-urlencoded'
             },
-            data: qs.stringify({ id: id })
+            data: qs.stringify({ id: id , user: getUser()})
           })
             .then(response => {
               this.$message({ type: 'success', message: response.message })
