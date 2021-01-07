@@ -174,12 +174,15 @@ export default {
       const key = this.form.key
       let status = ''
       let remark = ''
+      let url = ''
       if (this.$route.name == '技术审核') {
         status = 'technicalAudit'
         remark = 'technicalRemark'
+        url = '/proCheck/updateTechnicalStatus'
       }else if (this.$route.name == '商务审核') {
         status = 'businessAudit'
         remark = 'businessRemark'
+        url = '/proCheck/updateBusinessStatus'
       }
       const data = []
       if(key == 2){
@@ -196,7 +199,7 @@ export default {
               })
             })
             request.request({
-              url: '/proCheck/updateTechnicalStatus',
+              url: url,
               method: 'post',
               headers: {
                 'Content-Type': 'application/json'
@@ -228,7 +231,7 @@ export default {
           })
         })
         request.request({
-          url: '/proCheck/updateTechnicalStatus',
+          url: url,
           method: 'post',
           headers: {
             'Content-Type': 'application/json'
