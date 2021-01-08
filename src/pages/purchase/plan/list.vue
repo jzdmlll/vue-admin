@@ -2,17 +2,17 @@
   <!-- 采购计划 -->
   <div class="purchase_plan_list" ref="purchase">
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
-      <el-button v-if="selectedRowKeys.length>0" style="margin-right: 6px" type="primary" icon="el-icon-document" size="small" @click="handleAddInquiry">发起询价</el-button>
-      <el-select v-model="searchForm.purchaseProId" style="margin-right: 6px" filterable clearable placeholder="请选择采购项目" value-key="name">
-        <el-option v-for="item in purchasePros" :key="item.id" :label="item.projectName" :value="item.id" />
-      </el-select>
-      <el-button style="margin-right: 6px" type="primary" icon="el-icon-search" size="small" @click="toSearch">查询</el-button>
       <el-button style="margin-right: 6px" type="primary" size="small" @click="toAddItems">新增采购项</el-button>
       <el-button @click="clickFileInput" type="primary" size="small"><a-icon type="file-excel" style="font-size: 12px;margin-right: 5px"/>excel导入</el-button>
       <input type="file" ref="upload" accept=".xls,.xlsx" @change="readExcel" class="outputlist_upload">
       <div v-if="excelRows>0" style="display: inline-block;padding: 4px 0;font-size: 12px;color: #909399">从Excel读取到
         <span style="color: #42b983">{{excelRows}}</span>条数据
       </div>
+      <el-button v-if="selectedRowKeys.length>0" style="margin-right: 6px" type="primary" icon="el-icon-document" size="small" @click="handleAddInquiry">发起询价</el-button>
+      <el-select v-model="searchForm.purchaseProId" style="margin-right: 6px" filterable clearable placeholder="请选择采购项目" value-key="name">
+        <el-option v-for="item in purchasePros" :key="item.id" :label="item.projectName" :value="item.id" />
+      </el-select>
+      <el-button style="margin-right: 6px" type="primary" icon="el-icon-search" size="small" @click="toSearch">查询</el-button>
     </div>
       <el-card shadow="never">
         <div slot="header" class="index-md-title">
@@ -44,14 +44,15 @@
       <el-card shadow="never" style="margin-top: 1em">
         <div slot="header" class="index-md-title">
           <span>采购供应商</span>
+          <span v-if="currentItem!='' && currentItem">【{{currentItem}}】</span>
         </div>
         <a-table
           size="small"
           :pagination="false"
-          ref="purchaseSupplier"
+          ref="purchaseSuppliers"
           :rowKey="record => record.id"
           :loading="purchaseSupplierLoading"
-          :data-source="purchaseSupplier"
+          :data-source="purchaseSuppliers"
         >
           <a-table-column title="序号">
             <template slot-scope="text, record, index">
@@ -136,13 +137,13 @@
         </el-row>
         <el-row>
           <el-col :sm="24" :lg="12">
-            <el-form-item label="销售单价(元)" label-width="80px" prop="suPrice">
-              <el-input v-model="addItemsForm.sale_price" autocomplete="off" size="small" />
+            <el-form-item label="销售单价(元)" label-width="80px" prop="salePrice">
+              <el-input v-model="addItemsForm.salePrice" autocomplete="off" size="small" />
             </el-form-item>
           </el-col>
           <el-col :sm="24" :lg="12">
-            <el-form-item label="销售总价(元)" label-width="80px" prop="suTotalPrice">
-              <el-input v-model="addItemsForm.sale_totalPrice" autocomplete="off" size="small" />
+            <el-form-item label="销售总价(元)" label-width="80px">
+              <el-input disabled :value="parseFloat(addItemsForm.salePrice * addItemsForm.number)" autocomplete="off" size="small" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -179,7 +180,7 @@
   import '@/styles/auto-style.css'
   import { getUser } from '@/utils/auth'
   import XLSX from 'xlsx'
-
+  import { getAction, postActionByJson, postActionByQueryString } from '@/api/manage'
   export default {
     data() {
       return {
@@ -193,8 +194,11 @@
         plans: [],
         plansLoading: false,
         selectedRowKeys: [],
-        purchaseSupplier: [],
+        purchaseSuppliers: [],
         purchaseSupplierLoading: false,
+
+        currentItem: '',
+        selectKey: null,
 
         poolData: [],
         poolLoading: false,
@@ -221,7 +225,9 @@
 
     },
     methods: {
-      addItemsSubmit(){},
+      addItemsSubmit(){
+        postActionByQueryString('', {})
+      },
       clickFileInput(){
         this.$refs.upload.dispatchEvent(new MouseEvent('click'))
       },
@@ -252,17 +258,11 @@
                 this.excelRows ++
               }
             })
-            request.request({
-              url: '',
-              method: 'post',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              data: JSON.stringify({items: this.outputs})
+            console.log(this.outputs)
+            /*postActionByJson('', { items: []})
+              .then(resp => {
 
-            }).then(resp => {
-
-            })
+            })*/
             this.$refs.upload.value = '';
           } catch (e) {
             console.log(e)
@@ -279,10 +279,16 @@
           on: {
             click: () => {
               this.purchaseSupplierLoading = true
-              this.purchaseSupplier = [
-                {id: 1, supplier: '供应商'+(index+1),}
-              ]
-              this.purchaseSupplierLoading = false
+              getAction('/purchase/purchasePlan/findPurchasingSupplierByItemId', { id: row.id })
+                .then( resp => {
+                  this.purchaseSuppliers = resp.data
+                  this.purchaseSupplierLoading = false
+                  this.selectKey = row.id
+                  this.currentItem = row.item
+                })
+                .catch(() => {
+                  this.purchaseSupplierLoading = false
+                })
             }
           }
         }

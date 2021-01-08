@@ -30,7 +30,7 @@
           <a-table-column align="center" key="suParams" v-slot:title="title" data-index="suParams">
             <span slot="title">参数<p :class="{'table-column-p': card.inquiry.params?true:false}"><a-icon v-if="card.inquiry.params" type="like" />【{{card.inquiry.params}}】</p></span>
           </a-table-column>
-          <a-table-column align="center" key="suPrice" title="单价" data-index="suPrice" />
+          <a-table-column align="center" key="suPrice" defaultSortOrder="ascend" :sorter="(a, b) => a.suPrice - b.suPrice"  title="单价" data-index="suPrice" />
           <a-table-column align="center" key="suTotalPrice" title="总价" data-index="suTotalPrice" />
           <a-table-column align="center" key="suBrand" v-slot:title="title" data-index="suBrand">
             <span slot="title">品牌<p :class="{'table-column-p': card.inquiry.realBrand?true:false}"><a-icon v-if="card.inquiry.realBrand" type="like" />【{{card.inquiry.realBrand}}】</p></span>

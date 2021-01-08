@@ -93,7 +93,6 @@ let columns = [
     sorter: (a, b) => a.quote.suPrice - b.quote.suPrice, sortDirections: ['descend', 'ascend'] },
   { title: '商家总价', dataIndex: 'quote.suTotalPrice', key: 'quote.suTotalPrice', ellipsis: true,
     sorter: (a, b) => a.quote.suTotalPrice - b.quote.suTotalPrice, sortDirections: ['descend', 'ascend'] },
-  { title: '商家备注', dataIndex: 'quote.suRemark', key: 'quote.suRemark', ellipsis: true },
   { title: '商家货期', dataIndex: 'quote.suDelivery', scopedSlots: 'quote.suDelivery', ellipsis: true,
     sorter: (a, b) => a.quote.suDelivery - b.quote.suDelivery, sortDirections: ['descend', 'ascend'] },
   { title: '质保期', dataIndex: 'quote.warranty', key: 'quote.warranty', ellipsis: true,
@@ -104,12 +103,13 @@ let columns = [
     sorter: (a, b) => a.checkStatus - b.checkStatus, sortDirections: ['descend', 'ascend'] },
   { title: '审核状态', dataIndex: 'technicalAudit', scopedSlots: { customRender: 'technicalAudit' }, key: 'technicalAudit',
     sorter: (a, b) => a.checkStatus - b.checkStatus, sortDirections: ['descend', 'ascend'] },
-  { title: '备注', dataIndex: 'businessRemark', scopedSlots: { customRender: 'businessRemark' }, key: 'businessRemark',
+  { title: '商家备注', dataIndex: 'quote.suRemark',ellipsis: true , key: 'quote.suRemark',
+    sorter: (a, b) => a.quote.suRemark - b.quote.suRemark, sortDirections: ['descend', 'ascend'] },
+  { title: '备注', dataIndex: 'businessRemark', ellipsis: true,  key: 'businessRemark',
     sorter: (a, b) => a.checkStatus - b.checkStatus, sortDirections: ['descend', 'ascend'] },
-  { title: '备注', dataIndex: 'technicalRemark', scopedSlots: { customRender: 'technicalRemark' }, key: 'technicalRemark',
+  { title: '备注', dataIndex: 'technicalRemark',  key: 'technicalRemark', ellipsis: true,
     sorter: (a, b) => a.checkStatus - b.checkStatus, sortDirections: ['descend', 'ascend'] },
-  { title: '商家备注', dataIndex: 'suRemark', scopedSlots: { customRender: 'suRemark' }, key: 'suRemark',
-    sorter: (a, b) => a.suRemark - b.suRemark, sortDirections: ['descend', 'ascend'] },
+
   {
     title: '操作',
     dataIndex: 'operation',
@@ -132,10 +132,10 @@ export default {
       columns,
       prop: {
         '技术审核': ['quote.supplier', 'inquiry.name',
-          'inquiry.model', 'quote.suModel', 'inquiry.params', 'quote.suParams', 'checkStatus', 'quote.image', 'files', 'technicalAudit', 'technicalRemark', 'suRemark'
+          'inquiry.model', 'quote.suModel', 'inquiry.params', 'quote.suParams', 'checkStatus', 'quote.image', 'files', 'technicalAudit', 'technicalRemark', 'quote.suRemark'
         ],
         '商务审核': ['quote.supplier', 'inquiry.name', 'inquiry.params',
-          'quote.suPrice', 'quote.suTotalPrice', 'inquiry.suWarranties', 'checkStatus', 'files', 'businessAudit', 'businessRemark', 'suRemark'
+          'quote.suPrice', 'quote.suTotalPrice', 'inquiry.suWarranties', 'checkStatus', 'files', 'businessAudit', 'businessRemark', 'quote.suRemark'
         ],
       },
       realColumns: [],
