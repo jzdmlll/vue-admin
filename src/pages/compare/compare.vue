@@ -61,11 +61,12 @@
           :loading="inquiriesLoading"
           :data-source="inquiries"
           :scroll="{x: 1400}"
-          :row-selection="{ selectedRowKeys: selectedInquiryIds, onChange: onInquirySelectChange}"
+          :row-selection="{ selectedRowKeys: selectedInquiryIds, onChange: onInquirySelectChange, getCheckboxProps: record => ({props: {disabled: record.unSendNum > 0}})}"
         >
           <a-table-column :sorter="(a, b) => a.unCompareNum - b.unCompareNum" defaultSortOrder="descend" key="unCompareNum" title="状态" :width="100" data-index="unCompareNum" align="center">
             <template slot-scope="text, record, index">
-              <el-tag :type="text == 0 ? 'success':'danger'">{{ text == 0 ? '已完成':'未完成' }}</el-tag>
+              <el-tag v-if="record.unSendNum > 0" type="info">询价中</el-tag>
+              <el-tag v-else :type="text == 0 ? 'success':'danger'">{{ text == 0 ? '已完成':'未完成' }}</el-tag>
             </template>
           </a-table-column>
           <a-table-column ellipsis="true" key="sort" title="序号" :width="60" align="center" data-index="sort" />
@@ -112,7 +113,7 @@
 
           <a-table-column key="action" title="操作" fixed="right" align="center" :width="120">
             <template slot-scope="text, record">
-              <el-button @click="toCompare(record.id)" type="primary" size="mini" style="padding: 7px 10px;">比价</el-button>
+              <el-button :disabled="record.unSendNum > 0" @click="toCompare(record.id)" type="primary" size="mini" style="padding: 7px 10px;">比价</el-button>
             </template>
           </a-table-column>
         </a-table>
@@ -365,9 +366,11 @@
         this.drawer = false
       },
       onInquirySelectChange(selectedRowKeys, selectedRows) {
-        const rows = selectedRows.map(item => {
-          if (item.id) {
-            return item.id
+
+        let rows = []
+        selectedRows.map(item => {
+          if (item.id && item.unSendNum == 0) {
+            rows.push(item.id)
           }
         })
         this.selectedInquiryIds = rows
@@ -392,6 +395,8 @@
           return 'warning-row';
         }else if(row.businessAudit == 2 || row.technicalAudit == 2) {
           return 'danger-row'
+        }else if(row.compareStatus == null) {
+          return 'unActive-row'
         }
         return '';
       },
@@ -482,9 +487,9 @@
         if(this.proDetailId) {
           request.get("/compare/findInquiryByProDetailId?proDetailId="+this.proDetailId)
             .then(resp => {
-            setTimeout(() => {
+              setTimeout(() => {
                 this.opacity = 1
-              }, 500)
+              }, 200)
               this.inquiries = resp.data
             })
         }
@@ -516,6 +521,9 @@
       }
       /deep/.danger-row {
         background: #f1b7b7;
+      }
+      /deep/.unActive-row {
+        opacity: .5;
       }
       .table-column-p {
         color: #1890ff

@@ -98,39 +98,39 @@
 
     <!-- 新增采购项模态框 -->
     <el-dialog title="新增采购项" class="itemDialog" :visible.sync="itemDialogVisible">
-      <el-form :model="addItemsForm" status-icon>
+      <el-form ref="addItemsForm" :rules="rules" :model="addItemsForm" status-icon>
         <el-row>
           <el-col :sm="24" :lg="12">
-            <el-form-item label="采购序号" label-width="80px" prop="suModel">
+            <el-form-item label="采购序号" label-width="80px" prop="serialNumber">
               <el-input v-model="addItemsForm.serialNumber" autocomplete="off" size="small" />
             </el-form-item>
           </el-col>
           <el-col :sm="24" :lg="12">
-          <el-form-item size="mini" label="设备名称" label-width="80px" prop="supplier">
+          <el-form-item size="mini" label="设备名称" label-width="80px" prop="item">
               <el-input v-model="addItemsForm.item" autocomplete="off" size="small" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row>
           <el-col :sm="24" :lg="12">
-            <el-form-item label="型号" label-width="80px" prop="suModel">
+            <el-form-item label="型号" label-width="80px" prop="model">
               <el-input v-model="addItemsForm.model" autocomplete="off" size="small" />
             </el-form-item>
           </el-col>
           <el-col :sm="24" :lg="12">
-            <el-form-item label="配置需求" label-width="80px" prop="suBrand">
+            <el-form-item label="配置需求" label-width="80px" prop="params">
               <el-input v-model="addItemsForm.params" autocomplete="off" size="small" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row>
           <el-col :sm="24" :lg="12">
-            <el-form-item label="单位" label-width="80px" prop="suParams">
+            <el-form-item label="单位" label-width="80px" prop="unit">
               <el-input v-model="addItemsForm.unit" autocomplete="off" size="small" />
             </el-form-item>
           </el-col>
           <el-col :sm="24" :lg="12">
-            <el-form-item label="数量" label-width="80px" prop="suParams">
+            <el-form-item label="数量" label-width="80px" prop="number">
               <el-input v-model="addItemsForm.number" autocomplete="off" size="small" />
             </el-form-item>
           </el-col>
@@ -154,7 +154,7 @@
             </el-form-item>
           </el-col>
           <el-col :sm="24" :lg="12">
-            <el-form-item label="要求货期" label-width="80px" prop="suDelivery">
+            <el-form-item label="要求货期" label-width="80px" prop="requiredDelivery">
               <el-input v-model="addItemsForm.requiredDelivery" autocomplete="off" size="small" />
             </el-form-item>
           </el-col>
@@ -169,7 +169,7 @@
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button size="small" @click="inquiryVisible = false">取消</el-button>
-        <el-button type="primary" size="small" @click="addItemsSubmit">提交</el-button>
+        <el-button type="primary" size="small" @click="addItemsSubmit('addItemsForm')">提交</el-button>
       </div>
     </el-dialog>
   </div>
@@ -183,6 +183,21 @@
   import { getAction, postActionByJson, postActionByQueryString } from '@/api/manage'
   export default {
     data() {
+      var validSerialNumber = (rule, value, callback) => {
+        if (!value) {
+          return callback(new Error('不能为空'));
+        }
+        request.get('/purchase/purchasePlan/checkSerialNumberIsExists',{
+          params: { projectId: this.searchForm.purchaseProId, serialNum: value }
+        })
+          .then(response => {
+            if (response.data > 0) {
+              callback(new Error('采购项序号已存在'))
+            }else {
+              callback()
+            }
+          })
+      };
       return {
         outputs: [],
         excelRows: {},
@@ -206,6 +221,22 @@
         dialogSearchForm: {},
         poolDialogVisible: false,
         poolForm: {},
+
+        rules: {
+          serialNumber: [
+            { validator: validSerialNumber, trigger: 'blur'}
+          ],
+          item: [
+            { required: true, message: '不能为空', trigger: 'blur'}
+          ],
+          number: [
+            { required: true, message: '不能为空', trigger: 'blur'}
+          ],
+          salePrice: [
+            { required: true, message: '不能为空', trigger: 'blur'}
+          ],
+        },
+
         windowWidth: document.documentElement.clientWidth, // 屏幕实时宽度
       }
     },
@@ -225,8 +256,23 @@
 
     },
     methods: {
-      addItemsSubmit(){
-        postActionByQueryString('', {})
+      addItemsSubmit(addItemsForm){
+        this.$refs[addItemsForm].validate((valid) => {
+          if (valid) {
+            let form = this.addItemsForm
+            form.operator = getUser()
+            form.projectId = this.searchForm.purchaseProId
+
+            postActionByQueryString('/purchase/purchasePlan/addPurchaseItem', form)
+              .then( resp => {
+                this.$message({ message: resp.message, type: 'success' })
+                this.itemDialogVisible = false
+              })
+          }else {
+            console.log('error commit')
+            return false
+          }
+        })
       },
       clickFileInput(){
         this.$refs.upload.dispatchEvent(new MouseEvent('click'))
@@ -272,7 +318,11 @@
         fileReader.readAsBinaryString(files[0]);
       },
       toAddItems(row){
-        this.itemDialogVisible = true
+        if(this.searchForm.purchaseProId) {
+          this.itemDialogVisible = true
+        }else {
+          this.$message({message: '请选择项目', type: 'warning'})
+        }
       },
       rowClick(row, index) {
         return {
