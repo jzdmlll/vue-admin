@@ -215,7 +215,8 @@
           postActionByQueryString('/purchase/purchasePlan/inquiryResultSendPurchase', { quoteIds: this.selectedRowKeys, operator: getUser()})
             .then(resp => {
               this.$message({ type: 'success', message: resp.message });
-              this.toSearch()
+              this.loadPurchases()
+              this.selectedRowKeys = []
             })
         })
       },
