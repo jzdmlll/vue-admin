@@ -234,8 +234,8 @@
           }
           postActionByQueryString(url[type], params[type])
             .then(resp => {
+              this.loadPurchases()
               this.$message({ message: resp.message, type: 'success' })
-              this.toSearch()
             })
         }).catch(() => {
         });
