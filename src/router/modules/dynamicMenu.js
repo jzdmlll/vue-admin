@@ -31,6 +31,9 @@ async function parseMenu(id) {
             if (privilege.name === '审核管理' && page!='/proCheck/final') {
               page = '/proCheck/list'
             }
+            if (privilege.name === '采购管理' && p.remark == 'single'){
+              page = '/purchase/check/list'
+            }
             const son_route = {
               hidden: hidden,
               path: p.route,
