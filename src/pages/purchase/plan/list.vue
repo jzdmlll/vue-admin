@@ -1,14 +1,17 @@
 <template>
   <!-- 采购计划 -->
   <div class="purchase_plan_list" ref="purchase">
+    {{excelRows}}
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
+      <el-button v-if="selectedRowKeys.length>0" style="margin-right: 6px" type="danger" icon="el-icon-delete" size="small" @click="toDeleteItems">批量删除</el-button>
+      <el-button v-if="selectedRowKeys.length>0" style="margin-right: 6px" type="primary" icon="el-icon-document" size="small" @click="handleAddInquiry">发往询价</el-button>
       <el-button style="margin-right: 6px" type="primary" size="small" @click="toAddItems">新增采购项</el-button>
       <el-button @click="clickFileInput" type="primary" size="small"><a-icon type="file-excel" style="font-size: 12px;margin-right: 5px"/>excel导入</el-button>
       <input type="file" ref="upload" accept=".xls,.xlsx" @change="readExcel" class="outputlist_upload">
       <div v-if="excelRows>0" style="display: inline-block;padding: 4px 0;font-size: 12px;color: #909399">从Excel读取到
         <span style="color: #42b983">{{excelRows}}</span>条数据
       </div>
-      <el-button v-if="selectedRowKeys.length>0" style="margin-right: 6px" type="primary" icon="el-icon-document" size="small" @click="handleAddInquiry">发起询价</el-button>
+
       <el-select v-model="searchForm.purchaseProId" style="margin-right: 6px" filterable clearable placeholder="请选择采购项目" value-key="name">
         <el-option v-for="item in purchasePros" :key="item.id" :label="item.projectName" :value="item.id" />
       </el-select>
@@ -24,9 +27,15 @@
           :rowKey="record => record.id"
           :loading="plansLoading"
           :data-source="plans"
-          :row-selection="{ selectedRowKeys: selectedRowKeys, onChange: onSelectChange }"
+          :row-selection="{ selectedRowKeys: selectedRowKeys, onChange: onSelectChange, getCheckboxProps: record => ({props: {disabled: record.isInquiry == 1}})}"
           :customRow="rowClick"
-          :scroll="windowWidth< 870 + 34*2 && plans.length > 0 ?{ x: 870}:{}">
+          :scroll="windowWidth< 870 + 34*2 && plans.length > 0 ?{ x: 900}:{}">
+
+          <a-table-column :width="70" align="center" key="isInquiry" title="状态" data-index="isInquiry">
+            <template slot-scope="text, record">
+              <el-tag :type="text == 1 ? 'success':'info'">{{ text == 1 ? '已发询价':'未发询价' }}</el-tag>
+            </template>
+          </a-table-column>
           <a-table-column :width="60" align="center" key="serialNumber" title="序号" data-index="serialNumber" />
           <a-table-column :width="120" align="center" ellipsis="true" key="item" title="采购项" data-index="item" />
           <a-table-column :width="120" align="center" ellipsis="true" key="brand" title="品牌" data-index="brand" />
@@ -34,9 +43,10 @@
           <a-table-column :width="120" align="center" ellipsis="true" key="params" title="技术要求" data-index="params" />
           <a-table-column :width="60" align="center" key="unit" title="单位" data-index="unit" />
           <a-table-column :width="60" align="center" key="number" title="数量" data-index="number" />
-          <a-table-column :width="150" align="center" flex="right" key="action" title="操作" fixed="right">
+          <a-table-column :width="170" align="center" flex="right" key="action" title="操作" fixed="right">
             <template slot-scope="text, record">
                 <el-button v-if="record.isInquiry == 0" @click="poolChoose(record)" type="success" icon="el-icon-star-on" size="mini" style="padding: 7px 10px;background: #faad14;border-color:#faad14">产品池</el-button>
+                <el-button @click="splitPurchaseItem(record)" type="success" size="mini" >拆分</el-button>
             </template>
           </a-table-column>
         </a-table>
@@ -64,15 +74,32 @@
       </el-card>
 
     <!-- 模态框 -->
-    <el-dialog title="选择产品池产品" class="poolDialog" :visible.sync="poolDialogVisible">
-      <el-input type="text"
+    <el-dialog v-el-drag-dialog title="选择产品池产品" class="poolDialog" :visible.sync="poolDialogVisible">
+      <el-form :model="poolForm" status-icon>
+        <el-row>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="采购项" label-width="80px" prop="item">{{poolForm.item}}</el-form-item>
+          </el-col>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="品牌" label-width="80px" prop="brand">{{poolForm.brand}}</el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="型号" label-width="80px" prop="model">{{poolForm.model}}</el-form-item>
+          </el-col>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="技术要求" label-width="80px" prop="params">{{poolForm.params}}</el-form-item>
+          </el-col>
+        </el-row>
+        <el-input type="text"
                 v-model="dialogSearchForm.name"
                 placeholder="设备名" size="small" style="max-width: 200px;"></el-input>
-      <el-input type="text"
+        <el-input type="text"
                 v-model="dialogSearchForm.model"
                 placeholder="型号" size="small" style="max-width: 200px;"></el-input>
-      <el-button type="primary" size="small" @click="poolFind">查询</el-button>
-      <el-form :model="poolForm" status-icon>
+        <el-button type="primary" size="small" @click="poolFind">查询</el-button>
+      <div style="margin-top: 6px">
         <el-table :data="poolData" v-loading="poolLoading" size="small">
           <el-table-column label width="35">
             <template slot-scope="scope">
@@ -88,7 +115,7 @@
           <el-table-column :show-overflow-tooltip="true" prop="delivery" label="货期" />
           <el-table-column :show-overflow-tooltip="true" prop="remark" label="备注" />
         </el-table>
-
+      </div>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button size="small" @click="poolDialogVisible = false">取消</el-button>
@@ -97,7 +124,7 @@
     </el-dialog>
 
     <!-- 新增采购项模态框 -->
-    <el-dialog title="新增采购项" class="itemDialog" :visible.sync="itemDialogVisible">
+    <el-dialog v-el-drag-dialog title="新增采购项" class="itemDialog" :visible.sync="itemDialogVisible">
       <el-form ref="addItemsForm" :rules="rules" :model="addItemsForm" status-icon>
         <el-row>
           <el-col :sm="24" :lg="12">
@@ -181,7 +208,10 @@
   import { getUser } from '@/utils/auth'
   import XLSX from 'xlsx'
   import { getAction, postActionByJson, postActionByQueryString } from '@/api/manage'
+  import elDragDialog from '@/directive/el-drag-dialog'
+
   export default {
+    directives: { elDragDialog },
     data() {
       var validSerialNumber = (rule, value, callback) => {
         if (!value) {
@@ -200,7 +230,7 @@
       };
       return {
         outputs: [],
-        excelRows: {},
+        excelRows: null,
         addItemsForm: {},
         itemDialogVisible: false,
         searchForm: {},
@@ -221,6 +251,18 @@
         dialogSearchForm: {},
         poolDialogVisible: false,
         poolForm: {},
+
+        excelKeys: {
+          序号: 'serialNumber',
+          设备名称: 'item',
+          型号: 'model',
+          配置需求: 'params',
+          单位: 'unit',
+          数量: 'number',
+          设备厂家: 'brand',
+          货期: 'requiredDelivery',
+          备注: 'remark'
+        },
 
         rules: {
           serialNumber: [
@@ -253,9 +295,37 @@
     },
     created() {
       this.init()
-
     },
     methods: {
+      splitPurchaseItem(row) {
+        this.$prompt('请输入利率', '批量设置利率', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          inputPattern: /^[1-9][0-9]*([\.][0-9]{1,2})?$/,
+          inputErrorMessage: '格式不正确'
+        }).then(({ value }) => {
+          alert(row.number)
+          if (value > row.number) {
+            this.$message({message: '不能大于原始数量', type: 'warning'})
+            return false
+          }else {
+
+          }
+        })
+      },
+      toDeleteItems() {
+        this.$confirm('是否确定删除？', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          postActionByQueryString('/purchase/purchasePlan/logicDeletePurchaseItems', { purchaseItemIds: this.selectedRowKeys})
+            .then(resp => {
+              this.$message({message: resp.message, type: 'success'})
+              this.toSearch()
+            })
+        })
+      },
       addItemsSubmit(addItemsForm){
         this.$refs[addItemsForm].validate((valid) => {
           if (valid) {
@@ -275,7 +345,11 @@
         })
       },
       clickFileInput(){
-        this.$refs.upload.dispatchEvent(new MouseEvent('click'))
+        if (this.searchForm.purchaseProId) {
+          this.$refs.upload.dispatchEvent(new MouseEvent('click'))
+        }else {
+          this.$message({type: 'warning', message: '请选择采购项目'})
+        }
       },
       readExcel(e) {
         const files = e.target.files;
@@ -300,15 +374,30 @@
             this.outputs = [];//清空接收数据
             ws.map(item => {
               if(item['序号']&&item['设备名称']){
-                this.outputs.push(item);
+                let data = {}
+                let keys = Object.keys(item)
+                keys.map(key => {
+                  data[this.excelKeys[key]] = item[key]
+                })
+                data.projectId = this.searchForm.purchaseProId
+                data.operator = getUser()
+                this.outputs.push(data);
                 this.excelRows ++
               }
             })
             console.log(this.outputs)
-            /*postActionByJson('', { items: []})
-              .then(resp => {
-
-            })*/
+            this.$confirm('是否确定导入？', '提示', {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+              type: 'warning'
+            }).then(() => {
+              postActionByJson('/purchase/purchasePlan/excelPurchaseItems', { purchaseItems: this.outputs } )
+                .then(resp => {
+                  this.$message({ message: resp.message, type: 'success' })
+                  this.toSearch()
+                })
+            })
+            this.excelRows = null
             this.$refs.upload.value = '';
           } catch (e) {
             console.log(e)
@@ -321,7 +410,7 @@
         if(this.searchForm.purchaseProId) {
           this.itemDialogVisible = true
         }else {
-          this.$message({message: '请选择项目', type: 'warning'})
+          this.$message({message: '请选择采购项目', type: 'warning'})
         }
       },
       rowClick(row, index) {
@@ -359,9 +448,12 @@
           this.$message({ message: "请输入查询条件", type: 'warning' })
         }
       },
-      poolSubmit() {},
+      poolSubmit() {
+
+      },
       poolChoose(row) {
         this.poolDialogVisible = true
+        this.poolForm = row
         this.poolForm.inquiryId = row.id
         this.loadPool(row.name)
       },
@@ -378,7 +470,22 @@
           this.poolLoading = false
         })
       },
-      handleAddInquiry() {},
+      handleAddInquiry() {
+        this.$confirm('是否确定发往询价，不可撤销，请谨慎操作', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          let purchaseItems = {}
+          purchaseItems.projectId = this.searchForm.purchaseProId
+          purchaseItems.operator = getUser()
+          postActionByJson('/purchase/purchasePlan/updateItemsInquiry', { purchaseItems: purchaseItems, itemIds: this.selectedRowKeys})
+            .then(resp => {
+              this.$message({ type: 'success', message: resp.message })
+              this.toSearch()
+            })
+        })
+      },
       onSelectChange(selectedRowKeys, selectedRows) {
         const rows = selectedRows.map(item => {
           if (item.id) {

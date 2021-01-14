@@ -21,22 +21,26 @@
           :pagination = false
           :loading="comparesLoading"
           :row-class-name="tableRowClassName"
+          :customRow="rowClickAnt"
+          :scroll="{x: 1360}"
           :row-selection="{ selectedRowKeys: selectedRowKey[card.inquiry.id], onChange: onSelectChange, type: 'radio' }"
           >
-          <a-table-column  key="supplier" title="供应商" data-index="supplier" />
-          <a-table-column align="center" key="suModel" v-slot:title="title" data-index="suModel">
+          <a-table-column :width="100" key="supplier" title="供应商" data-index="supplier" />
+          <a-table-column :width="200" align="center" key="suModel" v-slot:title="title" data-index="suModel">
             <span slot="title" >型号<p :class="{'table-column-p': card.inquiry.model?true:false}"><a-icon v-if="card.inquiry.model" type="like" />【{{card.inquiry.model}}】</p></span>
           </a-table-column>
           <a-table-column align="center" key="suParams" v-slot:title="title" data-index="suParams">
             <span slot="title">参数<p :class="{'table-column-p': card.inquiry.params?true:false}"><a-icon v-if="card.inquiry.params" type="like" />【{{card.inquiry.params}}】</p></span>
           </a-table-column>
-          <a-table-column align="center" key="suPrice" defaultSortOrder="ascend" :sorter="(a, b) => a.suPrice - b.suPrice"  title="单价" data-index="suPrice" />
-          <a-table-column align="center" key="suTotalPrice" title="总价" data-index="suTotalPrice" />
-          <a-table-column align="center" key="suBrand" v-slot:title="title" data-index="suBrand">
+          <a-table-column :width="100" align="center" key="suPrice" defaultSortOrder="ascend" :sorter="(a, b) => a.suPrice - b.suPrice"  title="单价" data-index="suPrice" />
+          <a-table-column :width="100" align="center" key="suTotalPrice" title="总价" data-index="suTotalPrice" />
+          <a-table-column :width="100" align="center" key="suBrand" v-slot:title="title" data-index="suBrand">
             <span slot="title">品牌<p :class="{'table-column-p': card.inquiry.realBrand?true:false}"><a-icon v-if="card.inquiry.realBrand" type="like" />【{{card.inquiry.realBrand}}】</p></span>
           </a-table-column>
-          <a-table-column align="center" key="suDelivery" title="货期" data-index="suDelivery" />
-          <a-table-column align="center" key="warranty" title="质保期" data-index="warranty" />
+          <a-table-column :width="100" align="center" key="suDelivery" title="货期" data-index="suDelivery" />
+          <a-table-column :width="100" align="center" key="warranty" title="质保期" data-index="warranty" />
+          <a-table-column :width="100" align="center" key="technicalRemark" title="技审备注" data-index="technicalRemark" />
+
         </a-table>
       </el-card>
     </div>
@@ -61,8 +65,10 @@
           :loading="inquiriesLoading"
           :data-source="inquiries"
           :scroll="{x: 1400}"
-          :row-selection="{ selectedRowKeys: selectedInquiryIds, onChange: onInquirySelectChange, getCheckboxProps: record => ({props: {disabled: record.unSendNum > 0}})}"
-        >
+          :row-selection="{ selectedRowKeys: selectedInquiryIds,
+           onChange: onInquirySelectChange,
+           getCheckboxProps: record => ({props: {disabled: record.unSendNum > 0}}) }"
+          >
           <a-table-column :sorter="(a, b) => a.unCompareNum - b.unCompareNum" defaultSortOrder="descend" key="unCompareNum" title="状态" :width="100" data-index="unCompareNum" align="center">
             <template slot-scope="text, record, index">
               <el-tag v-if="record.unSendNum > 0" type="info">询价中</el-tag>
@@ -121,7 +127,7 @@
     </el-drawer>
 
     <!-- 模态框 -->
-    <el-dialog title="添加拟定报价" :visible.sync="visible">
+    <el-dialog v-el-drag-dialog title="添加拟定报价" :visible.sync="visible">
       <el-form ref="dialogForm" :model="dialogForm" :rules="rules" status-icon>
         <el-row>
           <el-col :sm="24" :lg="12">
@@ -188,8 +194,11 @@
   import { getUser } from '@/utils/auth'
   import { nullFormat } from '@/utils/format'
   import { onFilterDropdownVisibleChange, onFilter, handleSearch, handleReset } from '@/utils/column-search'
+  import elDragDialog from '@/directive/el-drag-dialog'
 
   export default {
+    directives: { elDragDialog },
+
     data() {
       const scopedSlots = {
         filterDropdown: 'filterDropdown',
@@ -243,6 +252,19 @@
       this.init()
     },
     methods: {
+      rowClickAnt(row, index) {
+        return {
+          on: {
+            click: () => {
+              let ids = []
+              let rows = []
+              ids.push(row.id)
+              rows.push(row)
+              this.onSelectChange(ids, rows)
+            }
+          }
+        }
+      },
       addRemark(inquiry) {
         this.$prompt('请输入备注', '填写备注', {
           confirmButtonText: '确定',
@@ -286,7 +308,7 @@
       getUser,
       getRate(suPrice, draftPrice, inquiryId) {
         let rate = 0
-        console.log(suPrice +'|'+ draftPrice)
+        //console.log(suPrice +'|'+ draftPrice)
         if(suPrice && draftPrice && draftPrice!='' && suPrice!='') {
           rate = ((parseFloat(draftPrice) - parseFloat(suPrice))/parseFloat(suPrice)*100).toFixed(2)
         }
@@ -377,18 +399,46 @@
       },
       onSelectChange(selectedRowKeys, selectedRows) {
         let suPrice = ''
-        const rows = selectedRows.map(item => {
-          if (item.id && item.businessAudit != 2 && item.technicalAudit != 2) {
-            suPrice = item.suPrice
-            return item.id
+        if(selectedRows[0].suPrice > selectedRows[0].minPrice) {
+          this.$confirm('该项不是最低价，是否确定选择？', '提示', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }).then(() => {
+            const rows = selectedRows.map(item => {
+
+              if (item.id && item.businessAudit != 2 && item.technicalAudit != 2) {
+                suPrice = item.suPrice
+                return item.id
+              }
+            })
+
+            if(rows && rows!='') {
+              this.$set(this.selectedRowKey, selectedRows[0].inquiryId, rows)
+              this.$set(this.selectedPrice, selectedRows[0].inquiryId, suPrice)
+              this.dialogForm.suPrice = selectedRows[0].suPrice
+              this.getRate(selectedRows[0].suPrice, this.draftPrice[selectedRows[0].inquiryId], selectedRows[0].inquiryId)
+            }
+          }).catch(() => {
+            //this.onSelectChange(ids, rows)
+          })
+        }else {
+          const rows = selectedRows.map(item => {
+
+            if (item.id && item.businessAudit != 2 && item.technicalAudit != 2) {
+              suPrice = item.suPrice
+              return item.id
+            }
+          })
+
+          if(rows && rows!='') {
+            this.$set(this.selectedRowKey, selectedRows[0].inquiryId, rows)
+            this.$set(this.selectedPrice, selectedRows[0].inquiryId, suPrice)
+            this.dialogForm.suPrice = selectedRows[0].suPrice
+            this.getRate(selectedRows[0].suPrice, this.draftPrice[selectedRows[0].inquiryId], selectedRows[0].inquiryId)
           }
-        })
-        if(rows && rows!='') {
-          this.$set(this.selectedRowKey, selectedRows[0].inquiryId, rows)
-          this.$set(this.selectedPrice, selectedRows[0].inquiryId, suPrice)
-          this.dialogForm.suPrice = selectedRows[0].suPrice
-          this.getRate(selectedRows[0].suPrice, this.draftPrice[selectedRows[0].inquiryId], selectedRows[0].inquiryId)
         }
+
       },
       tableRowClassName(row) {
         if (row.dataSource == 0 && !(row.businessAudit == 2 || row.technicalAudit == 2)) {
@@ -524,6 +574,9 @@
       }
       /deep/.unActive-row {
         opacity: .5;
+      }
+      /deep/tr {
+        cursor: pointer;
       }
       .table-column-p {
         color: #1890ff

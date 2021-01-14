@@ -11,7 +11,7 @@
 .table-container {
   padding:1em 1em 0 1em;margin-bottom:1em;background:#fff;
 }
-.btns .el-input,.btns .el-select  {
+.btns .el-select  {
   width: 20%;
   max-width: 200px
 }
@@ -71,6 +71,7 @@
   background: #4bcb90;
   border-color: #4bcb90;
 }
+
 .el-textarea__inner:focus, .el-textarea__inner:hover,
 .el-input__inner:focus, .ant-table-row-expand-icon:hover,
 .ant-table-row-expand-icon:active, .ant-table-row-expand-icon:focus,

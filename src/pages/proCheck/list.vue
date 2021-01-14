@@ -17,13 +17,14 @@
     </div>
     <div style="padding:1em;margin-bottom:1em;background:#fff">
       <a-table
-        size="middle"
+        size="small"
         :loading="loading"
         :columns="realColumns"
         :data-source="proChecks"
         class="childTable"
         :row-class-name="tableRowClassName"
         :rowKey="record => record.id"
+        :scroll="{x: 2000}"
         :row-selection="{ selectedRowKeys: selectedRowKeys, onChange: onSelectChange }"
       >
         <span slot="files" slot-scope="record">
@@ -71,43 +72,43 @@ import { getAction } from '@/api/manage'
 let checkStatusCol = ''
 
 let columns = [
-  { title: '设备名', dataIndex: 'inquiry.name', key: 'inquiry.name', ellipsis: true,
+  { title: '设备名', dataIndex: 'inquiry.name', key: 'inquiry.name', width: 100,
     sorter: (a, b) => a.inquiry.name.length - b.inquiry.name.length, sortDirections: ['descend', 'ascend'] },
-  { title: '供应商', dataIndex: 'quote.supplier', key: 'quote.supplier', ellipsis: true,
+  { title: '供应商', dataIndex: 'quote.supplier', key: 'quote.supplier', width: 100,
     sorter: (a, b) => a.quote.supplier.length - b.quote.supplier.length, sortDirections: ['descend', 'ascend'] },
-  { title: '设备型号', dataIndex: 'inquiry.model', key: 'inquiry.model', ellipsis: true,
+  { title: '设备型号', dataIndex: 'inquiry.model', key: 'inquiry.model', width: 160,
     sorter: (a, b) => a.inquiry.model.length - b.inquiry.model.length, sortDirections: ['descend', 'ascend'] },
-  { title: '商家设备型号', dataIndex: 'quote.suModel', key: 'quote.suModel', ellipsis: true,
+  { title: '商家设备型号', dataIndex: 'quote.suModel', key: 'quote.suModel', width: 160,
     sorter: (a, b) => a.quote.suModel.length - b.quote.suModel.length, sortDirections: ['descend', 'ascend'] },
-  { title: '技术参数', dataIndex: 'inquiry.params', key: 'inquiry.params', ellipsis: true,
+  { title: '技术参数', dataIndex: 'inquiry.params', key: 'inquiry.params', align: 'center',
     sorter: (a, b) => a.inquiry.params.length - b.inquiry.params.length, sortDirections: ['descend', 'ascend'] },
-  { title: '商家技术参数', dataIndex: 'quote.suParams', key: 'quote.suParams', ellipsis: true,
+  { title: '商家技术参数', dataIndex: 'quote.suParams', key: 'quote.suParams', align: 'center',
     sorter: (a, b) => a.quote.suParams.length - b.quote.suParams.length, sortDirections: ['descend', 'ascend'] },
-  { title: '品牌', dataIndex: 'inquiry.brand', key: 'inquiry.brand', ellipsis: true,
+  { title: '品牌', dataIndex: 'inquiry.brand', key: 'inquiry.brand', width: 100,
     sorter: (a, b) => a.inquiry.brand.length - b.inquiry.brand.length, sortDirections: ['descend', 'ascend'] },
-  { title: '数量', dataIndex: 'inquiry.number', key: 'inquiry.number', ellipsis: true,
+  { title: '数量', dataIndex: 'inquiry.number', key: 'inquiry.number', width: 60,
     sorter: (a, b) => a.inquiry.number - b.inquiry.number, sortDirections: ['descend', 'ascend'] },
-  { title: '单位', dataIndex: 'inquiry.unit', key: 'inquiry.unit', ellipsis: true,
+  { title: '单位', dataIndex: 'inquiry.unit', key: 'inquiry.unit', width: 60,
     sorter: (a, b) => a.inquiry.unit - b.inquiry.unit, sortDirections: ['descend', 'ascend'] },
-  { title: '商家单价', dataIndex: 'quote.suPrice', key: 'quote.suPrice', ellipsis: true,
+  { title: '商家单价', dataIndex: 'quote.suPrice', key: 'quote.suPrice', width: 80,
     sorter: (a, b) => a.quote.suPrice - b.quote.suPrice, sortDirections: ['descend', 'ascend'] },
-  { title: '商家总价', dataIndex: 'quote.suTotalPrice', key: 'quote.suTotalPrice', ellipsis: true,
+  { title: '商家总价', dataIndex: 'quote.suTotalPrice', key: 'quote.suTotalPrice', width: 80,
     sorter: (a, b) => a.quote.suTotalPrice - b.quote.suTotalPrice, sortDirections: ['descend', 'ascend'] },
-  { title: '商家货期', dataIndex: 'quote.suDelivery', scopedSlots: 'quote.suDelivery', ellipsis: true,
+  { title: '商家货期', dataIndex: 'quote.suDelivery', scopedSlots: 'quote.suDelivery', width: 100,
     sorter: (a, b) => a.quote.suDelivery - b.quote.suDelivery, sortDirections: ['descend', 'ascend'] },
-  { title: '质保期', dataIndex: 'quote.warranty', key: 'quote.warranty', ellipsis: true,
+  { title: '质保期', dataIndex: 'quote.warranty', key: 'quote.warranty', width: 100,
     sorter: (a, b) => a.quote.warranty - b.quote.warranty, sortDirections: ['descend', 'ascend'] },
-  { title: '文件',  dataIndex: 'files', scopedSlots: { customRender: 'files' }, key: 'files', ellipsis: true, align: 'center'},
-  { title: '设备图片', dataIndex: 'quote.image', scopedSlots: { customRender: 'image' }, key: 'quote.image', align: 'center'},
-  { title: '审核状态', dataIndex: 'businessAudit', scopedSlots: { customRender: 'businessAudit' }, key: 'businessAudit',
+  { title: '文件',  dataIndex: 'files', scopedSlots: { customRender: 'files' }, width: 100, key: 'files',  align: 'center'},
+  { title: '设备图片', dataIndex: 'quote.image', scopedSlots: { customRender: 'image' }, width: 80, key: 'quote.image', align: 'center'},
+  { title: '审核状态', dataIndex: 'businessAudit', scopedSlots: { customRender: 'businessAudit' }, width: 70, key: 'businessAudit',
     sorter: (a, b) => a.checkStatus - b.checkStatus, sortDirections: ['descend', 'ascend'] },
-  { title: '审核状态', dataIndex: 'technicalAudit', scopedSlots: { customRender: 'technicalAudit' }, key: 'technicalAudit',
+  { title: '审核状态', dataIndex: 'technicalAudit', scopedSlots: { customRender: 'technicalAudit' }, width: 70, key: 'technicalAudit',
     sorter: (a, b) => a.checkStatus - b.checkStatus, sortDirections: ['descend', 'ascend'] },
-  { title: '商家备注', dataIndex: 'quote.suRemark',ellipsis: true , key: 'quote.suRemark',
+  { title: '商家备注', dataIndex: 'quote.suRemark', key: 'quote.suRemark', width: 100,
     sorter: (a, b) => a.quote.suRemark - b.quote.suRemark, sortDirections: ['descend', 'ascend'] },
-  { title: '备注', dataIndex: 'businessRemark', ellipsis: true,  key: 'businessRemark',
+  { title: '备注', dataIndex: 'businessRemark',  key: 'businessRemark', width: 100,
     sorter: (a, b) => a.checkStatus - b.checkStatus, sortDirections: ['descend', 'ascend'] },
-  { title: '备注', dataIndex: 'technicalRemark',  key: 'technicalRemark', ellipsis: true,
+  { title: '备注', dataIndex: 'technicalRemark',  key: 'technicalRemark', width: 100,
     sorter: (a, b) => a.checkStatus - b.checkStatus, sortDirections: ['descend', 'ascend'] },
 
   {
@@ -357,7 +358,7 @@ export default {
       .warning-row {
         background: #eae2c5;
       }
-      th, td, .ant-table-column-sorters {
+      /*th, td, .ant-table-column-sorters {
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
@@ -367,7 +368,7 @@ export default {
         span, div {
           font-size: 13px;
         }
-      }
+      }*/
       td, .ant-table-column-sorters {
         padding: 10px 8px;
       }

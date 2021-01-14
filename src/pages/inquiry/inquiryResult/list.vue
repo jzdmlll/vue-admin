@@ -249,12 +249,10 @@
             const filterVal = ['sort', 'name', 'suModel', 'params', 'unit', 'number', 'price',
               'totalPrice', 'brand', 'delivery', 'remark']
             let list = []
-            let sort = 0
             this.purchases.map(item=>{
-              sort ++
               if(this.selectedRowKeys.includes(item.quote.id)){
                 list.push({
-                  sort: sort,
+                  sort: item.inquiry.sort,
                   name: item.inquiry.name,
                   suModel: item.quote.suModel,
                   params: item.inquiry.params,
