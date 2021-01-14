@@ -212,9 +212,11 @@
           cancelButtonText: '取消',
           type: 'warning'
         }).then(() => {
-          postActionByQueryString('', { quoteIds: this.selectedRowKeys})
+          postActionByQueryString('/purchase/purchasePlan/inquiryResultSendPurchase', { quoteIds: this.selectedRowKeys, operator: getUser()})
             .then(resp => {
               this.$message({ type: 'success', message: resp.message });
+              this.loadPurchases()
+              this.selectedRowKeys = []
             })
         })
       },
@@ -232,8 +234,8 @@
           }
           postActionByQueryString(url[type], params[type])
             .then(resp => {
+              this.loadPurchases()
               this.$message({ message: resp.message, type: 'success' })
-              //this.toSearch()
             })
         }).catch(() => {
         });

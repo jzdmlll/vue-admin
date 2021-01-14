@@ -46,6 +46,14 @@
         </a-table-column>-->
         <a-table-column ellipsis="true" key="content" title="内容" data-index="content" />
         <a-table-column ellipsis="true" key="remark" title="备注" data-index="remark" />
+        <a-table-column ellipsis="true" key="sysUser.username" title="创建人" data-index="sysUser.username" />
+        <a-table-column ellipsis="true" key="time" title="创建时间" data-index="time">
+          <template slot-scope="text,record">{{dateFormat(text)}}</template>
+        </a-table-column>
+        <a-table-column ellipsis="true" key="sysUser1.username" title="修改人" data-index="sysUser1.username" />
+        <a-table-column ellipsis="true" key="updateTime" title="修改时间" data-index="updateTime">
+          <template slot-scope="text,record">{{dateFormat(text)}}</template>
+        </a-table-column>
         <a-table-column title="操作" align="center" width="180">
           <template slot-scope="text, record, index">
             <el-tooltip class="item" effect="dark" content="比价" placement="bottom-start">
@@ -64,6 +72,7 @@
   import '@/styles/auto-style.css'
   import { getUser } from '@/utils/auth'
   import { onFilterDropdownVisibleChange, onFilter, handleReset, handleSearch} from '@/utils/column-search'
+  import { dateFormat } from '@/utils/format'
 
   const scopedSlots = {
     filterDropdown: 'filterDropdown',
@@ -88,7 +97,7 @@
       this.init()
     },
     methods: {
-
+      dateFormat,
       onFilterDropdownVisibleChange,
       onFilter,
       handleReset,
