@@ -305,6 +305,7 @@
         if (this.toCheckDialogForm.id) {
           let form = {}
           form.id = this.toCheckDialogForm.id
+          form.sender = getUser()
           switch (this.toCheckDialogForm.checkProcess) {
             case 0: break
             case 30: form.firstAudit = 0;break
