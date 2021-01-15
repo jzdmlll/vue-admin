@@ -204,6 +204,7 @@
               .then( resp => {
                 this.$message({ message: resp.message, type: 'success' })
                 this.visible = false
+                this.toSearch()
               })
           }else {
             console.log('error commit')
