@@ -29,6 +29,9 @@
     <el-card shadow="never" style="margin-top: 1em">
       <div slot="header" class="index-md-title">
         <span>{{level[page].title}}</span>
+        <span><el-button v-if="searchForm.contractId" style="margin-right: 6px;float:right;" type="primary" icon="el-icon-success" size="small" @click="toJudge(1)">审核通过</el-button></span>
+        <span><el-button v-if="searchForm.contractId" style="margin-right: 6px;float:right;" type="danger" icon="el-icon-close" size="small" @click="toJudge(2)">审核不通过</el-button></span>
+        <span><el-button v-if="searchForm.contractId" style="margin-right: 6px;float:right;" type="warning" icon="el-icon-paperclip" size="small" @click="getFile">查看附件</el-button></span>
       </div>
       <a-table
         size="small"
@@ -36,7 +39,9 @@
         :data-source="contractChecks"
         :rowKey="record => record.id"
         :loading="contractChecksLoading"
-        :scroll="contractChecks.length > 0 ?{ x: 1300}:{}"
+        :scroll="contractChecks.length > 0 ?{ x: 1500}:{}"
+        :pagination="false"
+        style="margin-top:20px;"
       >
         <a-table-column :width="60" key="serialNumber" title="序号" data-index="serialNumber" align="center"/>
         <a-table-column :width="100" key="item" title="设备" data-index="item" align="center"/>
@@ -54,6 +59,15 @@
         <a-table-column :width="100" key="delivery" title="货期" data-index="delivery" align="center"/>
       </a-table>
     </el-card>
+    <el-dialog :model="file" v-el-drag-dialog title="附件查看" :visible.sync="visible">
+      <div v-if="files.length > 0">
+        <a v-for='file in files' :key="file.id" :href='file.url'><button>{{file.name}}</button></a>
+        <br>
+      </div>
+      <a-empty v-else/>
+    </el-dialog>
+
+
   </div>
 </template>
 <script>
@@ -65,7 +79,6 @@
   import XLSX from 'xlsx'
   import { onFilterDropdownVisibleChange, onFilter, handleSearch, handleReset } from '@/utils/column-search'
   import elDragDialog from '@/directive/el-drag-dialog'
-
   export default {
     directives: { elDragDialog },
     data() {
@@ -114,14 +127,15 @@
         }
       }
       return {
+        file:[],     //获取文件存放对象
+        files:[],
         searchForm: {},
-
+        visible:false,
         contractChecks: [],
         contractChecksLoading: false,
 
         props: props,
         page: null,
-
         level: [
           { audit: 'firstAudit', title: '一级审核'},
           { audit: 'secondAudit', title: '二级审核'},
@@ -135,17 +149,39 @@
     },
     methods: {
       toSearch() {
+        this.contractChecksLoading = true
         if (this.searchForm.contractId) {
           getAction('/purchase/contractManagement/findItemsInfoByContractId', { contractId: this.searchForm.contractId[1]})
             .then( resp => {
               this.contractChecks = resp.data
-            })
+              this.contractChecksLoading = false
+            }).catch(()=> {
+            this.contractChecksLoading = false
+          })
         }else {
           this.$message({ type: 'warning', message: '请选择合同'})
         }
       },
+      getFile()
+      {
+        getAction('/purchase/contractManagement/findContractFileByContractId',{contractId: this.searchForm.contractId[1]})
+          .then(resp=>{
+            this.files=resp.data
+            this.visible=true
+          })
+      },
+      toJudge(record)
+      {
+        let form = {}
+        form[this.level[this.page]['audit']] =  record
+        form['id'] = this.searchForm.contractId[1]
+        form.operator = getUser()
+        postActionByQueryString('/purchase/contractAudit/updateContractAuditInfoById', form)
+          .then( resp => {
+            this.$message({ message: resp.message, type: 'success' })
+          })
+      },
       init() {
-
       },
       handleChange(value) {
       },
@@ -157,6 +193,8 @@
 </script>
 <style lang="scss" scoped>
   .purchase-check {
+    .el-input {
 
+    }
   }
 </style>

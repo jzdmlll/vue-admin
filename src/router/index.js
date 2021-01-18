@@ -49,6 +49,7 @@ export const constantRoutes = [
     component: () => import('@/views/login/index'),
     hidden: true
   },
+
   {
     path: '/auth-redirect',
     component: () => import('@/views/login/auth-redirect'),
@@ -82,6 +83,12 @@ export const constantRoutes = [
         meta: { title: '首页', icon: 'dashboard', affix: true }
       }*/
     ]
+  },
+  {
+    path: '/websocket',
+    component: () => import('@/pages/websocket/index'),
+    name: 'websocket',
+    meta: {title: 'websocket', icon: 'dashboard', affix: true, noCache: true},
   },
   {
     path: '/profile',

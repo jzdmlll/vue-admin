@@ -4,7 +4,15 @@
     辅：#72DCAD
     辅：#8EDCB9
  */
-
+.el-cascader .el-input {
+  width: auto;
+}
+.el-input {
+  width: 20%;
+  min-width: 80px;
+  max-width: 200px;
+  margin-left: 6px;
+}
 .ant-dropdown {
   z-index: 9999!important;
 }
