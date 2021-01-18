@@ -230,7 +230,7 @@
           })
       };
       return {
-        Items: {},
+        items: {},
         outputs: [],
         excelRows: null,
         addItemsForm: {},
@@ -311,11 +311,11 @@
             this.$message({message: '不能大于原始数量', type: 'warning'})
             return false
           }else {
-            this.Items.operator = getUser()
-            this.Items.id = row.id
-            this.Items.itemNum = value
+            this.items.operator = getUser()
+            this.items.id = row.id
+            this.items.itemNum = value
             console.log(this.Items)
-            postActionByQueryString('/purchase/purchasePlan/insertItem',this.Items)
+            postActionByQueryString('/purchase/purchasePlan/insertItem',this.items)
             .then(resp => {
               this.$message({message: resp.message, type: 'success'})
               this.toSearch()
