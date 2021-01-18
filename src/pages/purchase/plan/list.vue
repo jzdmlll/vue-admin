@@ -37,6 +37,7 @@
             </template>
           </a-table-column>
           <a-table-column :width="60" align="center" key="serialNumber" title="序号" data-index="serialNumber" />
+          <a-table-column :width="60" align="center" key="id" title="id" data-index="id" />
           <a-table-column :width="120" align="center" ellipsis="true" key="item" title="采购项" data-index="item" />
           <a-table-column :width="120" align="center" ellipsis="true" key="brand" title="品牌" data-index="brand" />
           <a-table-column :width="120" align="center" ellipsis="true" key="model" title="型号" data-index="model" />
@@ -46,7 +47,7 @@
           <a-table-column :width="170" align="center" flex="right" key="action" title="操作" fixed="right">
             <template slot-scope="text, record">
                 <el-button v-if="record.isInquiry == 0" @click="poolChoose(record)" type="success" icon="el-icon-star-on" size="mini" style="padding: 7px 10px;background: #faad14;border-color:#faad14">产品池</el-button>
-                <el-button @click="splitPurchaseItem(record)" type="success" size="mini" >拆分</el-button>
+                <el-button v-if="record.isInquiry == 0" @click="splitPurchaseItem(record)" type="success" size="mini" >拆分</el-button>
             </template>
           </a-table-column>
         </a-table>
@@ -229,28 +230,30 @@
           })
       };
       return {
+        Items: {},
         outputs: [],
         excelRows: null,
         addItemsForm: {},
         itemDialogVisible: false,
         searchForm: {},
-        purchasePros: [],
 
+        purchasePros: [],
         plans: [],
         plansLoading: false,
         selectedRowKeys: [],
         purchaseSuppliers: [],
+
         purchaseSupplierLoading: false,
-
         currentItem: '',
+
         selectKey: null,
-
         poolData: [],
-        poolLoading: false,
 
+        poolLoading: false,
         dialogSearchForm: {},
         poolDialogVisible: false,
         poolForm: {},
+
 
         excelKeys: {
           序号: 'serialNumber',
@@ -298,18 +301,25 @@
     },
     methods: {
       splitPurchaseItem(row) {
-        this.$prompt('请输入利率', '批量设置利率', {
+        this.$prompt('请输入拆分数量', '拆分', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
           inputPattern: /^[1-9][0-9]*([\.][0-9]{1,2})?$/,
           inputErrorMessage: '格式不正确'
         }).then(({ value }) => {
-          alert(row.number)
           if (value > row.number) {
             this.$message({message: '不能大于原始数量', type: 'warning'})
             return false
           }else {
-
+            this.Items.operator = getUser()
+            this.Items.id = row.id
+            this.Items.itemNum = value
+            console.log(this.Items)
+            postActionByQueryString('/purchase/purchasePlan/insertItem',this.Items)
+            .then(resp => {
+              this.$message({message: resp.message, type: 'success'})
+              this.toSearch()
+            })
           }
         })
       },

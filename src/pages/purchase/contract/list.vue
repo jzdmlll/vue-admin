@@ -162,7 +162,6 @@
     </el-dialog>
 
     <el-dialog title="送审" :visible.sync="checkDialogVisible">
-      {{toCheckDialogForm}}
       <el-form :model="toCheckDialogForm" >
         <el-form-item label="合同名" label-width="80px" prop="contractName">{{toCheckDialogForm.contractName}}</el-form-item>
         <el-form-item label="合同编号" label-width="80px" prop="contractNo">{{toCheckDialogForm.contractNo}}</el-form-item>
