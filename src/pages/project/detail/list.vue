@@ -177,6 +177,7 @@ export default {
     return {
       nameKey: '',
       keys: {
+        "序号": 'sort',
         "设备名称": 'name',
         "品牌": 'realBrand',
         "型号": 'model',

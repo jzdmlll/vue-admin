@@ -298,7 +298,7 @@
     },
     methods: {
       splitPurchaseItem(row) {
-        this.$prompt('请输入利率', '批量设置利率', {
+        this.$prompt('请输入拆分数量', '采购项拆分', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
           inputPattern: /^[1-9][0-9]*([\.][0-9]{1,2})?$/,
@@ -306,10 +306,19 @@
         }).then(({ value }) => {
           alert(row.number)
           if (value > row.number) {
-            this.$message({message: '不能大于原始数量', type: 'warning'})
+            this.$message({message: '不能大于原始数量【'+row.number+'】', type: 'warning'})
             return false
           }else {
+            let form = {}
+            form = row
+            form.operator = getUser()
 
+            form.itemNum = value
+            postActionByQueryString('/purchase/purchasePlan/insertItem', form)
+              .then(resp => {
+                this.$message({message: resp.message, type: 'success'})
+                this.toSearch()
+              })
           }
         })
       },

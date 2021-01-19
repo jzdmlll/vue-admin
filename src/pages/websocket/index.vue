@@ -6,7 +6,7 @@
 </template>
 
 <script>
-  import { getUser } from '@/utils/auth'
+  import { getUser, getToken } from '@/utils/auth'
   import { getAction, postActionByJson, postActionByQueryString } from '@/api/manage'
 
   export default {
@@ -33,7 +33,7 @@
       initWebSocket: function () {
         // WebSocket与普通的请求所用协议有所不同，ws等同于http，wss等同于https
         var userId = getUser()
-        var url = "ws://127.0.0.1:8081"+"/websocket/"+userId;
+        var url = process.env.VUE_APP_BASE_API.replace("https://","ws://").replace("http://","ws://")+"websocket/"+userId;
         this.websock = new WebSocket(url);
         this.websock.onopen = this.websocketonopen;
         this.websock.onerror = this.websocketonerror;
@@ -48,17 +48,27 @@
       },
       websocketonmessage: function (e) {
         var data = eval("(" + e.data + ")");
+        const h = this.$createElement;
         //处理订阅信息
         if(data.cmd == "topic"){
           //TODO 系统通知
+
+          this.$notify({
+            title: '系统通知',
+            message: h('i', { style: 'color: teal'}, data.msgTxt)
+          });
           console.log('系统通知'+data.msgTxt)
         }else if(data.cmd == "user"){
           //TODO 用户消息
+          this.$notify({
+            title: '用户消息',
+            message: h('i', { style: 'color: teal'}, data.msgTxt)
+          });
           console.log(data.msgTxt)
         }
       },
       websocketclose: function (e) {
-        console.log("connection closed (" + e.code + ")");
+        //console.log("connection closed (" + e.code + ")");
       }
     }
   }

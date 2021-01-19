@@ -72,9 +72,10 @@
           </template>
         </a-table-column>
         <a-table-column align="center" :width="120" key="remark" title="备注" data-index="remark" />
-        <a-table-column fixed="right" align="center" :width="120" key="action" title="操作">
+        <a-table-column fixed="right" align="center" :width="150" key="action" title="操作">
           <template slot-scope="text, record">
             <el-button v-if="record.firstAudit==null && record.secondAudit==null && record.threeAudit==null" @click="toCheck(record)" type="primary" size="mini" style="padding: 7px 10px;">送审</el-button>
+            <el-button  @click="upload(record)" :loading="uploadLoading" type="primary" size="mini" style="padding: 7px 10px;" icon="el-icon-upload">附件</el-button>
           </template>
         </a-table-column>
       </a-table>
@@ -156,13 +157,12 @@
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
-        <el-button size="small" @click="visible = false">取 消</el-button>
+        <el-button size="small" @click="dialogVisible = false">取 消</el-button>
         <el-button type="primary" size="small" @click="saveRecordHandler('form')">确 定</el-button>
       </div>
     </el-dialog>
 
     <el-dialog title="送审" :visible.sync="checkDialogVisible">
-      {{toCheckDialogForm}}
       <el-form :model="toCheckDialogForm" >
         <el-form-item label="合同名" label-width="80px" prop="contractName">{{toCheckDialogForm.contractName}}</el-form-item>
         <el-form-item label="合同编号" label-width="80px" prop="contractNo">{{toCheckDialogForm.contractNo}}</el-form-item>
@@ -179,8 +179,50 @@
       </el-form>
 
       <div slot="footer" class="dialog-footer">
-        <el-button size="small" @click="visible = false">取 消</el-button>
+        <el-button size="small" @click="checkDialogVisible = false">取 消</el-button>
         <el-button type="primary" size="small" @click="sendCheckHandler">确 定</el-button>
+      </div>
+    </el-dialog>
+
+    <el-dialog title="上传附件" :visible.sync="uploadDialogVisible">
+      <el-form :model="uploadForm">
+        <el-row>
+          <el-col :span="12">
+            <el-form-item label="合同名" label-width="80px" prop="contractName">{{uploadForm.contractName}}</el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="合同编号" label-width="80px" prop="contractNo">{{uploadForm.contractNo}}</el-form-item>
+          </el-col>
+        </el-row>
+        <div>
+          <a-upload-dragger
+            name="file"
+            :multiple="true"
+            :action="fileUploadUrl"
+            withCredentials
+            list-type="picture"
+            @before-upload="beforeUpload"
+            :file-list="fileList"
+            @change="uploadStatusChange"
+          >
+            <p class="ant-upload-drag-icon">
+              <a-icon type="inbox" />
+            </p>
+            <p class="ant-upload-text" style="color: #40a9ff">
+              上传项目文件
+            </p>
+            <p class="ant-upload-text">
+              点击或者拖拽文件来上传
+            </p>
+            <p class="ant-upload-hint">
+              支持单个或多个文件上传. 单个文件请不要超过12M
+            </p>
+          </a-upload-dragger>
+        </div>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button size="small" @click="uploadDialogVisible = false">取 消</el-button>
+        <el-button type="primary" :loading="uploadSubmitLoading" size="small" @click="uploadHandler">提 交</el-button>
       </div>
     </el-dialog>
 
@@ -194,9 +236,13 @@
   import XLSX from 'xlsx'
   import { dateTimeFormat } from '@/utils/format'
   import { getAction, postActionByJson, postActionByQueryString } from '@/api/manage'
+  import { beforeUpload, uploadStatusChange } from '@/utils/upload'
+
+  const fileUploadUrl = process.env.VUE_APP_BASE_API + 'file/uploadCache'
 
   export default {
     data() {
+
       var validNo = (rule, value, callback) => {
         if (!value) {
           return callback(new Error('不能为空'));
@@ -213,6 +259,16 @@
           })
       };
       return {
+        fileUploadUrl,
+
+        uploadForm: {},
+        fileList: [],
+        uploadKey: true,
+        uploadDialogVisible: false,
+        uploadSubmitLoading: false,
+
+        uploadLoading: false,
+
         marks: {
           0: '无审核',
           30: '一级',
@@ -278,6 +334,57 @@
       };
     },
     methods: {
+      uploadHandler() {
+        if (this.uploadKey) {
+          this.uploadSubmitLoading = true
+          const fileList = this.fileList.map(item => {
+            console.log(item)
+            return { id: item.id, name: item.name, url: item.url, type: 4, operator: item.response.operator }
+          })
+          console.log(fileList)
+          let form = {}
+          form.purchaseContract = this.uploadForm
+          form.purchaseContract.operator = getUser()
+          form.fileList = fileList
+          postActionByJson('/purchase/contractManagement/uploadContractFile', form)
+            .then(resp=> {
+              this.$message({ message: resp.message, type: 'success' })
+            })
+            .finally(() => {
+              this.uploadSubmitLoading = false
+              this.uploadDialogVisible = false
+            })
+        }else {
+          this.$message({ message: '文件上传未完成', type: 'warning' })
+        }
+      },
+      beforeUpload,
+      uploadStatusChange,
+      upload(row) {
+        this.fileList = []
+        this.uploadLoading = true
+        getAction('/file/findByOtherId',{otherId: row.id, type: 4})
+          .then(resp => {
+            resp.data.map(item => {
+              let response = item
+              response.error = 0
+              response.fileId = response.id
+              response.fileName = response.name
+              this.fileList.push({
+                uid: 0-item.id,
+                name: item.name,
+                operator: item.operator,
+                status: 'done',
+                response: response
+              })
+            })
+            this.uploadDialogVisible = true
+            this.uploadForm = row
+          })
+          .finally(()=>{
+            this.uploadLoading = false
+          })
+      },
       tableRowClassName(row, index){
         if(this.selectKey == row.id) {
           return 'selected'
@@ -400,53 +507,6 @@
 
       },
       dateTimeFormat,
-      handleDownload() {
-        if (this.selectedRowKeys.length) {
-          this.downloadLoading = true
-          import('@/vendor/Export2Excel').then(excel => {
-            const tHeader = ['序号', '设备名称', '型号', '配置需求',  '单位', '数量', '单价', '总价', '设备厂家', '货期', '备注']
-            const filterVal = ['sort', 'name', 'suModel', 'params', 'unit', 'number', 'price',
-              'totalPrice', 'supplier', 'delivery', 'remark']
-            let list = []
-            let sort = 0
-            this.purchases.map(item=>{
-              sort ++
-              if(this.selectedRowKeys.includes(item.quote.id)){
-                list.push({
-                    sort: sort,
-                    name: item.inquiry.name,
-                    suModel: item.quote.suModel,
-                    params: item.inquiry.params,
-                    unit: item.inquiry.unit,
-                    number: item.inquiry.number,
-                    price: item.inquiry.price,
-                    totalPrice: item.inquiry.totalPrice,
-                    supplier: item.quote.supplier,
-                    delivery: item.quote.suDelivery,
-                    remark: item.inquiry.remark,
-                })
-              }
-            })
-            const data = this.formatJson(filterVal, list)
-            excel.export_json_to_excel({
-              header: tHeader,
-              data,
-              filename: this.filename
-            })
-            this.downloadLoading = false
-            this.selectedRowKeys = []
-
-          })
-        } else {
-          this.$message({
-            message: 'Please select at least one item',
-            type: 'warning'
-          })
-        }
-      },
-      formatJson(filterVal, jsonData) {
-        return jsonData.map(v => filterVal.map(j => v[j]))
-      },
       onSelectChange(selectedRowKeys, selectedRows) {
         const rows = selectedRows.map(item => {
           if (item.quote.id) {
