@@ -46,8 +46,8 @@
           <a-table-column :width="60" align="center" key="number" title="数量" data-index="number" />
           <a-table-column :width="170" align="center" flex="right" key="action" title="操作" fixed="right">
             <template slot-scope="text, record">
-                <el-button v-if="record.isInquiry == 0" @click="poolChoose(record)" type="success" icon="el-icon-star-on" size="mini" style="padding: 7px 10px;background: #faad14;border-color:#faad14">产品池</el-button>
-                <el-button v-if="record.isInquiry == 0" @click="splitPurchaseItem(record)" type="success" size="mini" >拆分</el-button>
+              <el-button v-if="record.isInquiry == 0" @click="poolChoose(record)" type="success" icon="el-icon-star-on" size="mini" style="padding: 7px 10px;background: #faad14;border-color:#faad14">产品池</el-button>
+              <el-button v-if="record.isInquiry == 0" @click="splitPurchaseItem(record)" type="success" size="mini" >拆分</el-button>
             </template>
           </a-table-column>
         </a-table>
@@ -230,6 +230,7 @@
           })
       };
       return {
+        sendInquiryItem: [],
         items: {},
         outputs: [],
         excelRows: null,
@@ -486,10 +487,9 @@
           cancelButtonText: '取消',
           type: 'warning'
         }).then(() => {
-          let purchaseItems = {}
-          purchaseItems.projectId = this.searchForm.purchaseProId
-          purchaseItems.operator = getUser()
-          postActionByJson('/purchase/purchasePlan/updateItemsInquiry', { purchaseItems: purchaseItems, itemIds: this.selectedRowKeys})
+          let purchaseItems = this.sendInquiryItem
+          let operator = getUser()
+          postActionByJson('/purchase/purchasePlan/insertInquiryInfo', {purchaseItemsList: purchaseItems, sysProDetailWithBLOBs: {operator: operator, purchaseProId: this.searchForm.purchaseProId}})
             .then(resp => {
               this.$message({ type: 'success', message: resp.message })
               this.toSearch()
@@ -499,6 +499,7 @@
       onSelectChange(selectedRowKeys, selectedRows) {
         const rows = selectedRows.map(item => {
           if (item.id) {
+            this.sendInquiryItem.push({id : item.id})
             return item.id
           }
         })
