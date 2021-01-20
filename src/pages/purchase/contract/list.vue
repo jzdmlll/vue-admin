@@ -73,9 +73,9 @@
         </a-table-column>
         <a-table-column align="center" :width="120" key="remark" title="备注" data-index="remark" />
         <a-table-column fixed="right" align="center" :width="150" key="action" title="操作">
-          <template slot-scope="text, record">
+          <template slot-scope="text, record, index">
             <el-button v-if="record.firstAudit==null && record.secondAudit==null && record.threeAudit==null" @click="toCheck(record)" type="primary" size="mini" style="padding: 7px 10px;">送审</el-button>
-            <el-button  @click="upload(record)" :loading="uploadLoading" type="primary" size="mini" style="padding: 7px 10px;" icon="el-icon-upload">附件</el-button>
+            <el-button  @click="upload(record, index)" :loading="uploadLoading[index]" type="primary" size="mini" style="padding: 7px 10px;" icon="el-icon-upload">附件</el-button>
           </template>
         </a-table-column>
       </a-table>
@@ -209,7 +209,7 @@
               <a-icon type="inbox" />
             </p>
             <p class="ant-upload-text" style="color: #40a9ff">
-              上传项目文件
+              上传合同文件
             </p>
             <p class="ant-upload-text">
               点击或者拖拽文件来上传
@@ -267,7 +267,7 @@
         uploadDialogVisible: false,
         uploadSubmitLoading: false,
 
-        uploadLoading: false,
+        uploadLoading: [],
 
         marks: {
           0: '无审核',
@@ -360,9 +360,9 @@
       },
       beforeUpload,
       uploadStatusChange,
-      upload(row) {
+      upload(row, index) {
         this.fileList = []
-        this.uploadLoading = true
+        this.uploadLoading[index] = true
         getAction('/file/findByOtherId',{otherId: row.id, type: 4})
           .then(resp => {
             resp.data.map(item => {
@@ -382,7 +382,7 @@
             this.uploadForm = row
           })
           .finally(()=>{
-            this.uploadLoading = false
+            this.uploadLoading[index] = false
           })
       },
       tableRowClassName(row, index){

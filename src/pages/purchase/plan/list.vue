@@ -45,8 +45,8 @@
           <a-table-column :width="60" align="center" key="number" title="数量" data-index="number" />
           <a-table-column :width="170" align="center" flex="right" key="action" title="操作" fixed="right">
             <template slot-scope="text, record">
-                <el-button v-if="record.isInquiry == 0" @click="poolChoose(record)" type="success" icon="el-icon-star-on" size="mini" style="padding: 7px 10px;background: #faad14;border-color:#faad14">产品池</el-button>
-                <el-button @click="splitPurchaseItem(record)" type="success" size="mini" >拆分</el-button>
+              <el-button v-if="record.isInquiry == 0" @click="poolChoose(record)" type="success" icon="el-icon-star-on" size="mini" style="padding: 7px 10px;background: #faad14;border-color:#faad14">产品池</el-button>
+              <el-button v-if="record.isInquiry == 0" @click="splitPurchaseItem(record)" type="success" size="mini" >拆分</el-button>
             </template>
           </a-table-column>
         </a-table>
@@ -63,13 +63,32 @@
           :rowKey="record => record.id"
           :loading="purchaseSupplierLoading"
           :data-source="purchaseSuppliers"
+          :scroll="purchaseSuppliers.length > 0 ?{ x: 1200}:{}">
         >
-          <a-table-column title="序号">
+          <a-table-column :width="60" align="center" title="序号" fixed="left">
             <template slot-scope="text, record, index">
               {{index+1}}
             </template>
           </a-table-column>
-          <a-table-column key="supplier" title="供应商" data-index="supplier" />
+          <a-table-column :width="100" align="center" fixed="left" key="supplier" title="供应商" data-index="supplier" />
+          <a-table-column :width="100" align="center" fixed="left" key="brand" title="品牌" data-index="brand" />
+          <a-table-column :width="150" align="center" key="model" title="型号" data-index="model" />
+          <a-table-column :width="150" align="center" key="params" title="技术参数" data-index="params" />
+          <a-table-column :width="70" align="center" key="price" title="单价" data-index="price" />
+          <a-table-column :width="70" align="center" key="number" title="数量" data-index="number" />
+          <a-table-column :width="80" align="center" key="totalPrice" title="总价" >
+            <template slot-scope="text, record">
+              {{record.price&&record.number?record.price * record.number:''}}
+            </template>
+          </a-table-column>
+          <a-table-column :width="100" align="center" key="delivery" title="货期" data-index="delivery" />
+          <a-table-column :width="100" align="center" key="warranty" title="质保期" data-index="warranty" />
+          <a-table-column :width="100" align="center" key="remark" title="备注" data-index="remark" />
+          <a-table-column :width="100" align="center" flex="right" key="action" title="操作" fixed="right">
+            <template slot-scope="text, record">
+              <el-button  @click="deletePurchaseSupply(record, index)" type="danger" icon="el-icon-delete" size="mini" ></el-button>
+            </template>
+          </a-table-column>
         </a-table>
       </el-card>
 
@@ -103,7 +122,7 @@
         <el-table :data="poolData" v-loading="poolLoading" size="small">
           <el-table-column label width="35">
             <template slot-scope="scope">
-              <el-radio :label="scope.row.id" v-model="poolForm.id">&nbsp;</el-radio>
+              <el-radio :label="scope.row" v-model="poolForm.supply">&nbsp;</el-radio>
             </template>
           </el-table-column>
           <el-table-column :show-overflow-tooltip="true" prop="name" label="设备名称" />
@@ -251,7 +270,7 @@
         dialogSearchForm: {},
         poolDialogVisible: false,
         poolForm: {},
-
+        sendInquiryItem: [],
         excelKeys: {
           序号: 'serialNumber',
           设备名称: 'item',
@@ -297,6 +316,23 @@
       this.init()
     },
     methods: {
+      deletePurchaseSupply(row, index) {
+        this.$confirm('是否确定删除？', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          let form = {}
+          form.id = row.id
+          form.itemId = row.itemId
+          form.operator = getUser()
+          postActionByQueryString("/purchase/purchasePlan/deletePurchaseSupply", form)
+            .then(resp => {
+              this.$message({message: resp.message, type: 'success'})
+              this.toSearchSupply(row)
+            })
+        })
+      },
       splitPurchaseItem(row) {
         this.$prompt('请输入拆分数量', '采购项拆分', {
           confirmButtonText: '确定',
@@ -426,20 +462,23 @@
         return {
           on: {
             click: () => {
-              this.purchaseSupplierLoading = true
-              getAction('/purchase/purchasePlan/findPurchasingSupplierByItemId', { id: row.id })
-                .then( resp => {
-                  this.purchaseSuppliers = resp.data
-                  this.purchaseSupplierLoading = false
-                  this.selectKey = row.id
-                  this.currentItem = row.item
-                })
-                .catch(() => {
-                  this.purchaseSupplierLoading = false
-                })
+              this.toSearchSupply(row)
             }
           }
         }
+      },
+      toSearchSupply(row) {
+        this.purchaseSupplierLoading = true
+        getAction('/purchase/purchasePlan/findPurchasingSupplierByItemId', { id: row.id })
+          .then( resp => {
+            this.purchaseSuppliers = resp.data
+            this.purchaseSupplierLoading = false
+            this.selectKey = row.id
+            this.currentItem = row.item
+          })
+          .catch(() => {
+            this.purchaseSupplierLoading = false
+          })
       },
       poolFind() {
         if(this.dialogSearchForm.name || this.dialogSearchForm.model){
@@ -458,7 +497,27 @@
         }
       },
       poolSubmit() {
-
+        if (this.poolForm.supply) {
+          let form = {}
+          form.supplier = this.poolForm.supply.supplier
+          form.itemId = this.poolForm.id
+          form.model = this.poolForm.supply.model
+          form.brand = this.poolForm.supply.brand
+          form.params = this.poolForm.supply.params
+          form.price = this.poolForm.supply.price
+          form.delivery = this.poolForm.supply.delivery
+          form.number = this.poolForm.number
+          form.totalPrice = this.poolForm.price * this.poolForm.number
+          form.warranty = this.poolForm.supply.warranty
+          form.operator = getUser()
+          postActionByQueryString("/purchase/purchasePlan/insertSupplyByItem", form)
+            .then( resp => {
+              this.$message({ type: 'success', message: resp.message })
+              this.poolDialogVisible = false
+            })
+        }else {
+          return false
+        }
       },
       poolChoose(row) {
         this.poolDialogVisible = true
@@ -485,10 +544,9 @@
           cancelButtonText: '取消',
           type: 'warning'
         }).then(() => {
-          let purchaseItems = {}
-          purchaseItems.projectId = this.searchForm.purchaseProId
-          purchaseItems.operator = getUser()
-          postActionByJson('/purchase/purchasePlan/updateItemsInquiry', { purchaseItems: purchaseItems, itemIds: this.selectedRowKeys})
+          let purchaseItems = this.sendInquiryItem
+          let operator = getUser()
+          postActionByJson('/purchase/purchasePlan/insertInquiryInfo', {purchaseItemsList: purchaseItems, sysProDetailWithBLOBs: {operator: operator, purchaseProId: this.searchForm.purchaseProId}})
             .then(resp => {
               this.$message({ type: 'success', message: resp.message })
               this.toSearch()
@@ -498,6 +556,7 @@
       onSelectChange(selectedRowKeys, selectedRows) {
         const rows = selectedRows.map(item => {
           if (item.id) {
+            this.sendInquiryItem.push({id : item.id})
             return item.id
           }
         })
@@ -509,16 +568,6 @@
       },
       loadPlans(projectId) {
         this.plansLoading = true
-        /*setTimeout(()=>{
-          this.plans = [
-            {id: 1, name: 'xxx采购'},
-            {id: 2, name: 'xxx采购'},
-            {id: 3, name: 'xxx采购'},
-            {id: 4, name: 'xxx采购'},
-            {id: 5, name: 'xxx采购'},
-          ]
-          this.plansLoading = false
-        },500)*/
         request.get("/purchase/purchasePlan/findItemsByProjectId?projectId="+projectId)
           .then( resp => {
             this.plans = resp.data
