@@ -30,6 +30,14 @@
           width="55">
         </el-table-column>
         <el-table-column prop="sort" label="序号" width="50" />
+        <el-table-column :show-overflow-tooltip="true" prop="parentId" label="大类">
+          <template slot-scope="{row}">
+            <template v-if="row.editable">
+              <el-input v-model="row.parentId" class="edit-input" size="small" />
+            </template>
+            <template v-else>{{nullFormat(row.parentId)}}</template>
+          </template>
+        </el-table-column>
         <el-table-column :show-overflow-tooltip="true" prop="name" label="设备名称">
           <template slot-scope="{row}">
             <template v-if="row.editable">
