@@ -24,7 +24,7 @@
         class="childTable"
         :row-class-name="tableRowClassName"
         :rowKey="record => record.id"
-        :scroll="{x: 2000}"
+        :scroll="{x: 2000, y: tableHeight}"
         :row-selection="{ selectedRowKeys: selectedRowKeys, onChange: onSelectChange }"
       >
         <span slot="files" slot-scope="record">
@@ -76,6 +76,10 @@ let columns = [
     sorter: (a, b) => a.inquiry.name.length - b.inquiry.name.length, sortDirections: ['descend', 'ascend'] },
   { title: '供应商', dataIndex: 'quote.supplier', key: 'quote.supplier', width: 100,
     sorter: (a, b) => a.quote.supplier.length - b.quote.supplier.length, sortDirections: ['descend', 'ascend'] },
+  { title: '品牌', dataIndex: 'inquiry.brand', key: 'inquiry.brand', width: 100,
+    sorter: (a, b) => a.inquiry.brand.length - b.inquiry.brand.length, sortDirections: ['descend', 'ascend'] },
+  { title: '商家品牌', dataIndex: 'quote.suBrand', key: 'quote.suBrand', width: 120,
+    sorter: (a, b) => a.quote.suBrand.length - b.quote.suBrand.length, sortDirections: ['descend', 'ascend'] },
   { title: '设备型号', dataIndex: 'inquiry.model', key: 'inquiry.model', width: 160,
     sorter: (a, b) => a.inquiry.model.length - b.inquiry.model.length, sortDirections: ['descend', 'ascend'] },
   { title: '商家设备型号', dataIndex: 'quote.suModel', key: 'quote.suModel', width: 160,
@@ -84,8 +88,6 @@ let columns = [
     sorter: (a, b) => a.inquiry.params.length - b.inquiry.params.length, sortDirections: ['descend', 'ascend'] },
   { title: '商家技术参数', dataIndex: 'quote.suParams', key: 'quote.suParams', align: 'center',
     sorter: (a, b) => a.quote.suParams.length - b.quote.suParams.length, sortDirections: ['descend', 'ascend'] },
-  { title: '品牌', dataIndex: 'inquiry.brand', key: 'inquiry.brand', width: 100,
-    sorter: (a, b) => a.inquiry.brand.length - b.inquiry.brand.length, sortDirections: ['descend', 'ascend'] },
   { title: '数量', dataIndex: 'inquiry.number', key: 'inquiry.number', width: 60,
     sorter: (a, b) => a.inquiry.number - b.inquiry.number, sortDirections: ['descend', 'ascend'] },
   { title: '单位', dataIndex: 'inquiry.unit', key: 'inquiry.unit', width: 60,
@@ -100,11 +102,11 @@ let columns = [
     sorter: (a, b) => a.quote.warranty - b.quote.warranty, sortDirections: ['descend', 'ascend'] },
   { title: '文件',  dataIndex: 'files', scopedSlots: { customRender: 'files' }, width: 100, key: 'files',  align: 'center'},
   { title: '设备图片', dataIndex: 'quote.image', scopedSlots: { customRender: 'image' }, width: 80, key: 'quote.image', align: 'center'},
-  { title: '审核状态', dataIndex: 'businessAudit', scopedSlots: { customRender: 'businessAudit' }, width: 70, key: 'businessAudit',
+  { title: '状态', dataIndex: 'businessAudit', scopedSlots: { customRender: 'businessAudit' }, width: 100, key: 'businessAudit',
     sorter: (a, b) => a.checkStatus - b.checkStatus, sortDirections: ['descend', 'ascend'] },
-  { title: '审核状态', dataIndex: 'technicalAudit', scopedSlots: { customRender: 'technicalAudit' }, width: 70, key: 'technicalAudit',
+  { title: '状态', dataIndex: 'technicalAudit', scopedSlots: { customRender: 'technicalAudit' }, width: 100, key: 'technicalAudit',
     sorter: (a, b) => a.checkStatus - b.checkStatus, sortDirections: ['descend', 'ascend'] },
-  { title: '商家备注', dataIndex: 'quote.suRemark', key: 'quote.suRemark', width: 100,
+  { title: '商家备注', dataIndex: 'quote.suRemark', key: 'quote.suRemark', width: 120,
     sorter: (a, b) => a.quote.suRemark - b.quote.suRemark, sortDirections: ['descend', 'ascend'] },
   { title: '备注', dataIndex: 'businessRemark',  key: 'businessRemark', width: 100,
     sorter: (a, b) => a.checkStatus - b.checkStatus, sortDirections: ['descend', 'ascend'] },
@@ -123,6 +125,7 @@ let columns = [
 export default {
   data() {
     return {
+      tableHeight: document.documentElement.clientHeight - 340,
       files: [],
       searchForm: {status: ''},
       visible: false,
@@ -133,7 +136,7 @@ export default {
       columns,
       prop: {
         '技术审核': ['quote.supplier', 'inquiry.name',
-          'inquiry.model', 'quote.suModel', 'inquiry.params', 'quote.suParams', 'checkStatus', 'quote.image', 'files', 'technicalAudit', 'technicalRemark', 'quote.suRemark'
+          'inquiry.model', 'quote.suModel', 'inquiry.params', 'quote.suParams', 'checkStatus', 'quote.image', 'files', 'technicalAudit', 'technicalRemark', 'quote.suRemark', 'quote.suBrand'
         ],
         '商务审核': ['quote.supplier', 'inquiry.name', 'inquiry.params',
           'quote.suPrice', 'quote.suTotalPrice', 'inquiry.suWarranties', 'checkStatus', 'files', 'businessAudit', 'businessRemark', 'quote.suRemark'
@@ -157,6 +160,16 @@ export default {
     hasSelected() {
       return this.selectedRowKeys.length > 0
     }
+  },
+  mounted() {
+    var that = this;
+    // <!--把window.onresize事件挂在到mounted函数上-->
+    window.onresize = () => {
+      return (() => {
+        window.fullHeight = document.documentElement.clientHeight;
+        that.tableHeight = window.fullHeight - 340;
+      })()
+    };
   },
   created() {
     //this.loadChecks()
@@ -374,6 +387,10 @@ export default {
       }
       th {
         padding: 10px 2px;
+      }
+
+      /deep/.ant-table-hide-scrollbar {
+        overflow: auto!important;
       }
     }
   }

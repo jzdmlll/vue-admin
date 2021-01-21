@@ -7,35 +7,48 @@
       </el-tooltip>
     </div>
     <div style="padding:1em;margin-bottom:1em;background:#fff">
-      <el-table v-loading="loading" :data="projects" size="small">
-        <el-table-column type="index" prop="" label="序号" width="120" />
-        <el-table-column prop="name" show-overflow-tooltip label="项目名称" ellipsis="true" />
-        <el-table-column prop="content" show-overflow-tooltip label="内容" ellipsis="true" />
-        <el-table-column prop="sysProOrigin.name" label="项目来源" />
-        <el-table-column prop="sysProType.name" label="项目类型" />
-        <el-table-column prop="remark" label="批注" />
-        <el-table-column prop="sysUser.username" label="创建人" />
-        <el-table-column :width="100" show-overflow-tooltip label="创建时间">
-          <template slot-scope="scope">{{dateTimeFormat(scope.row.time)}}</template>
-        </el-table-column>
-        <el-table-column prop="sysUser1.username" label="修改人" />
-        <el-table-column :width="100" show-overflow-tooltip label="修改时间" align="center">
-          <template slot-scope="scope">{{dateTimeFormat(scope.row.updateTime)}}</template>
-        </el-table-column>
-        <el-table-column label="操作" align="center" width="180">
-          <template slot-scope="scope">
+      <a-table
+        :loading="loading"
+        :data-source="projects"
+        size="small"
+        :rowKey="record => record.id"
+        :scroll="projects.length>0?{x:1300}:{}">
+        <a-table-column :width="60" title="序号" align="center">
+          <template slot-scope="text, record, index">
+            {{index+1}}
+          </template>
+        </a-table-column>
+        <a-table-column key="name" title="项目名称" data-index="name" ellipsis="true" align="center"/>
+        <a-table-column :width="100" key="content" title="内容" data-index="content" ellipsis="true" align="center"/>
+        <a-table-column :width="100" key="sysProOrigin.name" title="项目来源" data-index="sysProOrigin.name" ellipsis="true" align="center"/>
+        <a-table-column :width="100" key="sysProType.name" title="项目类型" data-index="sysProType.name" ellipsis="true" align="center"/>
+        <a-table-column :width="100" key="remark" title="备注" data-index="remark" ellipsis="true" />
+        <a-table-column :width="100" key="sysUser.username" title="创建人" data-index="sysUser.username" ellipsis="true" align="center"/>
+        <a-table-column :width="100" key="time" title="创建时间">
+          <template slot-scope="text, record">
+            {{dateTimeFormat(record.time)}}
+          </template>
+        </a-table-column>
+        <a-table-column :width="100" key="updateTime" title="修改时间">
+          <template slot-scope="text, record">
+            {{dateTimeFormat(record.updateTime)}}
+          </template>
+        </a-table-column>
+        <a-table-column :width="100" key="sysUser1.username" title="修改人" data-index="sysUser1.username" align="center"/>
+        <a-table-column :width="180" title="操作" fixed="right" key="action" align="center">
+          <template slot-scope="text, record">
             <el-tooltip class="item" effect="dark" content="删除该项目" placement="bottom-start">
-              <el-button type="danger" icon="el-icon-delete" size="mini" @click="deleteHandler(scope.row.id)" />
+              <el-button type="danger" icon="el-icon-delete" size="mini" @click="deleteHandler(record.id)" />
             </el-tooltip>
             <el-tooltip class="item" effect="dark" content="修改该项目" placement="bottom-start">
-              <el-button type="success" icon="el-icon-edit" size="mini" @click="editHandler(scope.row)" />
+              <el-button type="success" icon="el-icon-edit" size="mini" @click="editHandler(record)" />
             </el-tooltip>
             <el-tooltip class="item" effect="dark" content="上传询价函" placement="bottom-start">
-              <el-button type="success" icon="el-icon-upload" size="mini" @click="uploadHandler(scope.row)" />
+              <el-button type="success" icon="el-icon-upload" size="mini" @click="uploadHandler(record)" />
             </el-tooltip>
           </template>
-        </el-table-column>
-      </el-table>
+        </a-table-column>
+      </a-table>
     </div>
     <!-- 模态框 -->
     <el-dialog :title="title" :visible.sync="visible">

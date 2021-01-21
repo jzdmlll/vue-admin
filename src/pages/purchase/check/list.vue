@@ -61,7 +61,7 @@
     </el-card>
     <el-dialog :model="file" v-el-drag-dialog title="附件查看" :visible.sync="visible">
       <div v-if="files.length > 0">
-        <a v-for='file in files' :key="file.id" :href='file.url'><button>{{file.name}}</button></a>
+        <a v-for='file in files' :key="file.id" :href='file.url' target="_blank"><button>{{file.name}}</button></a>
         <br>
       </div>
       <a-empty v-else/>

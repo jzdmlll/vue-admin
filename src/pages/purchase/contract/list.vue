@@ -186,6 +186,7 @@
 
     <el-dialog title="上传附件" :visible.sync="uploadDialogVisible">
       <el-form :model="uploadForm">
+        {{uploadKey}}
         <el-row>
           <el-col :span="12">
             <el-form-item label="合同名" label-width="80px" prop="contractName">{{uploadForm.contractName}}</el-form-item>
@@ -201,7 +202,7 @@
             :action="fileUploadUrl"
             withCredentials
             list-type="picture"
-            @before-upload="beforeUpload"
+            :before-upload="beforeUpload"
             :file-list="fileList"
             @change="uploadStatusChange"
           >
@@ -339,7 +340,7 @@
           this.uploadSubmitLoading = true
           const fileList = this.fileList.map(item => {
             console.log(item)
-            return { id: item.id, name: item.name, url: item.url, type: 4, operator: item.response.operator }
+            return { id: item.id, name: item.name, url: item.url, type: 5, operator: item.response.operator }
           })
           console.log(fileList)
           let form = {}
@@ -363,7 +364,7 @@
       upload(row, index) {
         this.fileList = []
         this.uploadLoading[index] = true
-        getAction('/file/findByOtherId',{otherId: row.id, type: 4})
+        getAction('/file/findByOtherId',{otherId: row.id, type: 5})
           .then(resp => {
             resp.data.map(item => {
               let response = item
