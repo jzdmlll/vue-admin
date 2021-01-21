@@ -72,10 +72,11 @@
           </template>
         </a-table-column>
         <a-table-column align="center" :width="120" key="remark" title="备注" data-index="remark" />
-        <a-table-column fixed="right" align="center" :width="150" key="action" title="操作">
+        <a-table-column fixed="right" align="center" :width="220" key="action" title="操作">
           <template slot-scope="text, record, index">
             <el-button v-if="record.firstAudit==null && record.secondAudit==null && record.threeAudit==null" @click="toCheck(record)" type="primary" size="mini" style="padding: 7px 10px;">送审</el-button>
             <el-button  @click="upload(record, index)" :loading="uploadLoading[index]" type="primary" size="mini" style="padding: 7px 10px;" icon="el-icon-upload">附件</el-button>
+            <el-button  @click="deleteContract(record, index)" type="danger" size="mini" style="padding: 7px 10px;">删除</el-button>
           </template>
         </a-table-column>
       </a-table>
@@ -334,6 +335,15 @@
       };
     },
     methods: {
+
+      deleteContract(row, index){
+        postActionByQueryString('/purchase/contract/deleteById',row)
+        .then(resp => {
+          this.$message({ message: resp.message, type: 'success' })
+          this.toSearch()
+          this.rowClick(row)
+        })
+      },
       uploadHandler() {
         if (this.uploadKey) {
           this.uploadSubmitLoading = true
