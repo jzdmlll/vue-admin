@@ -76,7 +76,7 @@
           <template slot-scope="text, record, index">
             <el-button v-if="record.firstAudit==null && record.secondAudit==null && record.threeAudit==null" @click="toCheck(record)" type="primary" size="mini" style="padding: 7px 10px;">送审</el-button>
             <el-button  @click="upload(record, index)" :loading="uploadLoading[index]" type="primary" size="mini" style="padding: 7px 10px;" icon="el-icon-upload">附件</el-button>
-            <el-button  @click="deleteContract(record, index)" type="danger" size="mini" style="padding: 7px 10px;">删除</el-button>
+            <el-button  @click="deleteContract(record, index)" icon="el-icon-delete" type="danger" size="mini" style="padding: 7px 10px;">删除</el-button>
           </template>
         </a-table-column>
       </a-table>
@@ -386,7 +386,8 @@
                 name: item.name,
                 operator: item.operator,
                 status: 'done',
-                response: response
+                response: response,
+                url: response.url
               })
             })
             this.uploadDialogVisible = true

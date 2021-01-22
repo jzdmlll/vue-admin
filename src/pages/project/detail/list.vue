@@ -22,7 +22,7 @@
         <a-table-column :width="100" key="content" title="内容" data-index="content" ellipsis="true" align="center"/>
         <a-table-column :width="100" key="sysProOrigin.name" title="项目来源" data-index="sysProOrigin.name" ellipsis="true" align="center"/>
         <a-table-column :width="100" key="sysProType.name" title="项目类型" data-index="sysProType.name" ellipsis="true" align="center"/>
-        <a-table-column :width="100" key="remark" title="备注" data-index="remark" ellipsis="true" />
+        <a-table-column :width="100" key="remark" title="备注" data-index="remark" ellipsis="true" align="center"/>
         <a-table-column :width="100" key="sysUser.username" title="创建人" data-index="sysUser.username" ellipsis="true" align="center"/>
         <a-table-column :width="100" key="time" title="创建时间">
           <template slot-scope="text, record">
@@ -137,6 +137,9 @@
       <el-form ref="form1" :model="form1" :rules="codeRules" status-icon>
         <div>
           <div style="margin: 8px 0 26px 0;position: relative;">
+            <el-select size="small" v-model="currentTemplate" placeholder="请选择解析模板" value-key="name" style="margin:0 0 8px 1em">
+              <el-option v-for="item in excelTemplates" :key="item.id" :label="item.name" :value="item" />
+            </el-select>
             <el-button @click="clickFileInput" type="primary" size="small"><a-icon type="file-excel" style="font-size: 12px;margin-right: 5px"/>excel导入</el-button>
             <input type="file" ref="upload" accept=".xls,.xlsx" @change="readExcel" class="outputlist_upload">
             <div v-if="excelRows>0" style="position: absolute;left: 0;padding: 4px 0;font-size: 12px;color: #909399">从Excel读取到
@@ -166,6 +169,8 @@ import '@/styles/auto-style.css'
 import { getUser } from '@/utils/auth'
 import XLSX from 'xlsx'
 import { dateTimeFormat } from '@/utils/format'
+import { beforeUpload, uploadStatusChange } from '@/utils/upload'
+import { getAction, postActionByJson, postActionByQueryString } from '@/api/manage'
 
 export default {
   data() {
@@ -188,6 +193,7 @@ export default {
         })
     };
     return {
+      uploadKey: true,
       nameKey: '',
       keys: {
         "序号": 'sort',
@@ -200,6 +206,36 @@ export default {
         "数量": 'number',
         "备注": 'remark',
       },
+      excelTemplates: [
+        { id: 1, name: '一般模板', tree: 0,
+          keys: {
+            "序号": 'sort',
+            "设备名称": 'name',
+            "品牌": 'realBrand',
+            "型号": 'model',
+            "技术要求": 'params',
+            "品牌推荐": 'brand',
+            "单位": 'unit',
+            "数量": 'number',
+            "备注": 'remark',
+          }
+        },
+        {
+          id: 2, name: '仪表模板', tree: 1,
+            keys: {
+              "序号": 'sort',
+              "设备名称": 'name',
+              "品牌": 'realBrand',
+              "型号": 'model',
+              "技术要求": 'params',
+              "品牌推荐": 'brand',
+              "单位": 'unit',
+              "数量": 'number',
+              "备注": 'remark',
+            },
+        }
+      ],
+      currentTemplate: {},
       outputs: [],
       excelRows: 0,
       visible2: false,
@@ -243,26 +279,21 @@ export default {
   methods: {
     dateTimeFormat,
     importHandler(form1) {
+      if (!this.currentTemplate.id) {
+        this.$message({type: 'warning', message: '请选择模板'})
+        return false
+      }else {
       this.$refs[form1].validate((valid) => {
         if (valid) {
-          const form = []
-          let keyArray = []
-          this.outputs.map(item => {
-            keyArray = Object.keys(item)
-            let inquiry = {}
-            keyArray.map(key => {
-              if (this.keys[key] != undefined)
-                inquiry[this.keys[key]] = item[key]
-            })
-            form.push(inquiry)
-          })
-          let userId = parseInt(getUser())
-          form.map(item => {
-            item['proDetailId'] = this.form1.proDetailId
-            item['operator'] = userId
-          })
+          const form = [...this.outputs]
+          let url = null
+          if(this.currentTemplate.tree == 0) {
+            url = '/inquiry/batchAddInquiry'
+          }else {
+            url = '/inquiry/batchAddInquiryTree'
+          }
           request.request({
-            url: '/inquiry/batchAddInquiry',
+            url: url,
             method: 'post',
             headers: {
               'Content-Type': 'application/json'
@@ -277,9 +308,15 @@ export default {
           return false
         }
       })
+      }
     },
     clickFileInput() {
-      this.$refs.upload.dispatchEvent(new MouseEvent('click'))
+      if (!this.currentTemplate.id) {
+        this.$message({type: 'warning', message: '请选择模板'})
+        return false
+      }else {
+        this.$refs.upload.dispatchEvent(new MouseEvent('click'))
+      }
     },
     readExcel(e) {
       const files = e.target.files;
@@ -300,14 +337,59 @@ export default {
           });
           const wsname = workbook.SheetNames[0];//取第一张表
           const ws = XLSX.utils.sheet_to_json(workbook.Sheets[wsname]);//生成json表格内容
-          console.log(ws)
+          //console.log(ws)
           this.outputs = [];//清空接收数据
+
+          let parent = {}
+          let children = []
+          let userId = getUser()
           ws.map(item => {
-            if(item['序号']&&item['设备名称']){
-              this.outputs.push(item);
-              this.excelRows ++
+            if(this.currentTemplate.tree == 0) {
+              if(item['序号']&&item['设备名称']){
+                let keyArray = Object.keys(item)
+                let inquiry = {}
+                keyArray.map(key => {
+                  if (this.currentTemplate.keys[key] != undefined)
+                    inquiry[this.currentTemplate.keys[key]] = item[key]
+                })
+                inquiry['proDetailId'] = this.form1.proDetailId
+                inquiry['operator'] = userId
+                this.outputs.push(inquiry);
+              }
+            }else {
+              let no = item['序号']+''
+
+              if(!no.includes('.') && Object.keys(item).length <= 2) {
+                if (parent['name']) {
+                  parent['children'] = children
+                  this.outputs.push(parent)
+                  parent = {}
+                  children = []
+                }
+
+                parent['sort'] = no
+                var keys = Object.keys(item)
+                parent['name'] = item[keys[1]]
+
+              }else {
+                let keyArray = Object.keys(item)
+                let inquiry = {}
+                keyArray.map(key => {
+                  if (this.currentTemplate.keys[key] != undefined)
+                    inquiry[this.currentTemplate.keys[key]] = item[key]
+                })
+                inquiry['proDetailId'] = this.form1.proDetailId
+                inquiry['operator'] = userId
+                children.push(inquiry)
+              }
             }
+            this.excelRows ++
           })
+          if(this.currentTemplate.tree == 1) {
+            parent['children'] = children
+            this.outputs.push(parent)
+          }
+          console.log(this.outputs)
           this.$refs.upload.value = '';
         } catch (e) {
           console.log(e)
@@ -358,28 +440,8 @@ export default {
           this.proTypes = response.data
         })
     },
-    beforeUpload(file) {
-      if (file.size > 12 * 1024 * 1024) {
-        this.$message({ message: '上传文件大小不能超过12M', type: 'error' })
-        return false
-      }
-    },
-    uploadStatusChange(info) {
-      if (info.file.status === 'uploading' || info.file.response.error === 0) {
-        let fileList = [...info.fileList]
-        fileList = fileList.map(file => {
-          if (file.response) {
-            file.url = file.response.url
-            file.id = file.response.fileId
-            file.name = file.response.fileName
-            //file.type = 1
-          }
-          return file
-        })
-
-        this.fileList = fileList
-      }
-    },
+    beforeUpload,
+    uploadStatusChange,
     cancelHandler() {
       if (this.active === 1) {
         this.visible = false
@@ -392,7 +454,27 @@ export default {
         case 1:
           this.$refs[form].validate((valid) => {
             if (valid) {
-              this.active++
+              this.fileList = []
+              getAction('/file/findByOtherId',{otherId: this.form.id, type: 0})
+                .then(resp => {
+                  resp.data.map(item => {
+                    let response = item
+                    response.error = 0
+                    response.fileId = response.id
+                    response.fileName = response.name
+                    this.fileList.push({
+                      uid: 0-item.id,
+                      name: item.name,
+                      operator: item.operator,
+                      status: 'done',
+                      response: response,
+                      url: response.url
+                    })
+                  })
+                })
+                .finally(()=> {
+                  this.active++
+                })
             } else {
               console.log('error commit')
               return false
@@ -402,7 +484,7 @@ export default {
         case 2:
           this.submitLoading = true
           const fileList = this.fileList.map(item => {
-            return { id: item.id, name: item.name, url: item.url, type: 1 }
+            return { id: item.id, name: item.name, url: item.url, type: 0, operator: item.response.operator }
           })
           this.form.operator = parseInt(getUser())
           delete this.form.role
@@ -464,17 +546,8 @@ export default {
       this.form = row
       this.submitLoading = false
       this.nameKey = row.name
-      //this.loadProChecks()
       this.loadProOrigins()
       this.loadProTypes()
-      //let proChecks = []
-      /*request.get('/project/detail/findProDetailCheck?proDetailId='+row.id)
-        .then(response => {
-          response.data.map(item => {
-            proChecks.push({'checkName': item.checkName, 'roleId': item.id})
-          })
-          this.proChecks = [...proChecks]
-        })*/
     }
   }
 }
