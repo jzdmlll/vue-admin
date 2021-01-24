@@ -15,7 +15,7 @@
           <el-button style="margin-right: 6px" type="primary" icon="el-icon-search" size="small" @click="toSearch">查询</el-button>
         </div>
         <div style="padding:1em;margin-bottom:1em;background:#fff">
-          <a-table class="parentTable" :loading="loading" size="default" :data-source="inquiryList" :scroll="{ x: 786 }"
+          <a-table class="parentTable" :loading="loading" size="middle" :data-source="inquiryList" :scroll="{ x: 786 }"
                    :row-class-name="tableRowClassName" @expand="expandChange" :rowKey="record => record.id">
             <a-table-column v-for="item in columns"
               :key="item.dataIndex"
@@ -488,6 +488,7 @@
         console.log(table.scrollHeight + '-' +table.scrollTop +'-' +table.clientHeight+'='+scrollDistance)
         if(scrollDistance <= 0.5) {//等于0证明已经到底，可以请求接口
           if(that.hasNextPage){
+            that.quoteLoading = true
             const proId = that.searchFormQuote.proDetailId
             const supplier = that.searchFormQuote.supplier
             //请求接口的代码
@@ -500,8 +501,10 @@
               that.quoteList = that.quoteList.concat(response.data.list)
               that.currentPage = response.data.nextPage
               that.hasNextPage = response.data.hasNextPage
-              that.quoteLoading = false
             })
+              .finally(() => {
+                that.quoteLoading = false
+              })
           }
         }
       })
@@ -511,8 +514,8 @@
         if (this.selectedId.length) {
           this.downloadLoading = true
           import('@/vendor/Export2Excel').then(excel => {
-            const tHeader = ['序号', '设备名称', '品牌', '型号',   '单位', '数量', '报价型号', '报价品牌', '设备单价', '设备总价']
-            const filterVal = ['sort', 'name', 'brand', 'model', 'unit', 'number', 'suModel', 'suBrand', 'price',
+            const tHeader = ['编号', '序号', '设备名称', '品牌', '型号',   '单位', '数量', '报价型号', '报价品牌', '设备单价', '设备总价']
+            const filterVal = ['id', 'sort', 'name', 'brand', 'model', 'unit', 'number', 'suModel', 'suBrand', 'price',
               'totalPrice']
             let list = []
             let sort = 0
@@ -520,6 +523,7 @@
               sort ++
               if(this.selectedId.includes(item.id)){
                 list.push({
+                  id: item.inquiry.id,
                   sort: sort,
                   name: item.inquiry.name,
                   brand: item.inquiry.realBrand,
@@ -807,7 +811,10 @@
             console.log(ws)
             that.outputs = [];//清空接收数据
             ws.map(item => {
-              if( item['供应商'] && item['设备名称']){
+              var num = Object.keys(item).length
+              console.log(item)
+              if( item['序号'] && num > 2){
+                alert(1)
                 that.outputs.push(item);
                 this.excelRows ++
               }

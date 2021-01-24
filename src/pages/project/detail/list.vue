@@ -143,7 +143,7 @@
             <el-button @click="clickFileInput" type="primary" size="small"><a-icon type="file-excel" style="font-size: 12px;margin-right: 5px"/>excel导入</el-button>
             <input type="file" ref="upload" accept=".xls,.xlsx" @change="readExcel" class="outputlist_upload">
             <div v-if="excelRows>0" style="position: absolute;left: 0;padding: 4px 0;font-size: 12px;color: #909399">从Excel读取到
-              <span style="color: #42b983">{{excelRows}}</span>条数据
+              <span style="color: #42b983">{{outputs.length}}</span>条数据
             </div>
           </div>
 
@@ -195,17 +195,6 @@ export default {
     return {
       uploadKey: true,
       nameKey: '',
-      keys: {
-        "序号": 'sort',
-        "设备名称": 'name',
-        "品牌": 'realBrand',
-        "型号": 'model',
-        "技术要求": 'params',
-        "品牌推荐": 'brand',
-        "单位": 'unit',
-        "数量": 'number',
-        "备注": 'remark',
-      },
       excelTemplates: [
         { id: 1, name: '一般模板', tree: 0,
           keys: {
@@ -218,10 +207,11 @@ export default {
             "单位": 'unit',
             "数量": 'number',
             "备注": 'remark',
-          }
+          },
+          antTableColumn: []
         },
         {
-          id: 2, name: '仪表模板', tree: 1,
+          id: 2, name: '大表格模板', tree: 1,
             keys: {
               "序号": 'sort',
               "设备名称": 'name',
@@ -233,6 +223,26 @@ export default {
               "数量": 'number',
               "备注": 'remark',
             },
+          antTableColumn: []
+        },
+        {
+          id: 3, name: '仪表模板', tree: 0,
+          keys: {
+            "序号": "sort",
+            "设备位号": "tagNumer",
+            "名称": "name",
+            "参数": "params",
+            "仪表名称": "meter",
+            "测量范围": "range",
+            "型号": "model",
+            "技术要求": "params",
+            "信号及规格": "signal",
+            "连接方式及标准": "connectionMode",
+            "保护管": "tube",
+            "数量": "number",
+            "备注": "remark",
+          },
+          antTableColumn: []
         }
       ],
       currentTemplate: {},
@@ -343,9 +353,11 @@ export default {
           let parent = {}
           let children = []
           let userId = getUser()
+
           ws.map(item => {
             if(this.currentTemplate.tree == 0) {
-              if(item['序号']&&item['设备名称']){
+              var num = Object.keys(item).length;
+              if( num>2 &&item['序号']){
                 let keyArray = Object.keys(item)
                 let inquiry = {}
                 keyArray.map(key => {
@@ -354,6 +366,7 @@ export default {
                 })
                 inquiry['proDetailId'] = this.form1.proDetailId
                 inquiry['operator'] = userId
+                inquiry['templateId'] = this.currentTemplate.id
                 this.outputs.push(inquiry);
               }
             }else {
@@ -362,6 +375,7 @@ export default {
               if(!no.includes('.') && Object.keys(item).length <= 2) {
                 if (parent['name']) {
                   parent['children'] = children
+                  parent['proDetailId'] = this.form1.proDetailId
                   this.outputs.push(parent)
                   parent = {}
                   children = []
@@ -380,6 +394,7 @@ export default {
                 })
                 inquiry['proDetailId'] = this.form1.proDetailId
                 inquiry['operator'] = userId
+                inquiry['templateId'] = this.currentTemplate.id
                 children.push(inquiry)
               }
             }
@@ -387,6 +402,7 @@ export default {
           })
           if(this.currentTemplate.tree == 1) {
             parent['children'] = children
+            parent['proDetailId'] = this.form1.proDetailId
             this.outputs.push(parent)
           }
           console.log(this.outputs)
@@ -402,9 +418,13 @@ export default {
       this.visible2 = false
     },
     uploadHandler(row) {
-      this.visible2 = true
-      this.form1.proDetailId = row.id
-      this.excelRows  = 0
+      getAction('/inquiry/template/findInquiryTemplate')
+        .then(resp => {
+          this.excelTemplates = resp.data
+          this.visible2 = true
+          this.form1.proDetailId = row.id
+          this.excelRows  = 0
+        })
     },
     /*removeCheck(role) {
       this.proChecks.splice(this.proChecks.findIndex(item => item.roleId === role.id), 1)
@@ -455,26 +475,30 @@ export default {
           this.$refs[form].validate((valid) => {
             if (valid) {
               this.fileList = []
-              getAction('/file/findByOtherId',{otherId: this.form.id, type: 0})
-                .then(resp => {
-                  resp.data.map(item => {
-                    let response = item
-                    response.error = 0
-                    response.fileId = response.id
-                    response.fileName = response.name
-                    this.fileList.push({
-                      uid: 0-item.id,
-                      name: item.name,
-                      operator: item.operator,
-                      status: 'done',
-                      response: response,
-                      url: response.url
+              if (this.form.id) {
+                getAction('/file/findByOtherId',{otherId: this.form.id, type: 0})
+                  .then(resp => {
+                    resp.data.map(item => {
+                      let response = item
+                      response.error = 0
+                      response.fileId = response.id
+                      response.fileName = response.name
+                      this.fileList.push({
+                        uid: 0-item.id,
+                        name: item.name,
+                        operator: item.operator,
+                        status: 'done',
+                        response: response,
+                        url: response.url
+                      })
                     })
                   })
-                })
-                .finally(()=> {
-                  this.active++
-                })
+                  .finally(()=> {
+                    this.active++
+                  })
+              }else {
+                this.active++
+              }
             } else {
               console.log('error commit')
               return false
@@ -543,6 +567,7 @@ export default {
     editHandler(row) {
       this.visible = true
       this.title = '修改项目'
+      this.active = 1
       this.form = row
       this.submitLoading = false
       this.nameKey = row.name

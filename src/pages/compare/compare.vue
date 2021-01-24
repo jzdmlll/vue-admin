@@ -3,7 +3,7 @@
     <div class="btns" style="margin-bottom:1em;background:#fff;position:absolute;">
       <span :style="opacity==1?{opacity: opacity}:{opacity: 0, display: 'none'}" class="draw-fixed-button el-icon-arrow-down my-transition" @click="()=>{this.drawer=true; this.loadInquiries()}"></span>
     </div>
-    <div class="table-container">
+    <div class="table-container" style="margin-bottom: 50px">
       <el-card v-for="card in compares" :key="card.inquiry.id" shadow="never">
         <div slot="header" class="index-md-title">
 

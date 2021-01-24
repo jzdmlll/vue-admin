@@ -11,19 +11,58 @@
       <el-tooltip class="item" v-if="selectedId.length > 0" effect="dark" content="选择设备类型" placement="bottom-start">
         <el-button type="primary" icon="el-icon-s-help" size="small" @click="handleSetDevice">选择设备类型</el-button>
       </el-tooltip>
-      <!--<el-tooltip class="item" v-if="selectedId.length > 0" effect="dark" content="无需询价" placement="bottom-start">
-        <el-button type="success" size="small" @click="setIsNotInquiry(0)">无需询价</el-button>
-      </el-tooltip>
-      <el-tooltip class="item" v-if="selectedId.length > 0" effect="dark" content="撤回无需询价" placement="bottom-start">
-        <el-button type="warning" size="small" @click="setIsNotInquiry(1)">撤回</el-button>
-      </el-tooltip>-->
       <el-select v-model="searchForm.proDetailId" style="margin-right: 6px" filterable clearable placeholder="请选择项目" value-key="name">
         <el-option v-for="item in projects" :key="item.id" :label="item.name" :value="item.id" />
       </el-select>
       <el-button style="margin-right: 6px" type="primary" icon="el-icon-search" size="small" @click="toSearch">查询</el-button>
     </div>
     <div style="padding:1em;margin-bottom:1em;background:#fff">
-      <el-table ref="inquiryList" class="table" v-loading="loading" :default-sort = "{prop: 'sort', order: 'ascending'}"
+      <a-table
+        class="table"
+        size="middle"
+        ref="inquiryList"
+        :rowKey="record => record.id"
+        :loading="loading"
+        :data-source="inquiryList"
+        :row-class-name="tableRowClassName"
+        :row-selection="{ selectedRowKeys: selectedId, onChange: handleSelectionChange,}"
+        :scroll="inquiryList.length > 0 ?{ x: 1200}:{}">
+        <a-table-column v-if="currentTemplate.tree == 1" ellipsis="true" :width="100" align="center" key="parentId" title="大类" data-index="parentId"/>
+        <a-table-column v-for="item in currentTemplate.tableColumn" ellipsis="true" :width="item.width" :align="item.align" :key="item.key" :title="item.title" :dataIndex="item.dataIndex">
+          <template slot-scope="text, record">
+            <template v-if="record.editable && item.key != 'sort'">
+              <el-input v-model="record[item.key]" class="edit-input" size="small" />
+            </template>
+            <template v-else>{{record[item.key]}}</template>
+          </template>
+        </a-table-column>
+        <a-table-column fixed="right" title="操作" key="action" align="center" :width="180">
+          <template slot-scope="text, record">
+            <span v-if="record.editable" >
+                <el-tooltip class="item" effect="dark" content="行内编辑保存" placement="bottom-start">
+                  <el-button type="success" size="mini" style="padding: 7px 10px;" @click="save(record)">保存</el-button>
+                </el-tooltip>
+                <a-popconfirm title="确定取消修改吗?" @confirm="() => cancel(record)">
+                  <el-tooltip class="item" effect="dark" content="取消" placement="bottom-start">
+                    <el-button type="danger" size="mini" style="padding: 7px 10px;">取消</el-button>
+                  </el-tooltip>
+                </a-popconfirm>
+              </span>
+            <span v-else>
+                 <!--<el-tooltip class="item" effect="dark" content="选择历史产品" placement="bottom-start">
+                  <el-button type="success" icon="el-icon-star-on" size="mini" style="padding: 7px 10px;background: #faad14;border-color:#faad14" @click="poolChoose(row)">产品池选择</el-button>
+                </el-tooltip>-->
+                <el-tooltip v-if="record.veto==1" class="item" effect="dark" content="重新询价" placement="bottom-start">
+                  <el-button type="primary" icon="el-icon-edit" size="mini" @click="addInquiry(record)">重新询价</el-button>
+                </el-tooltip>
+                <el-tooltip class="item" effect="dark" content="行内编辑" placement="bottom-start">
+                  <el-button :disabled="record.veto==1?true:false" type="primary" icon="el-icon-edit" size="mini" @click="edit(record)"></el-button>
+                </el-tooltip>
+              </span>
+          </template>
+        </a-table-column>
+      </a-table>
+<!--      <el-table ref="inquiryList" class="table" v-loading="loading" :default-sort = "{prop: 'sort', order: 'ascending'}"
                 :data="inquiryList" :row-class-name="tableRowClassName" @selection-change="handleSelectionChange" size="small" stripe>
         <el-table-column
           type="selection"
@@ -32,10 +71,7 @@
         <el-table-column prop="sort" label="序号" width="50" />
         <el-table-column :show-overflow-tooltip="true" prop="parentId" label="大类">
           <template slot-scope="{row}">
-            <template v-if="row.editable">
-              <el-input v-model="row.parentId" class="edit-input" size="small" />
-            </template>
-            <template v-else>{{nullFormat(row.parentId)}}</template>
+            {{row.parentId}}
           </template>
         </el-table-column>
         <el-table-column :show-overflow-tooltip="true" prop="name" label="设备名称">
@@ -43,7 +79,7 @@
             <template v-if="row.editable">
               <el-input v-model="row.name" class="edit-input" size="small" />
             </template>
-            <template v-else>{{nullFormat(row.name)}}</template>
+            <template v-else>{{row.name}}</template>
           </template>
         </el-table-column>
         <el-table-column prop="realBrand" label="品牌">
@@ -51,7 +87,7 @@
             <template v-if="row.editable">
               <el-input v-model="row.realBrand" class="edit-input" size="small" />
             </template>
-            <template v-else>{{nullFormat(row.realBrand)}}</template>
+            <template v-else>{{row.realBrand}}</template>
           </template>
         </el-table-column>
         <el-table-column prop="params" :show-overflow-tooltip="true" label="技术参数" >
@@ -59,7 +95,7 @@
             <template v-if="row.editable">
               <el-input v-model="row.params" class="edit-input" size="small" />
             </template>
-            <template v-else>{{nullFormat(row.params)}}</template>
+            <template v-else>{{row.params}}</template>
           </template>
         </el-table-column>
         <el-table-column prop="model" :show-overflow-tooltip="true" label="品牌型号" >
@@ -67,7 +103,7 @@
             <template v-if="row.editable">
               <el-input v-model="row.model" class="edit-input" size="small" />
             </template>
-            <template v-else>{{nullFormat(row.model)}}</template>
+            <template v-else>{{row.model}}</template>
           </template>
         </el-table-column>
         <el-table-column prop="unit" label="单位">
@@ -75,7 +111,7 @@
             <template v-if="row.editable">
               <el-input v-model="row.unit" class="edit-input" size="small" />
             </template>
-            <template v-else>{{nullFormat(row.unit)}}</template>
+            <template v-else>{{row.unit}}</template>
           </template>
         </el-table-column>
         <el-table-column prop="number" label="数量" >
@@ -83,7 +119,7 @@
             <template v-if="row.editable">
               <el-input v-model="row.number" class="edit-input" size="small" />
             </template>
-            <template v-else>{{nullFormat(row.number)}}</template>
+            <template v-else>{{row.number}}</template>
           </template>
         </el-table-column>
         <el-table-column prop="brand" label="品牌推荐" >
@@ -91,7 +127,7 @@
             <template v-if="row.editable">
               <el-input v-model="row.brand" class="edit-input" size="small" />
             </template>
-            <template v-else>{{nullFormat(row.brand)}}</template>
+            <template v-else>{{row.brand}}</template>
           </template>
         </el-table-column>
         <el-table-column prop="remark" label="备注" >
@@ -99,15 +135,15 @@
             <template v-if="row.editable">
               <el-input v-model="row.remark" class="edit-input" size="small" />
             </template>
-            <template v-else>{{nullFormat(row.remark)}}</template>
+            <template v-else>{{row.remark}}</template>
           </template>
         </el-table-column>
         <el-table-column prop="quoteNum" label="报价数量" >
           <template slot-scope="{row}">
-            <template>{{nullFormat(row.quoteNum)}}</template>
+            <template>{{row.quoteNum}}</template>
           </template>
         </el-table-column>
-        <!--<el-table-column prop="isInquiry" label="是否需要询价" fixed="right">
+        &lt;!&ndash;<el-table-column prop="isInquiry" label="是否需要询价" fixed="right">
           <template slot-scope="{row}">
             <el-switch
               v-model.string="row.isinquiry"
@@ -121,7 +157,7 @@
             </el-switch>
 
           </template>
-        </el-table-column>-->
+        </el-table-column>&ndash;&gt;
         <el-table-column align="right" label="操作" width="180" fixed="right">
           <template slot-scope="{row}">
               <span v-if="row.editable" >
@@ -135,9 +171,9 @@
                 </a-popconfirm>
               </span>
               <span v-else>
-                 <!--<el-tooltip class="item" effect="dark" content="选择历史产品" placement="bottom-start">
+                 &lt;!&ndash;<el-tooltip class="item" effect="dark" content="选择历史产品" placement="bottom-start">
                   <el-button type="success" icon="el-icon-star-on" size="mini" style="padding: 7px 10px;background: #faad14;border-color:#faad14" @click="poolChoose(row)">产品池选择</el-button>
-                </el-tooltip>-->
+                </el-tooltip>&ndash;&gt;
                 <el-tooltip v-if="row.veto==1" class="item" effect="dark" content="重新询价" placement="bottom-start">
                   <el-button type="primary" icon="el-icon-edit" size="mini" @click="addInquiry(row)">重新询价</el-button>
                 </el-tooltip>
@@ -147,7 +183,7 @@
               </span>
           </template>
         </el-table-column>
-      </el-table>
+      </el-table>-->
     </div>
 
     <!-- 模态框 -->
@@ -225,14 +261,18 @@
   import '@/styles/auto-style.css'
   import request from '@/utils/request'
   import qs from 'querystring'
-  import { dateFormat,nullFormat,nullToEmpty } from '@/utils/format'
+  import { dateFormat,nullToEmpty } from '@/utils/format'
   import { getUser } from '@/utils/auth'
   import { sortBykey } from '@/utils/sort'
+  import { getAction, postActionByJson, postActionByQueryString } from '@/api/manage'
 
   export default {
     data() {
       const fileUploadUrl = process.env.VUE_APP_BASE_API + 'file/uploadCache'
       return {
+
+        currentTemplate: {},
+
         props: { multiple: false, value: 'id', label: 'name', emitPath: false },
         devices: [],
         deviceVisible: false,
@@ -287,33 +327,33 @@
         if (this.selectedId.length) {
           this.downloadLoading = true
           import('@/vendor/Export2Excel').then(excel => {
-            const tHeader = [
-              '序号','供应商', '设备名称', '品牌', '型号', '技术要求', '单位', '报价型号', '报价品牌', '实际技术参数',
+            let quote = {
+              tHeader: ['报价型号', '报价品牌', '实际技术参数', '设备单价','设备总价','货期','质保期/售后','图片','备注'],
+              filterVal: ['suModel', 'suBrand', 'suParams', 'price', 'totalPrice', 'delivery', 'warranty', 'image', 'quoteRemark']
+            }
+            let tHeader = Object.keys(this.currentTemplate.jsonKeys)
+            let filterVal = Object.values(this.currentTemplate.jsonKeys)
+            tHeader = ['编号'].concat(tHeader)
+            tHeader = tHeader.concat(quote.tHeader)
+            filterVal = ['id'].concat(filterVal)
+            filterVal = filterVal.concat(quote.filterVal)
+
+
+           /* const tHeader = [
+              '编号', '序号','供应商', '设备名称', '品牌', '型号', '技术要求', '单位', '报价型号', '报价品牌', '实际技术参数',
               '设备单价','设备总价','货期','质保期/售后','图片','备注'
             ]
-            const filterVal = ['sort', 'supplier', 'name', 'realBrand', 'model', 'params', 'unit', 'suModel', 'suBrand',
-              'suParams', 'price', 'totalPrice', 'delivery', 'warranty', 'image', 'remark']
+            const filterVal = ['id', 'sort', 'supplier', 'name', 'realBrand', 'model', 'params', 'unit', 'suModel', 'suBrand',
+              'suParams', 'price', 'totalPrice', 'delivery', 'warranty', 'image', 'remark']*/
             let list = []
             this.inquiryList.map(item=>{
+              console.log(item)
               if(this.selectedId.includes(item.id)){
-                list.push({
-                  sort: item.sort,
-                  supplier: '',
-                  name: item.name,
-                  realBrand: item.realBrand,
-                  model: item.model,
-                  params: item.params,
-                  unit: item.unit,
-                  suModel: '',
-                  suBrand: '',
-                  suParams: '',
-                  price: item.price,
-                  totalPrice: item.totalPrice,
-                  delivery: '',
-                  warranty: '',
-                  image: '',
-                  remark: '',
+                let inquiry = {}
+                filterVal.map(key => {
+                  inquiry[key] = item[key]
                 })
+                list.push(inquiry)
               }
             })
 
@@ -358,7 +398,7 @@
         this.form = row
         this.quoteVisible = true
       },
-      tableRowClassName({row, index}) {
+      tableRowClassName(row, index) {
         if (row.veto == 1 || row.refuseNum != 0) {
           return 'danger-row';
         }else if(row.poolNum != 0){
@@ -366,25 +406,6 @@
         }
         return '';
       },
-      /*switchChange(id, status) {
-        console.log(id,status)
-        const ids = []
-        ids.push(id)
-        request.request({
-          url: '/inquiry/batchSetIsNotInquiry',
-          method: 'post',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-          },
-          data: qs.stringify({'ids': ids, 'status': status})
-        })
-          .then(response => {
-            this.$message({ message: response.message, type: 'success' })
-            this.init()
-          }).catch(()=>{
-          this.init()
-        })
-      },*/
       setIsNotInquiry(status) {
         if (this.selectedId.length > 0) {
           request.request({
@@ -427,7 +448,7 @@
         const selectedId = []
         console.log(record)
         record.map(item => {
-          selectedId.push(item.id)
+          selectedId.push(item)
         })
         this.selectedId = selectedId
       },
@@ -501,6 +522,8 @@
           request.get('/inquiry/findByProDetailId?proDetailId='+this.searchForm.proDetailId)
             .then(response => {
               this.inquiryList = response.data
+              this.currentTemplate = {}
+              this.loadCurrentTemplate(this.inquiryList[0]['templateId'])
               this.loading = false
             }).catch(()=>{
               this.loading = false
@@ -512,10 +535,6 @@
        */
       dateFormat,
       /**
-       * 空值格式化
-       */
-      nullFormat,
-      /**
        * 查询所有项目
        */
       async loadProjects() {
@@ -523,7 +542,18 @@
           .then(response => {
             this.projects = response.data
           })
-      }
+      },
+      loadCurrentTemplate(id) {
+        if (id) {
+          getAction('/inquiry/template/findInquiryTemplate', {id: id})
+            .then(resp => {
+              resp.data[0].jsonKeys = JSON.parse(resp.data[0].jsonKeys)
+              resp.data[0].tableColumn = JSON.parse(resp.data[0].tableColumn)
+              this.currentTemplate = resp.data[0]
+            })
+        }
+
+      },
     }
   }
 </script>
@@ -536,11 +566,10 @@
       margin-left:90px!important
     }
     .table {
-      /deep/.el-table__body {
-        .danger-row, .danger-row td {
+        /deep/.danger-row{
           background: #f1b7b7;
         }
-        .warning-row, .warning-row td {
+      /deep/.warning-row{
           background: #eae2c5;
         }
         .cell {
@@ -548,7 +577,6 @@
             margin-left: 5px!important;
           }
         }
-      }
     }
     /deep/.el-col {
       padding: 0 1em
