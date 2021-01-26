@@ -126,6 +126,8 @@ export default {
   data() {
     return {
       tableHeight: document.documentElement.clientHeight - 340,
+
+      currentTemplate: {},
       files: [],
       searchForm: {status: ''},
       visible: false,
@@ -178,6 +180,17 @@ export default {
     this.searchForm.status = 0
   },
   methods: {
+    loadCurrentTemplate(id) {
+      if (id) {
+        getAction('/inquiry/template/findInquiryTemplate', {id: id})
+          .then(resp => {
+            resp.data[0].jsonKeys = JSON.parse(resp.data[0].jsonKeys)
+            resp.data[0].tableColumn = JSON.parse(resp.data[0].tableColumn)
+            this.currentTemplate = resp.data[0]
+          })
+      }
+
+    },
     tableRowClassName(row, index){
       if (row.quote.dataSource == 0) {
         return 'warning-row';
@@ -306,6 +319,7 @@ export default {
         .then(response => {
           this.proChecks = response.data
           this.loading = false
+          
         }).catch(()=>{
           this.loading = false
         })

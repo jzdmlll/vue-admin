@@ -293,9 +293,9 @@
           number: [
             { required: true, message: '不能为空', trigger: 'blur'}
           ],
-          salePrice: [
+          /*salePrice: [
             { required: true, message: '不能为空', trigger: 'blur'}
-          ],
+          ],*/
         },
 
         windowWidth: document.documentElement.clientWidth, // 屏幕实时宽度
@@ -382,6 +382,7 @@
               .then( resp => {
                 this.$message({ message: resp.message, type: 'success' })
                 this.itemDialogVisible = false
+                this.toSearch()
               })
           }else {
             console.log('error commit')

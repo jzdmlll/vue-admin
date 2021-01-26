@@ -1,17 +1,18 @@
 <template>
   <div class="compare_compare">
-    <div class="btns" style="margin-bottom:1em;background:#fff;position:absolute;">
+    <div class="btns" style="margin-bottom:1em;background:#fff;position:relative;padding: 1em">
+      <el-button type="primary" size="mini" style="background: #1890ff;border-color: #1890ff" @click="back">返回</el-button>
       <span :style="opacity==1?{opacity: opacity}:{opacity: 0, display: 'none'}" class="draw-fixed-button el-icon-arrow-down my-transition" @click="()=>{this.drawer=true; this.loadInquiries()}"></span>
     </div>
     <div class="table-container" style="margin-bottom: 50px">
+      <a-skeleton :loading="skeletonLoading" :key="item" v-for="item in [1,2,3]"/>
       <el-card v-for="card in compares" :key="card.inquiry.id" shadow="never">
         <div slot="header" class="index-md-title">
-
           <span>【{{nullFormat(card.inquiry.name)}}】|【{{nullFormat(card.inquiry.model)}}】|【{{nullFormat(card.inquiry.realBrand)}}】|【{{nullFormat(card.inquiry.params)}}】|【{{nullFormat(card.inquiry.number)}}】</span>
           <span style="color: red">【利率：<span>{{rate[card.inquiry.id]}}</span>%】</span>
-          <span v-if="remark[card.inquiry.id]" style="color: #606266">【备注：<span>{{remark[card.inquiry.id]}}</span>】</span>
+          <!--<span v-if="remark[card.inquiry.id]" style="color: #606266">【备注：<span>{{remark[card.inquiry.id]}}</span>】</span>-->
           <el-button icon="el-icon-plus" type="primary" size="mini" @click="addPrice(card.inquiry)" style="float: right;margin-right:5px"></el-button>
-          <el-button type="primary" size="mini" @click="addRemark(card.inquiry)" style="float: right;margin-right:5px">备注</el-button>
+          <!--<el-button type="primary" size="mini" @click="addRemark(card.inquiry)" style="float: right;margin-right:5px">备注</el-button>-->
         </div>
         <a-table
           class="compare-table"
@@ -40,7 +41,13 @@
           <a-table-column :width="100" align="center" key="suDelivery" title="货期" data-index="suDelivery" />
           <a-table-column :width="100" align="center" key="warranty" title="质保期" data-index="warranty" />
           <a-table-column :width="100" align="center" key="technicalRemark" title="技审备注" data-index="technicalRemark" />
+          <a-table-column :width="100" align="center" key="compareRemark" title="比价备注" data-index="compareRemark" />
 
+          <a-table-column :width="100" key="action" title="操作" align="center" fixed="right">
+            <template slot-scope="text, record, index">
+              <el-button type="primary" size="mini" @click.native.stop="addRemark(record, index)">备注</el-button>
+            </template>
+          </a-table-column>
         </a-table>
       </el-card>
     </div>
@@ -75,8 +82,8 @@
               <el-tag v-else :type="text == 0 ? 'success':'danger'">{{ text == 0 ? '已完成':'未完成' }}</el-tag>
             </template>
           </a-table-column>
-          <a-table-column ellipsis="true" key="sort" title="序号" :width="60" align="center" data-index="sort" />
-          <a-table-column :sorter="(a, b) => a.name.localeCompare(b.name)" ellipsis="true"
+          <a-table-column v-if="item.key != 'name' && item.key != 'brand'" v-for="item in currentTemplate.tableColumn" ellipsis="true" :width="item.width" :align="item.align" :key="item.key" :title="item.title" :dataIndex="item.dataIndex" />
+          <a-table-column v-else-if="item.key == 'name'" :sorter="(a, b) => a.name.localeCompare(b.name)" ellipsis="true"
                           key="name" title="设备名" data-index="name" :width="150" align="center"
                           @filter="onFilter" @filterDropdownVisibleChange="onFilterDropdownVisibleChange" :scopedSlots="scopedSlots">
             <template slot="filterDropdown" slot-scope="{ setSelectedKeys, selectedKeys, confirm, clearFilters, column }"
@@ -103,10 +110,6 @@
               </el-button>
             </template>
           </a-table-column>
-          <a-table-column ellipsis="true" key="model" title="型号" :width="150" align="center" data-index="model" />
-          <a-table-column ellipsis="true" key="params" title="参数" :width="150" align="center" data-index="params" />
-          <a-table-column ellipsis="true" key="number" :width="60" align="center" title="数量" data-index="number" />
-          <a-table-column ellipsis="true" key="unit" :width="50" align="center" title="单位" data-index="unit" />
           <a-table-column ellipsis="true" key="inquiryRate" :width="80" align="center" title="利率" data-index="inquiryRate">
             <template slot-scope="text, record, index">
               {{text?parseFloat(text)/1000:0}}%
@@ -114,8 +117,6 @@
           </a-table-column>
           <a-table-column ellipsis="true" key="price" :width="100" align="center" title="拟定报价单价" data-index="price" />
           <a-table-column ellipsis="true" key="totalPrice" :width="100" align="center" title="拟定报价总价" data-index="totalPrice" />
-          <a-table-column ellipsis="true" key="realBrand" :width="100" align="center" title="品牌" data-index="realBrand" />
-          <a-table-column ellipsis="true" key="remark" :width="150" align="center" title="备注" data-index="remark" />
 
           <a-table-column key="action" title="操作" fixed="right" align="center" :width="120">
             <template slot-scope="text, record">
@@ -194,6 +195,7 @@
   import { getUser } from '@/utils/auth'
   import { nullFormat } from '@/utils/format'
   import { onFilterDropdownVisibleChange, onFilter, handleSearch, handleReset } from '@/utils/column-search'
+  import { getAction, postActionByJson, postActionByQueryString } from '@/api/manage'
   import elDragDialog from '@/directive/el-drag-dialog'
 
   export default {
@@ -206,6 +208,11 @@
         customRender: 'customRender',
       }
       return {
+
+        currentTemplate: {},
+
+        skeletonLoading: true,
+
         poolData: [],
         poolLoading: false,
         dialogSearchForm: {},
@@ -252,6 +259,20 @@
       this.init()
     },
     methods: {
+      loadCurrentTemplate(id) {
+        if (id) {
+          getAction('/inquiry/template/findInquiryTemplate', {id: id})
+            .then(resp => {
+              resp.data[0].jsonKeys = JSON.parse(resp.data[0].jsonKeys)
+              resp.data[0].tableColumn = JSON.parse(resp.data[0].tableColumn)
+              this.currentTemplate = resp.data[0]
+            })
+        }
+
+      },
+      back() {
+        this.$router.push("/compare/new")
+      },
       rowClickAnt(row, index) {
         return {
           on: {
@@ -265,19 +286,22 @@
           }
         }
       },
-      addRemark(inquiry) {
-        this.$prompt('请输入备注', '填写备注', {
+      addRemark(record, index) {
+        this.$prompt('请输入'+(index+1)+'#【'+record.supplier+'】备注', '填写备注', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
-          //inputPattern: /^[1-9][0-9]*([\.][0-9]{1,2})?$/,
-          //inputErrorMessage: '格式不正确'
         }).then(({ value }) => {
-          this.$set(this.remark, inquiry.id, value)
+          postActionByQueryString('/compare/compareAddRemark',{quoteId: record.id, operator: getUser(), compareRemark: value})
+            .then(resp => {
+              this.$message({ type: 'success', message: resp.message})
+            })
         }).catch(() => {
+
           this.$message({
             type: 'info',
             message: '取消输入'
           })
+          return false
         })
       },
       submitCompare() {
@@ -486,9 +510,11 @@
           })
           this.compares = resp.data
           this.comparesLoading = false
+          this.skeletonLoading = false
         }).catch(()=>{
           alert('error')
           this.comparesLoading = false
+          this.skeletonLoading = false
         })
       },
       setInquiryRate() {
@@ -537,10 +563,12 @@
         if(this.proDetailId) {
           request.get("/compare/findInquiryByProDetailId?proDetailId="+this.proDetailId)
             .then(resp => {
-              setTimeout(() => {
-                this.opacity = 1
-              }, 200)
+
               this.inquiries = resp.data
+              if (this.inquiries.length > 0)  {
+                this.loadCurrentTemplate(resp.data[0].templateId)
+              }
+              this.opacity = 1
             })
         }
       }

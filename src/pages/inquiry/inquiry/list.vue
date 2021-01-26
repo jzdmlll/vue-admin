@@ -27,16 +27,18 @@
         :row-class-name="tableRowClassName"
         :row-selection="{ selectedRowKeys: selectedId, onChange: handleSelectionChange,}"
         :scroll="inquiryList.length > 0 ?{ x: 1200}:{}">
-        <a-table-column v-if="currentTemplate.tree == 1" ellipsis="true" :width="100" align="center" key="parentId" title="大类" data-index="parentId"/>
+        <a-table-column v-if="currentTemplate.tree == 1" :ellipsis="true" :width="100" align="center" key="parentId" title="大类" data-index="parentId"/>
         <a-table-column v-for="item in currentTemplate.tableColumn" ellipsis="true" :width="item.width" :align="item.align" :key="item.key" :title="item.title" :dataIndex="item.dataIndex">
           <template slot-scope="text, record">
             <template v-if="record.editable && item.key != 'sort'">
               <el-input v-model="record[item.key]" class="edit-input" size="small" />
             </template>
-            <template v-else>{{record[item.key]}}</template>
+            <a-tooltip v-else :title="text+''" placement="topLeft">
+              <span>{{record[item.key]}}</span>
+            </a-tooltip>
           </template>
         </a-table-column>
-        <a-table-column fixed="right" title="操作" key="action" align="center" :width="180">
+        <a-table-column fixed="right" title="操作" key="action" align="center" :width="140">
           <template slot-scope="text, record">
             <span v-if="record.editable" >
                 <el-tooltip class="item" effect="dark" content="行内编辑保存" placement="bottom-start">
@@ -62,128 +64,6 @@
           </template>
         </a-table-column>
       </a-table>
-<!--      <el-table ref="inquiryList" class="table" v-loading="loading" :default-sort = "{prop: 'sort', order: 'ascending'}"
-                :data="inquiryList" :row-class-name="tableRowClassName" @selection-change="handleSelectionChange" size="small" stripe>
-        <el-table-column
-          type="selection"
-          width="55">
-        </el-table-column>
-        <el-table-column prop="sort" label="序号" width="50" />
-        <el-table-column :show-overflow-tooltip="true" prop="parentId" label="大类">
-          <template slot-scope="{row}">
-            {{row.parentId}}
-          </template>
-        </el-table-column>
-        <el-table-column :show-overflow-tooltip="true" prop="name" label="设备名称">
-          <template slot-scope="{row}">
-            <template v-if="row.editable">
-              <el-input v-model="row.name" class="edit-input" size="small" />
-            </template>
-            <template v-else>{{row.name}}</template>
-          </template>
-        </el-table-column>
-        <el-table-column prop="realBrand" label="品牌">
-          <template slot-scope="{row}">
-            <template v-if="row.editable">
-              <el-input v-model="row.realBrand" class="edit-input" size="small" />
-            </template>
-            <template v-else>{{row.realBrand}}</template>
-          </template>
-        </el-table-column>
-        <el-table-column prop="params" :show-overflow-tooltip="true" label="技术参数" >
-          <template slot-scope="{row}">
-            <template v-if="row.editable">
-              <el-input v-model="row.params" class="edit-input" size="small" />
-            </template>
-            <template v-else>{{row.params}}</template>
-          </template>
-        </el-table-column>
-        <el-table-column prop="model" :show-overflow-tooltip="true" label="品牌型号" >
-          <template slot-scope="{row}">
-            <template v-if="row.editable">
-              <el-input v-model="row.model" class="edit-input" size="small" />
-            </template>
-            <template v-else>{{row.model}}</template>
-          </template>
-        </el-table-column>
-        <el-table-column prop="unit" label="单位">
-          <template slot-scope="{row}">
-            <template v-if="row.editable">
-              <el-input v-model="row.unit" class="edit-input" size="small" />
-            </template>
-            <template v-else>{{row.unit}}</template>
-          </template>
-        </el-table-column>
-        <el-table-column prop="number" label="数量" >
-          <template slot-scope="{row}">
-            <template v-if="row.editable">
-              <el-input v-model="row.number" class="edit-input" size="small" />
-            </template>
-            <template v-else>{{row.number}}</template>
-          </template>
-        </el-table-column>
-        <el-table-column prop="brand" label="品牌推荐" >
-          <template slot-scope="{row}">
-            <template v-if="row.editable">
-              <el-input v-model="row.brand" class="edit-input" size="small" />
-            </template>
-            <template v-else>{{row.brand}}</template>
-          </template>
-        </el-table-column>
-        <el-table-column prop="remark" label="备注" >
-          <template slot-scope="{row}">
-            <template v-if="row.editable">
-              <el-input v-model="row.remark" class="edit-input" size="small" />
-            </template>
-            <template v-else>{{row.remark}}</template>
-          </template>
-        </el-table-column>
-        <el-table-column prop="quoteNum" label="报价数量" >
-          <template slot-scope="{row}">
-            <template>{{row.quoteNum}}</template>
-          </template>
-        </el-table-column>
-        &lt;!&ndash;<el-table-column prop="isInquiry" label="是否需要询价" fixed="right">
-          <template slot-scope="{row}">
-            <el-switch
-              v-model.string="row.isinquiry"
-              active-color="#42B983"
-              inactive-color="#8b8b8b"
-              :active-value="1"
-              :inactive-value="0"
-              :disabled="row.veto==1?true:false"
-              @change="switchChange(row.id, row.isinquiry)"
-            >
-            </el-switch>
-
-          </template>
-        </el-table-column>&ndash;&gt;
-        <el-table-column align="right" label="操作" width="180" fixed="right">
-          <template slot-scope="{row}">
-              <span v-if="row.editable" >
-                <el-tooltip class="item" effect="dark" content="行内编辑保存" placement="bottom-start">
-                  <el-button type="success" size="mini" style="padding: 7px 10px;" @click="save(row)">保存</el-button>
-                </el-tooltip>
-                <a-popconfirm title="确定取消修改吗?" @confirm="() => cancel(row)">
-                  <el-tooltip class="item" effect="dark" content="取消" placement="bottom-start">
-                    <el-button type="danger" size="mini" style="padding: 7px 10px;">取消</el-button>
-                  </el-tooltip>
-                </a-popconfirm>
-              </span>
-              <span v-else>
-                 &lt;!&ndash;<el-tooltip class="item" effect="dark" content="选择历史产品" placement="bottom-start">
-                  <el-button type="success" icon="el-icon-star-on" size="mini" style="padding: 7px 10px;background: #faad14;border-color:#faad14" @click="poolChoose(row)">产品池选择</el-button>
-                </el-tooltip>&ndash;&gt;
-                <el-tooltip v-if="row.veto==1" class="item" effect="dark" content="重新询价" placement="bottom-start">
-                  <el-button type="primary" icon="el-icon-edit" size="mini" @click="addInquiry(row)">重新询价</el-button>
-                </el-tooltip>
-                <el-tooltip class="item" effect="dark" content="行内编辑" placement="bottom-start">
-                  <el-button :disabled="row.veto==1?true:false" type="primary" icon="el-icon-edit" size="mini" @click="edit(row)"></el-button>
-                </el-tooltip>
-              </span>
-          </template>
-        </el-table-column>
-      </el-table>-->
     </div>
 
     <!-- 模态框 -->

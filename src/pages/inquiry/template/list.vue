@@ -127,7 +127,7 @@
         this.dialog.title = '新增模板'
         this.dialog.visible = true
         this.dialog.form.jsonKeys = JSON.parse(jsonTemplate)
-        this.getAutoColumn(keys)
+        this.getAutoColumn()
       },
       editTemplate(record) {
         this.dialog.title = '修改模板'
@@ -147,12 +147,12 @@
         console.log(keys)
         let tableColumn = []
         keys.map(key => {
-          let width = 100
+          let width = 120
           if (key == '序号' || key == '单位' || key == '数量') {
             width = 60
           }
           if (key == '技术要求' || key == '型号' || key == '设备位号' || key == '参数') {
-            width = ''
+            width = 150
           }
           tableColumn.push({
             width: width,
@@ -167,27 +167,29 @@
       },
       dialogSubmit(form) {
         this.$refs[form].validate((valid) => {
-          if (this.dialog.form) {
-            let url = ''
-            if (this.dialog.form.id) {
-              url = '/inquiry/template/updateInquiryTemplate'
-            } else {
-              url = '/inquiry/template/insertInquiryTemplate'
+          if (valid) {
+            if (this.dialog.form) {
+              let url = ''
+              if (this.dialog.form.id) {
+                url = '/inquiry/template/updateInquiryTemplate'
+              } else {
+                url = '/inquiry/template/insertInquiryTemplate'
+              }
+              let form = this.dialog.form
+              if ('object' == typeof form.jsonKeys) {
+                form.jsonKeys = JSON.stringify(form.jsonKeys)
+              }
+              if ('object' == typeof form.tableColumn) {
+                form.tableColumn = JSON.stringify(form.tableColumn)
+              }
+              form.operator = getUser()
+              postActionByQueryString(url, form)
+                .then(resp => {
+                  this.$message({type: 'success', message: resp.message})
+                  this.dialog.visible = false
+                  this.loadTemplates()
+                })
             }
-            let form = this.dialog.form
-            if ('object' == typeof form.jsonKeys) {
-              form.jsonKeys = JSON.stringify(form.jsonKeys)
-            }
-            if ('object' == typeof form.tableColumn) {
-              form.tableColumn = JSON.stringify(form.tableColumn)
-            }
-            form.operator = getUser()
-            postActionByQueryString(url, form)
-              .then(resp => {
-                this.$message({type: 'success', message: resp.message})
-                this.dialog.visible = false
-                this.loadTemplates()
-              })
           }else {
             return false
           }

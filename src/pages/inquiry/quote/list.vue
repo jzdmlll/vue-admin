@@ -17,16 +17,12 @@
         <div style="padding:1em;margin-bottom:1em;background:#fff">
           <a-table class="parentTable" :loading="loading" size="middle" :data-source="inquiryList" :scroll="{ x: 786 }"
                    :row-class-name="tableRowClassName" @expand="expandChange" :rowKey="record => record.id">
-            <a-table-column v-for="item in columns"
-              :key="item.dataIndex"
-              :title="item.title"
-              :data-index="item.dataIndex"
-              :ellipsis="item.ellipsis">
-                <template slot-scope="text, record">
-                  <a-tooltip placement="topLeft" :title="text+''">
-                    <span @click="handleCopy(text, $event)">{{ text }}</span>
-                  </a-tooltip>
-                </template>
+            <a-table-column v-for="item in currentTemplate.tableColumn" ellipsis="true" :width="item.width" :align="item.align" :key="item.key" :title="item.title" :dataIndex="item.dataIndex">
+              <template slot-scope="text, record">
+                <a-tooltip placement="topLeft" :title="text+''">
+                  <span @click="handleCopy(text, $event)">{{ text }}</span>
+                </a-tooltip>
+              </template>
             </a-table-column>
             <a-table-column
               key="operation"
@@ -40,7 +36,6 @@
                 <el-button type="success" size="mini" style="padding: 7px 10px;" @click="toCompare(record)">比价</el-button>
               </template>
             </a-table-column>
-
             <a-table
               slot="expandedRowRender"
               slot-scope="scope"
@@ -83,9 +78,7 @@
               <template slot="operation" slot-scope="text, record, index">
                 <div class="editable-row-operations" style="text-align: center">
               <span v-if="record.editable" >
-                <el-tooltip class="item" effect="dark" content="编辑" placement="bottom-start">
                   <el-button type="primary" icon="el-icon-upload" size="mini" @click="toEdit(record)" />
-                </el-tooltip>
                 <el-tooltip class="item" effect="dark" content="行内编辑" placement="bottom-start">
                   <el-button type="success" size="mini" style="padding: 7px 10px;" @click="save(record)">保存</el-button>
                 </el-tooltip>
@@ -96,9 +89,7 @@
                 </a-popconfirm>
               </span>
                   <span v-else>
-                <el-tooltip class="item" effect="dark" content="编辑" placement="bottom-start">
                   <el-button type="primary" icon="el-icon-upload" size="mini" @click="toEdit(record)" />
-                </el-tooltip>
                 <el-tooltip v-if="record.technicalAudit==0 && record.businessAudit==0" class="item" effect="dark" content="行内编辑" placement="bottom-start">
                   <el-button type="primary" icon="el-icon-edit" size="mini" @click="edit(record)" />
                 </el-tooltip>
@@ -246,7 +237,7 @@
           <el-tooltip class="item" v-if="selectedId.length > 0" effect="dark" content="批量删除" placement="bottom-start">
             <el-button type="danger" size="small" icon="el-icon-delete" @click="batchDelete">批量删除</el-button>
           </el-tooltip>
-          <el-button v-if="selectedId.length>0" style="margin-right: 6px" type="primary" icon="el-icon-document" size="small" :loading="downloadLoading" @click="handleDownload">导出Excel</el-button>
+<!--          <el-button v-if="selectedId.length>0" style="margin-right: 6px" type="primary" icon="el-icon-document" size="small" :loading="downloadLoading" @click="handleDownload">导出Excel</el-button>-->
           <el-select v-model="searchFormQuote.proDetailId" style="margin-right: 6px" filterable clearable placeholder="请选择项目" value-key="name">
             <el-option v-for="item in projects" :key="item.id" :label="item.name" :value="item.id" />
           </el-select>
@@ -255,7 +246,7 @@
         </div>
         <div style="padding:1em;margin-bottom:1em;background:#fff">
           <el-table id="quote_table" class="parentTable" v-loading="quoteLoading" @selection-change="handleSelectionChange"
-                    :row-class-name="tableRowClassName1" :data="quoteList" stripe size="small" :max-height="tableHeight">
+                    :row-class-name="tableRowClassName1" ref="quoteList" :data="quoteList" stripe size="small" :max-height="tableHeight">
             <el-table-column
               type="selection"
               width="55">
@@ -350,18 +341,9 @@
   import XLSX from 'xlsx'
   import clip from '@/utils/clipboard'
   import elDragDialog from '@/directive/el-drag-dialog'
+  import { getAction, postActionByJson, postActionByQueryString } from '@/api/manage'
+  import { sortBykey } from '@/utils/sort'
 
-  const columns = [
-    { title: '序号', dataIndex: 'sort', scopedSlots: { customRender: 'sort' }, ellipsis: true },
-    { title: '设备名', dataIndex: 'name', scopedSlots: { customRender: 'name' }, ellipsis: true },
-    { title: '品牌', dataIndex: 'realBrand', scopedSlots: { customRender: 'realBrand' }, ellipsis: true },
-    { title: '技术参数', dataIndex: 'params', scopedSlots: { customRender: 'params' }, ellipsis: true },
-    { title: '设备型号', dataIndex: 'model', scopedSlots: { customRender: 'model' }, ellipsis: true },
-    { title: '单位', dataIndex: 'unit', key: 'unit', ellipsis: true },
-    { title: '数量', dataIndex: 'number', key: 'number', ellipsis: true },
-    { title: '品牌推荐', dataIndex: 'brand', key: 'brand', ellipsis: true },
-    { title: '报价总数', dataIndex: 'quoteNum', key: 'quoteNum', ellipsis: true },
-  ]
   const innerColumns = [
 
     { title: '供应商', dataIndex: 'supplier', scopedSlots: { customRender: 'supplier' }, fixed: 'left', width: 110,
@@ -403,6 +385,9 @@
     data() {
       const fileUploadUrl = process.env.VUE_APP_BASE_API + 'file/uploadCache'
       return {
+
+        currentTemplate: {},
+
         downloadLoading: false,
         quoteForm: {},
         quoteVisible: false,
@@ -444,7 +429,6 @@
         projects: [],
         loading: true,
         form: {},
-        columns,
         innerColumns,
         editingKey: '',
         newInquiry: [],
@@ -485,7 +469,7 @@
       let table = document.querySelector('#quote_table .el-table__body-wrapper');
       table.addEventListener("scroll", function() {
         const scrollDistance =table.scrollHeight - table.scrollTop - table.clientHeight;
-        console.log(table.scrollHeight + '-' +table.scrollTop +'-' +table.clientHeight+'='+scrollDistance)
+        //console.log(table.scrollHeight + '-' +table.scrollTop +'-' +table.clientHeight+'='+scrollDistance)
         if(scrollDistance <= 0.5) {//等于0证明已经到底，可以请求接口
           if(that.hasNextPage){
             that.quoteLoading = true
@@ -510,34 +494,52 @@
       })
     },
     methods: {
-      handleDownload() {
+      loadCurrentTemplate(id) {
+        if (id) {
+          this.currentTemplate = {}
+          getAction('/inquiry/template/findInquiryTemplate', {id: id})
+            .then(resp => {
+              resp.data[0].jsonKeys = JSON.parse(resp.data[0].jsonKeys)
+              resp.data[0].tableColumn = JSON.parse(resp.data[0].tableColumn)
+              this.currentTemplate = resp.data[0]
+            })
+        }
+      },
+      /*handleDownload() {
         if (this.selectedId.length) {
           this.downloadLoading = true
           import('@/vendor/Export2Excel').then(excel => {
-            const tHeader = ['编号', '序号', '设备名称', '品牌', '型号',   '单位', '数量', '报价型号', '报价品牌', '设备单价', '设备总价']
-            const filterVal = ['id', 'sort', 'name', 'brand', 'model', 'unit', 'number', 'suModel', 'suBrand', 'price',
-              'totalPrice']
-            let list = []
-            let sort = 0
-            this.quoteList.map(item=>{
-              sort ++
-              if(this.selectedId.includes(item.id)){
-                list.push({
-                  id: item.inquiry.id,
-                  sort: sort,
-                  name: item.inquiry.name,
-                  brand: item.inquiry.realBrand,
-                  model: item.inquiry.model,
-                  unit: item.inquiry.unit,
-                  number: item.inquiry.number,
-                  suModel: item.suModel,
-                  suBrand: item.suBrand,
-                  price: item.suPrice,
-                  totalPrice: item.suTotalPrice,
-                })
+            let quote = {
+              tHeader: ['报价型号', '报价品牌', '实际技术参数', '设备单价','设备总价','货期','质保期/售后','图片','备注'],
+              filterVal: ['suModel', 'suBrand', 'suParams', 'price', 'totalPrice', 'delivery', 'warranty', 'image', 'quoteRemark']
+            }
+            let tHeader = Object.keys(this.currentTemplate.jsonKeys)
+            let filterVal = Object.values(this.currentTemplate.jsonKeys)
+            tHeader = ['编号'].concat(tHeader)
+            tHeader = tHeader.concat(quote.tHeader)
+            filterVal = ['id'].concat(filterVal)
+            filterVal = filterVal.concat(quote.filterVal)
 
+
+            /!* const tHeader = [
+               '编号', '序号','供应商', '设备名称', '品牌', '型号', '技术要求', '单位', '报价型号', '报价品牌', '实际技术参数',
+               '设备单价','设备总价','货期','质保期/售后','图片','备注'
+             ]
+             const filterVal = ['id', 'sort', 'supplier', 'name', 'realBrand', 'model', 'params', 'unit', 'suModel', 'suBrand',
+               'suParams', 'price', 'totalPrice', 'delivery', 'warranty', 'image', 'remark']*!/
+            let list = []
+            this.inquiryList.map(item=>{
+              console.log(item)
+              if(this.selectedId.includes(item.id)){
+                let inquiry = {}
+                filterVal.map(key => {
+                  inquiry[key] = item[key]
+                })
+                list.push(inquiry)
               }
             })
+
+            list = sortBykey(list, 'sort')
             const data = this.formatJson(filterVal, list)
             excel.export_json_to_excel({
               header: tHeader,
@@ -545,7 +547,7 @@
               filename: this.filename
             })
             this.downloadLoading = false
-            this.selectedId = []
+            this.$refs['quoteList'].clearSelection()
 
           })
         } else {
@@ -557,7 +559,7 @@
       },
       formatJson(filterVal, jsonData) {
         return jsonData.map(v => filterVal.map(j => v[j]))
-      },
+      },*/
       toCompare(row) {
         request.get('/quote/sendCompare?inquiryId='+row.id)
           .then(resp=>{
@@ -711,14 +713,14 @@
       },
       handleSelectionChange(record) {
         const selectedId = []
-        console.log(record)
+       // console.log(record)
         record.map(item => {
           selectedId.push(item.id)
         })
         this.selectedId = selectedId
       },
       tabClick(record) {
-        console.log(record.label)
+       // console.log(record.label)
         if (record.label === '供应商报价管理') {
           this.quoteInit()
         }else if(record.label === '供应商报价管理') {
@@ -767,9 +769,9 @@
                 item.detailList = []
               })
               this.inquiryList = response.data
-              /*this.inquiryList.map(item => {
-                this.childLoading[item.id] = true
-              })*/
+              if (this.inquiryList.length > 0) {
+                this.loadCurrentTemplate(this.inquiryList[0]['templateId'])
+              }
               this.loading = false
             })
         }

@@ -1,12 +1,15 @@
 <template>
   <div class="compare_new">
-    <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
+    <!--<div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
       <el-select v-model="searchForm.purchaseProId" style="margin-right: 6px" filterable clearable placeholder="请选择项目" value-key="name">
         <el-option v-for="item in projects" :key="item.id" :label="item.name" :value="item.id" />
       </el-select>
       <el-button style="margin-right: 6px" type="primary" icon="el-icon-search" size="small" @click="toSearch">查询</el-button>
-    </div>
-    <div class="table-container">
+    </div>-->
+    <el-card shadow="never">
+      <div slot="header" class="index-md-title">
+        <span>项目表</span>
+      </div>
       <a-table v-loading="loading" :rowKey="record => record.id" :data-source="projects" size="middle">
         <a-table-column title="序号" :width="60">
           <template slot-scope="text, record, index">
@@ -56,14 +59,11 @@
         </a-table-column>
         <a-table-column title="操作" align="center" width="180">
           <template slot-scope="text, record, index">
-            <el-tooltip class="item" effect="dark" content="比价" placement="bottom-start">
-              <el-button type="primary" size="mini" @click="toCompare(record.id)">比价</el-button>
-            </el-tooltip>
+            <el-button type="primary" size="mini" @click="toCompare(record.id)">比价</el-button>
           </template>
         </a-table-column>
       </a-table>
-    </div>
-
+    </el-card>
   </div>
 </template>
 <script>
