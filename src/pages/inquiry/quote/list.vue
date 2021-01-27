@@ -775,6 +775,8 @@
               this.inquiryList = response.data
               if (this.inquiryList.length > 0) {
                 this.loadCurrentTemplate(this.inquiryList[0]['templateId'])
+              }else {
+                this.loading = false
               }
             })
             .catch(() => {

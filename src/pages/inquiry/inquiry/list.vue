@@ -403,8 +403,11 @@
             .then(response => {
               this.inquiryList = response.data
               this.currentTemplate = {}
-              this.loadCurrentTemplate(this.inquiryList[0]['templateId'])
-
+              if (this.inquiryList.length > 0) {
+                this.loadCurrentTemplate(this.inquiryList[0]['templateId'])
+              }else {
+                this.loading = false
+              }
             }).catch(()=>{
               this.loading = false
             })

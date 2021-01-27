@@ -75,12 +75,12 @@
               <i class="el-icon-medal-1" style="opacity: .7;font-size: 18px;color: #0568c3; float: right" v-if="text && text.minPrice === 1">
                 <span style="font-size: 12px">最低价</span>
               </i>
-              <a-tooltip :destroyTooltipOnHide="true" placement="top" :title="record['inquiry'].suModel">
+              <a-tooltip :destroyTooltipOnHide="true" placement="top" :title="text.suModel">
                 <p class="ellipsis"><el-tag size="mini" style="background: #ecf5ff;color: #409eff;" type="success">型号</el-tag>
                   <span style="margin-left: 4px;background: #6bca9f;padding: 2px 4px">{{text?nullFormat(text.suModel):''}}</span>
                 </p>
               </a-tooltip>
-              <a-tooltip :destroyTooltipOnHide="true" placement="top" :title="record['inquiry'].suParams">
+              <a-tooltip :destroyTooltipOnHide="true" placement="top" :title="text.suParams">
                 <p class="ellipsis"><el-tag size="mini" style="background: #ecf5ff;color: #409eff;" type="success">参数</el-tag>
                   <span style="margin-left: 4px;background: #6bca9f;padding: 2px 4px">{{text?nullFormat(text.suParams):''}}</span>
                 </p>
@@ -121,12 +121,12 @@
               <i class="el-icon-medal-1" style="opacity: .7;font-size: 18px;color: #0568c3; float: right" v-if="text && text.minPrice === 1">
                 <span style="font-size: 12px">最低价</span>
               </i>
-              <a-tooltip :destroyTooltipOnHide="true" placement="top" :title="record['inquiry'].suModel">
+              <a-tooltip :destroyTooltipOnHide="true" placement="top" :title="text.suModel">
                 <p class="ellipsis"><el-tag size="mini" style="background: #ecf5ff;color: #409eff;" type="success">型号</el-tag>
                   <span style="margin-left: 4px;background: #f6fcff;padding: 2px 4px">{{text?nullFormat(text.suModel):''}}</span>
                 </p>
               </a-tooltip>
-              <a-tooltip :destroyTooltipOnHide="true" placement="top" :title="record['inquiry'].suParams">
+              <a-tooltip :destroyTooltipOnHide="true" placement="top" :title="text.suParams">
                 <p class="ellipsis"><el-tag size="mini" style="background: #ecf5ff;color: #409eff;" type="success">参数</el-tag>
                   <span style="margin-left: 4px;background: #f6fcff;padding: 2px 4px">{{text?nullFormat(text.suParams):''}}</span>
                 </p>
@@ -140,14 +140,14 @@
               <p>
                 <el-tag size="mini" style="background: #ecf5ff;color: #409eff;" type="success">技审</el-tag>
                 <el-tag size="mini" :type="statusType[text.technicalAudit]">{{status[text.technicalAudit]}}</el-tag>
-                <a-tooltip v-if="text.technicalRemark" :destroyTooltipOnHide="true" placement="top" :title="record['inquiry'].technicalRemark">
+                <a-tooltip v-if="text.technicalRemark" :destroyTooltipOnHide="true" placement="top" :title="text.technicalRemark">
                   <span style="float: right; width: calc(100% - 80px)" class="ellipsis">{{text.technicalRemark}}</span>
                 </a-tooltip>
               </p>
               <p>
                 <el-tag size="mini" style="background: #ecf5ff;color: #409eff;" type="success">商审</el-tag>
                 <el-tag size="mini" :type="statusType[text.businessAudit]">{{status[text.businessAudit]}}</el-tag>
-                <a-tooltip v-if="text.businessRemark" :destroyTooltipOnHide="true" placement="top" :title="record['inquiry'].businessRemark">
+                <a-tooltip v-if="text.businessRemark" :destroyTooltipOnHide="true" placement="top" :title="text.businessRemark">
                   <span style="float: right; width: calc(100% - 80px)" class="ellipsis">{{text.businessRemark}}</span>
                 </a-tooltip>
               </p>
@@ -411,7 +411,12 @@
               submitForm.allCompareIds = [...allCompareIds]
 
               this.submitForm = submitForm
-              this.loadCurrentTemplate(resp.data[0]['inquiry'].templateId)
+              if (resp.data.length > 0) {
+                this.loadCurrentTemplate(resp.data[0]['inquiry'].templateId)
+              }else {
+                this.searchLoading = false
+                this.dataLoading = false
+              }
             })
         }else {
           this.$message({ message: '请选择项目', type: 'warning' })

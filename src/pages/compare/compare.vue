@@ -1,6 +1,7 @@
 <template>
   <div class="compare_compare">
     <div class="btns" style="margin-bottom:1em;background:#fff;position:relative;padding: 1em">
+      {{currentTemplate}}
       <el-button type="primary" size="mini" style="background: #1890ff;border-color: #1890ff" @click="back">返回</el-button>
       <span :style="opacity==1?{opacity: opacity}:{opacity: 0, display: 'none'}" class="draw-fixed-button el-icon-arrow-down my-transition" @click="()=>{this.drawer=true; this.loadInquiries()}"></span>
     </div>
@@ -567,8 +568,13 @@
               this.inquiries = resp.data
               if (this.inquiries.length > 0)  {
                 this.loadCurrentTemplate(resp.data[0].templateId)
+              }else {
+
               }
               this.opacity = 1
+            })
+            .catch(()=>{
+
             })
         }
       }
