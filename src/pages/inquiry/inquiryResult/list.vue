@@ -103,6 +103,7 @@
             </el-button>
           </template>
         </a-table-column>
+        <a-table-column v-if="item.key != 'name' && item.key != 'brand'" v-for="item in currentTemplate.tableColumn" ellipsis="true" :width="item.width" :align="item.align" :key="item.key" :title="item.title" :dataIndex="item.dataIndex" />
         <a-table-column :width="100" ellipsis="true" key="quote.suBrand" title="品牌" data-index="quote.suBrand" align="center"/>
         <a-table-column :width="100" ellipsis="true" key="quote.suModel" title="规格型号" data-index="quote.suModel" align="center"/>
         <a-table-column :width="100" ellipsis="true" key="inquiry.price" title="比价报价" data-index="inquiry.price" align="center"/>
@@ -156,6 +157,7 @@
         customRender: 'customRender',
       }
       return {
+        currentTemplate: {},
         searchForm: { time: []},
         purchases: [],
         loading: false,
@@ -183,6 +185,16 @@
       this.role = this.$store.getters.roles[0]
     },
     methods: {
+      loadCurrentTemplate(id) {
+        if (id) {
+          getAction('/inquiry/template/findInquiryTemplate', {id: id})
+            .then(resp => {
+              resp.data[0].jsonKeys = JSON.parse(resp.data[0].jsonKeys)
+              resp.data[0].tableColumn = JSON.parse(resp.data[0].tableColumn)
+              this.currentTemplate = resp.data[0]
+            })
+        }
+      },
       tableRowClassName(row, index){
         if(this.selectKey == row.id) {
           return 'selected'
@@ -311,6 +323,9 @@
           request.get('/inquiry/findProPurchase?proDetailId='+this.searchForm.proDetailId)
             .then(response => {
               this.purchases = response.data
+              if (this.purchases.length > 0){
+                this.loadCurrentTemplate(response.data[0].inquiry.templateId)
+              }
               this.loading = false
             }).catch(()=> {
             this.loading = false
