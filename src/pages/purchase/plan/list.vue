@@ -41,12 +41,19 @@
           <a-table-column :width="120" align="center" ellipsis="true" key="brand" title="品牌" data-index="brand" />
           <a-table-column :width="120" align="center" ellipsis="true" key="model" title="型号" data-index="model" />
           <a-table-column :width="120" align="center" ellipsis="true" key="params" title="技术要求" data-index="params" />
+          <a-table-column :width="120" align="center" ellipsis="true" key="tagNumber" title="设备位号" data-index="tagNumber" />
+          <a-table-column :width="120" align="center" ellipsis="true" key="meter" title="仪表" data-index="meter" />
+          <a-table-column :width="120" align="center" ellipsis="true" key="measuringRange" title="测量范围" data-index="measuringRange" />
+          <a-table-column :width="120" align="center" ellipsis="true" key="meterSignal" title="规格" data-index="meterSignal" />
+          <a-table-column :width="120" align="center" ellipsis="true" key="connectionMode" title="连接方式" data-index="connectionMode" />
+          <a-table-column :width="120" align="center" ellipsis="true" key="tube" title="保护管" data-index="tube" />
           <a-table-column :width="60" align="center" key="unit" title="单位" data-index="unit" />
           <a-table-column :width="60" align="center" key="number" title="数量" data-index="number" />
-          <a-table-column :width="170" align="center" flex="right" key="action" title="操作" fixed="right">
+          <a-table-column :width="250" align="center" flex="right" key="action" title="操作" fixed="right">
             <template slot-scope="text, record">
               <el-button v-if="record.isInquiry == 0" @click="poolChoose(record)" type="success" icon="el-icon-star-on" size="mini" style="padding: 7px 10px;background: #faad14;border-color:#faad14">产品池</el-button>
               <el-button v-if="record.isInquiry == 0" @click="splitPurchaseItem(record)" type="success" size="mini" >拆分</el-button>
+              <el-button @click="editPurchaseItem(record)" size="mini" type="danger" >修改</el-button>
             </template>
           </a-table-column>
         </a-table>
@@ -212,6 +219,45 @@
             </el-form-item>
           </el-col>
         </el-row>
+
+        <el-divider><i class="el-icon-mobile-phone"> 仪表类</i></el-divider>
+        <el-row>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="设备位号" label-width="80px" prop="model">
+              <el-input v-model="addItemsForm.tagNumber" autocomplete="off" size="small" />
+            </el-form-item>
+          </el-col>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="仪表" label-width="80px" prop="params">
+              <el-input v-model="addItemsForm.meter" autocomplete="off" size="small" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="测量范围" label-width="80px" prop="model">
+              <el-input v-model="addItemsForm.measuringRange" autocomplete="off" size="small" />
+            </el-form-item>
+          </el-col>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="信号及规格" label-width="80px" prop="params">
+              <el-input v-model="addItemsForm.meterSignal" autocomplete="off" size="small" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="连接方式" label-width="80px" prop="model">
+              <el-input v-model="addItemsForm.connectionMode" autocomplete="off" size="small" />
+            </el-form-item>
+          </el-col>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="保护管" label-width="80px" prop="params">
+              <el-input v-model="addItemsForm.tube" autocomplete="off" size="small" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button size="small" @click="inquiryVisible = false">取消</el-button>
@@ -316,6 +362,14 @@
       this.init()
     },
     methods: {
+      editPurchaseItem(row, index){
+        if(this.searchForm.purchaseProId) {
+          this.addItemsForm = row
+          this.itemDialogVisible = true
+        }else {
+          this.$message({message: '请选择采购项目', type: 'warning'})
+        }
+      },
       deletePurchaseSupply(row, index) {
         this.$confirm('是否确定删除？', '提示', {
           confirmButtonText: '确定',
