@@ -427,7 +427,7 @@
         visible: false,
         visible2: false,
         projects: [],
-        loading: true,
+        loading: false,
         form: {},
         innerColumns,
         editingKey: '',
@@ -502,6 +502,9 @@
               resp.data[0].jsonKeys = JSON.parse(resp.data[0].jsonKeys)
               resp.data[0].tableColumn = JSON.parse(resp.data[0].tableColumn)
               this.currentTemplate = resp.data[0]
+            })
+            .finally(() => {
+              this.loading = false
             })
         }
       },
@@ -752,13 +755,14 @@
           }
           this.toSearch()
         }else {
-          this.loading = false
+          //this.loading = false
         }
 
         //this.loadProChecks()
       },
       toSearch() {
         if(this.searchForm.proDetailId) {
+          this.loading = true
           request.request({
             url: '/inquiry/findByProDetailId',
             method: 'get',
@@ -772,6 +776,8 @@
               if (this.inquiryList.length > 0) {
                 this.loadCurrentTemplate(this.inquiryList[0]['templateId'])
               }
+            })
+            .catch(() => {
               this.loading = false
             })
         }

@@ -404,7 +404,7 @@
               this.inquiryList = response.data
               this.currentTemplate = {}
               this.loadCurrentTemplate(this.inquiryList[0]['templateId'])
-              this.loading = false
+
             }).catch(()=>{
               this.loading = false
             })
@@ -430,6 +430,9 @@
               resp.data[0].jsonKeys = JSON.parse(resp.data[0].jsonKeys)
               resp.data[0].tableColumn = JSON.parse(resp.data[0].tableColumn)
               this.currentTemplate = resp.data[0]
+            })
+            .finally(()=> {
+              this.loading = false
             })
         }
 

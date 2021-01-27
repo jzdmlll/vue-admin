@@ -13,14 +13,14 @@
       </el-select>
       <el-input v-if="$route.name == '商务审核'" v-model="searchForm.supplier"  placeholder="请输入供应商名"></el-input>
       <el-button style="margin-right: 6px" type="primary" icon="el-icon-search" size="small" @click="toSearch">查询</el-button>
-      <el-link v-for="item in files" type="primary" :href = "item.url">{{item.name}} | </el-link>
+      <el-link v-for="item in files" type="primary" :download="item.name" target="_blank" :href = "item.url">{{item.name}} | </el-link>
     </div>
     <div style="padding:1em;margin-bottom:1em;background:#fff">
       <a-table
         size="small"
         :loading="loading"
-        :columns="realColumns"
         :data-source="proChecks"
+        :columns="realColumns"
         class="childTable"
         :row-class-name="tableRowClassName"
         :rowKey="record => record.id"
@@ -45,7 +45,7 @@
         <span slot="businessAudit" slot-scope="text, record, index">
           <el-tag :type="text === 0 ? 'info':(text === 1? 'success':'danger')">{{ statu(text) }}</el-tag>
         </span>
-      </a-table>
+-->      </a-table>
     </div>
 
     <!-- 模态框 -->
@@ -72,26 +72,14 @@ import { getAction } from '@/api/manage'
 let checkStatusCol = ''
 
 let columns = [
-  { title: '设备名', dataIndex: 'inquiry.name', key: 'inquiry.name', width: 100,
-    sorter: (a, b) => a.inquiry.name.length - b.inquiry.name.length, sortDirections: ['descend', 'ascend'] },
   { title: '供应商', dataIndex: 'quote.supplier', key: 'quote.supplier', width: 100,
     sorter: (a, b) => a.quote.supplier.length - b.quote.supplier.length, sortDirections: ['descend', 'ascend'] },
-  { title: '品牌', dataIndex: 'inquiry.brand', key: 'inquiry.brand', width: 100,
-    sorter: (a, b) => a.inquiry.brand.length - b.inquiry.brand.length, sortDirections: ['descend', 'ascend'] },
   { title: '商家品牌', dataIndex: 'quote.suBrand', key: 'quote.suBrand', width: 120,
     sorter: (a, b) => a.quote.suBrand.length - b.quote.suBrand.length, sortDirections: ['descend', 'ascend'] },
-  { title: '设备型号', dataIndex: 'inquiry.model', key: 'inquiry.model', width: 160,
-    sorter: (a, b) => a.inquiry.model.length - b.inquiry.model.length, sortDirections: ['descend', 'ascend'] },
   { title: '商家设备型号', dataIndex: 'quote.suModel', key: 'quote.suModel', width: 160,
     sorter: (a, b) => a.quote.suModel.length - b.quote.suModel.length, sortDirections: ['descend', 'ascend'] },
-  { title: '技术参数', dataIndex: 'inquiry.params', key: 'inquiry.params', align: 'center',
-    sorter: (a, b) => a.inquiry.params.length - b.inquiry.params.length, sortDirections: ['descend', 'ascend'] },
   { title: '商家技术参数', dataIndex: 'quote.suParams', key: 'quote.suParams', align: 'center',
     sorter: (a, b) => a.quote.suParams.length - b.quote.suParams.length, sortDirections: ['descend', 'ascend'] },
-  { title: '数量', dataIndex: 'inquiry.number', key: 'inquiry.number', width: 60,
-    sorter: (a, b) => a.inquiry.number - b.inquiry.number, sortDirections: ['descend', 'ascend'] },
-  { title: '单位', dataIndex: 'inquiry.unit', key: 'inquiry.unit', width: 60,
-    sorter: (a, b) => a.inquiry.unit - b.inquiry.unit, sortDirections: ['descend', 'ascend'] },
   { title: '商家单价', dataIndex: 'quote.suPrice', key: 'quote.suPrice', width: 80,
     sorter: (a, b) => a.quote.suPrice - b.quote.suPrice, sortDirections: ['descend', 'ascend'] },
   { title: '商家总价', dataIndex: 'quote.suTotalPrice', key: 'quote.suTotalPrice', width: 80,
@@ -137,11 +125,11 @@ export default {
       loading: false,
       columns,
       prop: {
-        '技术审核': ['quote.supplier', 'inquiry.name',
-          'inquiry.model', 'quote.suModel', 'inquiry.params', 'quote.suParams', 'checkStatus', 'quote.image', 'files', 'technicalAudit', 'technicalRemark', 'quote.suRemark', 'quote.suBrand'
+        '技术审核': ['quote.supplier', 'name', 'meter', 'measuringRange', 'meterSignal', 'connectionMode', 'tube',
+          'model', 'quote.suModel', 'params', 'quote.suParams', 'checkStatus', 'quote.image', 'files', 'technicalAudit', 'technicalRemark', 'quote.suRemark', 'quote.suBrand'
         ],
-        '商务审核': ['quote.supplier', 'inquiry.name', 'inquiry.params',
-          'quote.suPrice', 'quote.suTotalPrice', 'inquiry.suWarranties', 'checkStatus', 'files', 'businessAudit', 'businessRemark', 'quote.suRemark'
+        '商务审核': ['quote.supplier', 'name', 'params', 'meter', 'measuringRange', 'meterSignal', 'connectionMode', 'tube',
+          'quote.suPrice', 'quote.suTotalPrice', 'suWarranties', 'checkStatus', 'files', 'businessAudit', 'businessRemark', 'quote.suRemark'
         ],
       },
       realColumns: [],
@@ -175,7 +163,7 @@ export default {
   },
   created() {
     //this.loadChecks()
-    this.initColumns()
+    //this.initColumns()
     this.loadProjects()
     this.searchForm.status = 0
   },
@@ -187,6 +175,8 @@ export default {
             resp.data[0].jsonKeys = JSON.parse(resp.data[0].jsonKeys)
             resp.data[0].tableColumn = JSON.parse(resp.data[0].tableColumn)
             this.currentTemplate = resp.data[0]
+
+            this.initColumns()
           })
       }
 
@@ -319,7 +309,9 @@ export default {
         .then(response => {
           this.proChecks = response.data
           this.loading = false
-          
+          if (this.proChecks.length > 0) {
+            this.loadCurrentTemplate(this.proChecks[0]['inquiry'].templateId)
+          }
         }).catch(()=>{
           this.loading = false
         })
@@ -358,15 +350,22 @@ export default {
       }else if (this.$route.name == '商务审核') {
         this.fileType = 3
       }
-      this.realColumns = this.columns.map(item => {
-        const key = item.key
-        if (this.prop[this.$route.name].includes(key)) {
-          return item
+      this.realColumns = []
+      this.currentTemplate.tableColumn.map(item => {
+        if (this.prop[this.$route.name].includes(item.key) ) {
+          if (item.key == 'params' || item.key == 'model' ) {
+            this.$delete(item, 'width')
+          }
+          item.key = 'inquiry.'+item.key
+          item.dataIndex = 'inquiry.'+item.dataIndex
+
+          this.realColumns.push(item)
         }
       })
-      this.realColumns.map((item, index) => {
-        if (item == null) {
-          delete this.realColumns[index]
+
+      this.columns.map(item => {
+        if (this.prop[this.$route.name].includes(item.key) ) {
+          this.realColumns.push(item)
         }
       })
     }
