@@ -114,30 +114,6 @@
         </a-table-column>-->
       </a-table>
     </el-card>
-      <!--<a-table
-        size="middle"
-        ref="purchases"
-        :rowKey="record => record.quote.id"
-        :loading="loading"
-        :data-source="purchases"
-        :row-selection="{ selectedRowKeys: selectedRowKeys, onChange: onSelectChange }">
-        <a-table-column title="序号">
-          <template slot-scope="text, record, index">
-            {{index+1}}
-          </template>
-        </a-table-column>
-        <a-table-column key="quote.supplier" title="合同编号" data-index="quote.supplier" />
-        <a-table-column key="quote.suBrand" title="生成时间" data-index="quote.suBrand" />
-        <a-table-column key="quote.suModel" title="规格型号" data-index="quote.suModel" />
-        <a-table-column key="inquiry.name" title="名称" data-index="inquiry.name" />
-        <a-table-column key="inquiry.unit" title="单位" data-index="inquiry.unit" />
-        <a-table-column key="inquiry.number" title="数量" data-index="inquiry.number" />
-        <a-table-column key="inquiry.price" title="单价" data-index="inquiry.price" />
-        <a-table-column key="inquiry.totalPrice" title="总价" data-index="inquiry.totalPrice" />
-        <a-table-column key="inquiry.params" title="技术要求" data-index="inquiry.params" />
-        <a-table-column key="quote.suDelivery" title="货期" data-index="inquiry.suDelivery" />
-        <a-table-column key="inquiry.remark" title="备注" data-index="inquiry.remark" />
-      </a-table>-->
 
     <!-- 模态框 -->
     <el-dialog :title="title" :visible.sync="dialogVisible">

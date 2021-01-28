@@ -72,7 +72,7 @@
   import { getAction, postActionByJson, postActionByQueryString } from '@/api/manage'
   import elDragDialog from '@/directive/el-drag-dialog'
 
-  const jsonTemplate = '{"序号": "sort", "设备名称": "name", "品牌": "realBrand", "型号": "model", "技术要求": "params", "品牌推荐": "brand", "单位": "unit", "数量": "number", "备注": "remark"}'
+  const jsonTemplate = '{"序号": "sort", "设备名称": "name", "品牌": "realBrand", "型号": "model", "技术要求": "params", "品牌推荐": "brand", "单位": "unit", "数量": "number", "备注": "inquiryRemark"}'
   const columnTemplate = '[{"width": 60,"align": "center","key": "sort","title": "序号"}]'
   export default {
     name: 'JsonEditorDemo',
@@ -147,6 +147,7 @@
         console.log(keys)
         let tableColumn = []
         keys.map(key => {
+          let commonsColumn = ['sort', 'unit', 'number', 'name', 'realBrand', 'brand', 'inquiryRemark']
           let width = 120
           if (key == '序号' || key == '单位' || key == '数量') {
             width = 60
@@ -154,14 +155,22 @@
           if (key == '技术要求' || key == '型号' || key == '设备位号' || key == '参数') {
             width = 150
           }
-          tableColumn.push({
+
+          let item = {
             width: width,
             key: this.dialog.form.jsonKeys[key],
             title: key,
             dataIndex: this.dialog.form.jsonKeys[key],
             align: 'center',
             ellipsis: false
-          })
+          }
+
+          if (commonsColumn.includes(this.dialog.form.jsonKeys[key])) {
+            item.commons = true
+          }else {
+            item.commons = false
+          }
+          tableColumn.push(item)
         })
         this.dialog.form.tableColumn = tableColumn
       },

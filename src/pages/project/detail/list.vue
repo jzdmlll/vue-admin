@@ -195,56 +195,7 @@ export default {
     return {
       uploadKey: true,
       nameKey: '',
-      excelTemplates: [
-        { id: 1, name: '一般模板', tree: 0,
-          keys: {
-            "序号": 'sort',
-            "设备名称": 'name',
-            "品牌": 'realBrand',
-            "型号": 'model',
-            "技术要求": 'params',
-            "品牌推荐": 'brand',
-            "单位": 'unit',
-            "数量": 'number',
-            "备注": 'remark',
-          },
-          antTableColumn: []
-        },
-        {
-          id: 2, name: '大表格模板', tree: 1,
-            keys: {
-              "序号": 'sort',
-              "设备名称": 'name',
-              "品牌": 'realBrand',
-              "型号": 'model',
-              "技术要求": 'params',
-              "品牌推荐": 'brand',
-              "单位": 'unit',
-              "数量": 'number',
-              "备注": 'remark',
-            },
-          antTableColumn: []
-        },
-        {
-          id: 3, name: '仪表模板', tree: 0,
-          keys: {
-            "序号": "sort",
-            "设备位号": "tagNumer",
-            "名称": "name",
-            "参数": "params",
-            "仪表名称": "meter",
-            "测量范围": "range",
-            "型号": "model",
-            "技术要求": "params",
-            "信号及规格": "signal",
-            "连接方式及标准": "connectionMode",
-            "保护管": "tube",
-            "数量": "number",
-            "备注": "remark",
-          },
-          antTableColumn: []
-        }
-      ],
+      excelTemplates: [],
       currentTemplate: {},
       outputs: [],
       excelRows: 0,
@@ -353,16 +304,16 @@ export default {
           let parent = {}
           let children = []
           let userId = getUser()
-
+          this.currentTemplate.jsonKeys = JSON.parse(this.currentTemplate.jsonKeys)
           ws.map(item => {
             if(this.currentTemplate.tree == 0) {
               var num = Object.keys(item).length;
-              if( num>2 &&item['序号']){
+              if( num>2 && item['序号']){
                 let keyArray = Object.keys(item)
                 let inquiry = {}
                 keyArray.map(key => {
-                  if (this.currentTemplate.keys[key] != undefined)
-                    inquiry[this.currentTemplate.keys[key]] = item[key]
+                  if (this.currentTemplate.jsonKeys[key] != undefined)
+                    inquiry[this.currentTemplate.jsonKeys[key]] = item[key]
                 })
                 inquiry['proDetailId'] = this.form1.proDetailId
                 inquiry['operator'] = userId
@@ -389,8 +340,8 @@ export default {
                 let keyArray = Object.keys(item)
                 let inquiry = {}
                 keyArray.map(key => {
-                  if (this.currentTemplate.keys[key] != undefined)
-                    inquiry[this.currentTemplate.keys[key]] = item[key]
+                  if (this.currentTemplate.jsonKeys[key] != undefined)
+                    inquiry[this.currentTemplate.jsonKeys[key]] = item[key]
                 })
                 inquiry['proDetailId'] = this.form1.proDetailId
                 inquiry['operator'] = userId
@@ -421,6 +372,11 @@ export default {
       getAction('/inquiry/template/findInquiryTemplate')
         .then(resp => {
           this.excelTemplates = resp.data
+          this.excelTemplates.map(item => {
+            if (item.name == '一般模板') {
+              this.currentTemplate = item
+            }
+          })
           this.visible2 = true
           this.form1.proDetailId = row.id
           this.excelRows  = 0

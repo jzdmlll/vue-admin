@@ -1,16 +1,12 @@
 <template>
   <!-- 采购计划 -->
   <div class="purchase_plan_list" ref="purchase">
-    {{excelRows}}
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
       <el-button v-if="selectedRowKeys.length>0" style="margin-right: 6px" type="danger" icon="el-icon-delete" size="small" @click="toDeleteItems">批量删除</el-button>
       <el-button v-if="selectedRowKeys.length>0" style="margin-right: 6px" type="primary" icon="el-icon-document" size="small" @click="handleAddInquiry">发往询价</el-button>
       <el-button style="margin-right: 6px" type="primary" size="small" @click="toAddItems">新增采购项</el-button>
-      <el-button @click="clickFileInput" type="primary" size="small"><a-icon type="file-excel" style="font-size: 12px;margin-right: 5px"/>excel导入</el-button>
+      <el-button @click="importHandle" type="primary" size="small"><a-icon type="file-excel" style="font-size: 12px;margin-right: 5px"/>excel导入</el-button>
       <input type="file" ref="upload" accept=".xls,.xlsx" @change="readExcel" class="outputlist_upload">
-      <div v-if="excelRows>0" style="display: inline-block;padding: 4px 0;font-size: 12px;color: #909399">从Excel读取到
-        <span style="color: #42b983">{{excelRows}}</span>条数据
-      </div>
 
       <el-select v-model="searchForm.purchaseProId" style="margin-right: 6px" filterable clearable placeholder="请选择采购项目" value-key="name">
         <el-option v-for="item in purchasePros" :key="item.id" :label="item.projectName" :value="item.id" />
@@ -29,7 +25,7 @@
           :data-source="plans"
           :row-selection="{ selectedRowKeys: selectedRowKeys, onChange: onSelectChange, getCheckboxProps: record => ({props: {disabled: record.isInquiry == 1}})}"
           :customRow="rowClick"
-          :scroll="windowWidth< 870 + 34*2 && plans.length > 0 ?{ x: 900}:{}">
+          :scroll="plans.length > 0 ?{ x: 900}:{}">
 
           <a-table-column :width="70" align="center" key="isInquiry" title="状态" data-index="isInquiry">
             <template slot-scope="text, record">
@@ -37,23 +33,16 @@
             </template>
           </a-table-column>
           <a-table-column :width="60" align="center" key="serialNumber" title="序号" data-index="serialNumber" />
-          <a-table-column :width="120" align="center" ellipsis="true" key="item" title="采购项" data-index="item" />
+          <a-table-column :width="120" align="center" ellipsis="true" key="item" title="设备名" data-index="item" />
           <a-table-column :width="120" align="center" ellipsis="true" key="brand" title="品牌" data-index="brand" />
-          <a-table-column :width="120" align="center" ellipsis="true" key="model" title="型号" data-index="model" />
-          <a-table-column :width="120" align="center" ellipsis="true" key="params" title="技术要求" data-index="params" />
-          <a-table-column :width="120" align="center" ellipsis="true" key="tagNumber" title="设备位号" data-index="tagNumber" />
-          <a-table-column :width="120" align="center" ellipsis="true" key="meter" title="仪表" data-index="meter" />
-          <a-table-column :width="120" align="center" ellipsis="true" key="measuringRange" title="测量范围" data-index="measuringRange" />
-          <a-table-column :width="120" align="center" ellipsis="true" key="meterSignal" title="规格" data-index="meterSignal" />
-          <a-table-column :width="120" align="center" ellipsis="true" key="connectionMode" title="连接方式" data-index="connectionMode" />
-          <a-table-column :width="120" align="center" ellipsis="true" key="tube" title="保护管" data-index="tube" />
-          <a-table-column :width="60" align="center" key="unit" title="单位" data-index="unit" />
-          <a-table-column :width="60" align="center" key="number" title="数量" data-index="number" />
+          <a-table-column v-if="item.key != 'inquiryRemark' && item.key != 'sort' && item.key != 'name' && item.key != 'brand' && item.key != 'realBrand'"
+                          v-for="item in currentTemplate.tableColumn" ellipsis="true" :width="item.width" :align="item.align" :key="item.key" :title="item.title" :dataIndex="item.dataIndex" />
+          <a-table-column :width="120" align="center" ellipsis="true" key="remark" title="备注" data-index="remark" />
           <a-table-column :width="250" align="center" flex="right" key="action" title="操作" fixed="right">
             <template slot-scope="text, record">
               <el-button v-if="record.isInquiry == 0" @click="poolChoose(record)" type="success" icon="el-icon-star-on" size="mini" style="padding: 7px 10px;background: #faad14;border-color:#faad14">产品池</el-button>
-              <el-button v-if="record.isInquiry == 0" @click="splitPurchaseItem(record)" type="success" size="mini" >拆分</el-button>
-              <el-button @click="editPurchaseItem(record)" size="mini" type="danger" >修改</el-button>
+              <el-button v-if="record.isInquiry == 0" @click="splitPurchaseItem(record)" type="info" size="mini" >拆分</el-button>
+              <el-button @click="editPurchaseItem(record)" size="mini" type="success" >修改</el-button>
             </template>
           </a-table-column>
         </a-table>
@@ -150,8 +139,17 @@
     </el-dialog>
 
     <!-- 新增采购项模态框 -->
-    <el-dialog v-el-drag-dialog title="新增采购项" class="itemDialog" :visible.sync="itemDialogVisible">
+    <el-dialog v-el-drag-dialog :title="itemDialogTitle" class="itemDialog" :visible.sync="itemDialogVisible">
       <el-form ref="addItemsForm" :rules="rules" :model="addItemsForm" status-icon>
+        <el-row>
+          <el-col :sm="24" :lg="12">
+            <el-form-item label="采购模板" label-width="80px" prop="currentTemplate">
+              <el-select v-model="addItemsForm.currentTemplate" :disabled="currentTemplate.id?true:false" style="width: 100%" size="small" placeholder="请选择模板" value-key="name" >
+                <el-option v-for="item in excelTemplates" :key="item.id" :label="item.name" :value="item" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
         <el-row>
           <el-col :sm="24" :lg="12">
             <el-form-item label="采购序号" label-width="80px" prop="serialNumber">
@@ -164,18 +162,7 @@
             </el-form-item>
           </el-col>
         </el-row>
-        <el-row>
-          <el-col :sm="24" :lg="12">
-            <el-form-item label="型号" label-width="80px" prop="model">
-              <el-input v-model="addItemsForm.model" autocomplete="off" size="small" />
-            </el-form-item>
-          </el-col>
-          <el-col :sm="24" :lg="12">
-            <el-form-item label="配置需求" label-width="80px" prop="params">
-              <el-input v-model="addItemsForm.params" autocomplete="off" size="small" />
-            </el-form-item>
-          </el-col>
-        </el-row>
+
         <el-row>
           <el-col :sm="24" :lg="12">
             <el-form-item label="单位" label-width="80px" prop="unit">
@@ -215,53 +202,56 @@
         <el-row>
           <el-col :sm="24" :lg="12">
             <el-form-item label="备注" label-width="80px" prop="suRemark">
-              <el-input v-model="addItemsForm.suRemark" autocomplete="off" size="small" />
+              <el-input v-model="addItemsForm.remark" autocomplete="off" size="small" />
             </el-form-item>
           </el-col>
         </el-row>
-
-        <el-divider><i class="el-icon-mobile-phone"> 仪表类</i></el-divider>
-        <el-row>
-          <el-col :sm="24" :lg="12">
-            <el-form-item label="设备位号" label-width="80px" prop="model">
-              <el-input v-model="addItemsForm.tagNumber" autocomplete="off" size="small" />
-            </el-form-item>
-          </el-col>
-          <el-col :sm="24" :lg="12">
-            <el-form-item label="仪表" label-width="80px" prop="params">
-              <el-input v-model="addItemsForm.meter" autocomplete="off" size="small" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row>
-          <el-col :sm="24" :lg="12">
-            <el-form-item label="测量范围" label-width="80px" prop="model">
-              <el-input v-model="addItemsForm.measuringRange" autocomplete="off" size="small" />
-            </el-form-item>
-          </el-col>
-          <el-col :sm="24" :lg="12">
-            <el-form-item label="信号及规格" label-width="80px" prop="params">
-              <el-input v-model="addItemsForm.meterSignal" autocomplete="off" size="small" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row>
-          <el-col :sm="24" :lg="12">
-            <el-form-item label="连接方式" label-width="80px" prop="model">
-              <el-input v-model="addItemsForm.connectionMode" autocomplete="off" size="small" />
-            </el-form-item>
-          </el-col>
-          <el-col :sm="24" :lg="12">
-            <el-form-item label="保护管" label-width="80px" prop="params">
-              <el-input v-model="addItemsForm.tube" autocomplete="off" size="small" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-
+        <div v-if="addItemsForm.currentTemplate&&addItemsForm.currentTemplate.tableColumn&&addItemsForm.currentTemplate.tableColumn.length>0">
+          <el-divider><i class="el-icon-mobile-phone"> {{addItemsForm.currentTemplate.name}}</i></el-divider>
+          <el-row v-if="index%2 == 0" v-for="(item, index) in column = addItemsForm.currentTemplate.tableColumn.filter(item => item.commons == false)">
+            <el-col :sm="24" :lg="12">
+              <el-form-item :label="item.title" label-width="80px" :prop="item.key">
+                <el-input v-model="addItemsForm[item.key]" autocomplete="off" size="small" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :lg="12">
+              <el-form-item v-if="column[index+1]" :label="column[index+1].title" label-width="80px" :prop="column[index+1].key">
+                <el-input v-model="addItemsForm[column[index+1].key]" autocomplete="off" size="small" />
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </div>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button size="small" @click="inquiryVisible = false">取消</el-button>
         <el-button type="primary" size="small" @click="addItemsSubmit('addItemsForm')">提交</el-button>
+      </div>
+    </el-dialog>
+    <el-dialog title="导入采购计划" class="importDialog" :visible.sync="importDialogVisible">
+      <el-form ref="importForm" :model="importForm" status-icon>
+        <div>
+          <div style="margin: 8px 0 26px 0;position: relative;">
+            <el-select size="small" v-model="importForm.template" placeholder="请选择解析模板" value-key="name" style="margin:0 0 8px 1em">
+              <el-option v-for="item in excelTemplates" :key="item.id" :label="item.name" :value="item" />
+            </el-select>
+            <el-button @click="clickFileInput" type="primary" size="small"><a-icon type="file-excel" style="font-size: 12px;margin-right: 5px"/>excel导入</el-button>
+            <input type="file" ref="upload" accept=".xls,.xlsx" @change="readExcel" class="outputlist_upload">
+            <div v-if="excelRows>0" style="position: absolute;left: 0;padding: 4px 0;font-size: 12px;color: #909399">从Excel读取到
+              <span style="color: #42b983">{{outputs.length}}</span>条数据
+            </div>
+          </div>
+
+          <el-input
+            type="textarea"
+            placeholder="点击上方按钮导入或者复制excel中数据来粘贴"
+            :autosize="{ minRows: 4, maxRows: 12}"
+            >
+          </el-input>
+        </div>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button size="small" @click="importDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="submitLoading" size="small" @click="importHandler('importForm')">提交</el-button>
       </div>
     </el-dialog>
   </div>
@@ -286,18 +276,33 @@
           params: { projectId: this.searchForm.purchaseProId, serialNum: value }
         })
           .then(response => {
-            if (response.data > 0) {
+            if (response.data > 0 && value != this.nokey) {
               callback(new Error('采购项序号已存在'))
             }else {
               callback()
             }
           })
       };
+      var validTemplate = (rule, value, callback) => {
+        if (!value.id) {
+          return callback(new Error('不能为空'));
+        }else {
+          callback()
+        }
+      };
       return {
+        submitLoading: false,
+        importForm: {},
+        importDialogVisible: false,
+
+        excelTemplates: [],
+        currentTemplate: {},
+
         outputs: [],
         excelRows: null,
-        addItemsForm: {},
+        addItemsForm: {currentTemplate:{}},
         itemDialogVisible: false,
+        itemDialogTitle: '',
         searchForm: {},
         purchasePros: [],
 
@@ -309,6 +314,8 @@
 
         currentItem: '',
         selectKey: null,
+
+        noKey: null,
 
         poolData: [],
         poolLoading: false,
@@ -330,6 +337,9 @@
         },
 
         rules: {
+          currentTemplate: [
+            { validator: validTemplate, trigger: 'blur'}
+          ],
           serialNumber: [
             { validator: validSerialNumber, trigger: 'blur'}
           ],
@@ -344,11 +354,11 @@
           ],*/
         },
 
-        windowWidth: document.documentElement.clientWidth, // 屏幕实时宽度
+        //windowWidth: document.documentElement.clientWidth, // 屏幕实时宽度
       }
     },
     mounted() {
-      var that = this;
+      /*var that = this;
       // <!--把window.onresize事件挂在到mounted函数上-->
       window.onresize = () => {
         return (() => {
@@ -356,19 +366,43 @@
           //window.fullWidth = document.documentElement.clientWidth;
           that.windowWidth = that.$refs.purchase.clientWidth ; // 宽
         })()
-      };
+      };*/
     },
     created() {
       this.init()
     },
     methods: {
-      editPurchaseItem(row, index){
-        if(this.searchForm.purchaseProId) {
-          this.addItemsForm = row
-          this.itemDialogVisible = true
-        }else {
-          this.$message({message: '请选择采购项目', type: 'warning'})
+      loadCurrentTemplate(id) {
+        if (id) {
+          getAction('/inquiry/template/findInquiryTemplate', {id: id})
+            .then(resp => {
+              resp.data[0].jsonKeys = JSON.parse(resp.data[0].jsonKeys)
+              resp.data[0].tableColumn = JSON.parse(resp.data[0].tableColumn)
+              this.currentTemplate = resp.data[0]
+            })
+            .finally(()=> {
+              this.plansLoading = false
+            })
         }
+
+      },
+      importHandle() {
+        if (this.searchForm.purchaseProId) {
+          this.importDialogVisible = true
+        }else {
+          this.$message({type: 'warning', message: '请选择采购项目'})
+        }
+      },
+      loadTemplates() {
+        getAction('/inquiry/template/findInquiryTemplate')
+          .then(resp => {
+            resp.data.map(item=> {
+              item.tableColumn = JSON.parse(item.tableColumn)
+              item.jsonKeys = JSON.parse(item.jsonKeys)
+            })
+            this.excelTemplates = resp.data
+
+          })
       },
       deletePurchaseSupply(row, index) {
         this.$confirm('是否确定删除？', '提示', {
@@ -431,8 +465,17 @@
             let form = this.addItemsForm
             form.operator = getUser()
             form.projectId = this.searchForm.purchaseProId
-
-            postActionByQueryString('/purchase/purchasePlan/addPurchaseItem', form)
+            if (form.salePrice&&form.number) {
+              form.saleTotalPrice = parseFloat(form.salePrice * form.number)
+            }
+            form.templateId = form.currentTemplate.id
+            let url = ''
+            if (form.id) {
+              url = '/purchase/purchasePlan/updatePurchaseItem'
+            }else {
+              url = '/purchase/purchasePlan/addPurchaseItem'
+            }
+            postActionByQueryString(url, form)
               .then( resp => {
                 this.$message({ message: resp.message, type: 'success' })
                 this.itemDialogVisible = false
@@ -453,7 +496,7 @@
       },
       readExcel(e) {
         const files = e.target.files;
-        //console.log(files);
+
         if(files.length<=0){//如果没有文件名
           return false;
         }else if(!/\.(xls|xlsx)$/.test(files[0].name.toLowerCase())){
@@ -506,9 +549,33 @@
         };
         fileReader.readAsBinaryString(files[0]);
       },
+      editPurchaseItem(row, index){
+        this.itemDialogTitle = '修改采购项'
+        this.addItemsForm = row
+        this.nokey = row.serialNumber
+        if (this.currentTemplate.id) {
+          this.addItemsForm.currentTemplate = this.currentTemplate
+
+        }else {
+          this.$message({type: 'warning', message: '该采购计划未设置模板'})
+        }
+        this.itemDialogVisible = true
+      },
       toAddItems(row){
+        this.itemDialogTitle = '新增采购项'
+        this.nokey = ''
         if(this.searchForm.purchaseProId) {
+          if (this.currentTemplate) {
+            this.addItemsForm.currentTemplate = this.currentTemplate
+          }else {
+            this.excelTemplates.map(item => {
+              if (item.name == '一般模板') {
+                this.addItemsForm.currentTemplate = item
+              }
+            })
+          }
           this.itemDialogVisible = true
+
         }else {
           this.$message({message: '请选择采购项目', type: 'warning'})
         }
@@ -619,13 +686,22 @@
       },
       init() {
         this.loadPurchasePros()
+        this.loadTemplates()
         //this.loadPlans()
       },
       loadPlans(projectId) {
+        this.currentTemplate = {}
         this.plansLoading = true
         request.get("/purchase/purchasePlan/findItemsByProjectId?projectId="+projectId)
           .then( resp => {
             this.plans = resp.data
+            if (this.plans[0].templateId) {
+              this.loadCurrentTemplate(this.plans[0].templateId)
+            }else {
+              this.plansLoading = false
+            }
+          })
+          .catch(()=>{
             this.plansLoading = false
           })
       },
@@ -638,6 +714,7 @@
       toSearch() {
         if(this.searchForm.purchaseProId) {
           this.loadPlans(this.searchForm.purchaseProId)
+          this.purchaseSuppliers = []
         }else {
           this.$message({message: '请选择项目', type: 'warning'})
         }
@@ -657,6 +734,11 @@
     opacity: 0;
     width: 0;
     overflow: hidden;
+  }
+  /deep/.el-dialog {
+    .el-col {
+      padding: 0 4px
+    }
   }
 }
 </style>
