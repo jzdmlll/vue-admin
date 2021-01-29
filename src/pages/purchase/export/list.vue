@@ -8,6 +8,7 @@
         <el-option v-for="item in projects" :key="item.id" :label="item.projectName" :value="item.id" />
       </el-select>
       <el-button style="margin-right: 6px" type="primary" icon="el-icon-search" size="small" @click="toSearch">查询</el-button>
+      <el-link v-for="item in files" type="primary" :download="item.name" target="_blank" :href = "item.url">{{item.name}} | </el-link>
     </div>
     <div style="padding:1em;margin-bottom:1em;background:#fff">
       <a-table
@@ -131,7 +132,7 @@
           })
       };
       return {
-
+        files: [],
         currentTemplate: {},
 
         searchForm: {},
@@ -311,7 +312,14 @@
        * 顶部 查询按钮 点击事件
        */
       toSearch() {
+
         if(this.searchForm.proDetailId) {
+          //查询项目文件
+          getAction('/file/findByProId',{proId : this.searchForm.proDetailId})
+            .then(resp => {
+              this.files = resp.data
+            })
+
           getAction('/purchase/generatePurchaseContract/findItemsAndSupplyByProjectId', { projectId: this.searchForm.proDetailId})
             .then( resp => {
               this.purchases = resp.data

@@ -151,7 +151,7 @@
       toSearch() {
         this.contractChecksLoading = true
         if (this.searchForm.contractId) {
-          getAction('/purchase/contractManagement/findItemsInfoByContractId', { contractId: this.searchForm.contractId[1]})
+          getAction('/purchase/contractManagement/findPurchaseMessageByContractId', { contractId: this.searchForm.contractId[1]})
             .then( resp => {
               this.contractChecks = resp.data
               this.contractChecksLoading = false
