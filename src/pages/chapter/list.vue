@@ -55,10 +55,10 @@
         <a-table-column :width="100" title="操作">
           <template slot-scope="text,scope">
             <a-tooltip placement="topLeft" title="查看附件">
-              <a-button type="primary" icon="folder" size="small" @click="getFile(scope.id)"/>
+              <el-button type="primary" icon="el-icon-paperclip" size="small" @click="getFile(scope.id)"/>
             </a-tooltip>
             <a-tooltip title="修改">
-              <a-button type="primary" icon="edit" size="small" @click="modifyInfo(scope)"/>
+              <el-button type="primary" icon="el-icon-edit" size="small" @click="modifyInfo(scope)"/>
             </a-tooltip>
           </template>
         </a-table-column>
@@ -178,7 +178,7 @@
         fileVisible:false,
         form: {projectName:'',contractName:'',contractNo:'',price:'',firstParty:'',secondParty:'',type:'',senderRemark:'',auditor:'',mainContent:''},
         rule: {
-          projectName: [
+          /*projectName: [
             {required: true, message: '不能为空', trigger: 'blur'}
           ],
           contractName: [
@@ -207,7 +207,7 @@
           ],
           mainContent: [
             {required: true, message: '不能为空', trigger: 'blur'}
-          ]
+          ]*/
 
         },
         active:1,
