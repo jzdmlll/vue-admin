@@ -62,12 +62,11 @@
           </template>
         </a-table-column>
         <a-table-column :width="100" ellipsis="true" key="purchaseSupply.brand" title="品牌" data-index="purchaseSupply.brand" align="center"/>
-        <a-table-column :width="100" ellipsis="true" key="purchaseSupply.model" title="规格型号" data-index="purchaseSupply.model" align="center"/>
+        <a-table-column v-if="item.commons == false" v-for="item in currentTemplate.tableColumn" :width="item.width" ellipsis="true" :key="item.key" :title="item.title" :data-index="item.dataIndex" align="center"/>
         <a-table-column :width="70" key="purchaseSupply.price" title="单价" data-index="purchaseSupply.price" align="center"/>
         <a-table-column :width="80" key="purchaseSupply.totalPrice" title="总价" data-index="purchaseSupply.totalPrice" align="center"/>
         <a-table-column :width="50" key="unit" title="单位" data-index="unit" align="center"/>
         <a-table-column :width="70" key="number" title="数量" data-index="number" align="center"/>
-        <a-table-column :width="100" ellipsis="true" key="params" title="技术要求" data-index="params" align="center"/>
         <a-table-column :width="100" ellipsis="true" key="purchaseSupply.params" title="实际参数" data-index="purchaseSupply.params" align="center"/>
         <a-table-column :width="100" ellipsis="true" key="purchaseSupply.warranty" title="货期" data-index="purchaseSupply.warranty" align="center"/>
         <a-table-column :width="100" ellipsis="true" key="purchaseSupply.remark" title="备注" data-index="purchaseSupply.remark" align="center"/>
@@ -132,6 +131,9 @@
           })
       };
       return {
+
+        currentTemplate: {},
+
         searchForm: {},
         purchases: [],
         loading: true,
@@ -164,6 +166,20 @@
       this.role = this.$store.getters.roles[0]
     },
     methods: {
+      loadCurrentTemplate(id) {
+        if (id) {
+          getAction('/inquiry/template/findInquiryTemplate', {id: id})
+            .then(resp => {
+              resp.data[0].jsonKeys = JSON.parse(resp.data[0].jsonKeys)
+              resp.data[0].tableColumn = JSON.parse(resp.data[0].tableColumn)
+              this.currentTemplate = resp.data[0]
+            })
+            .finally(()=> {
+              this.loading = false
+            })
+        }
+
+      },
       /**
        * 弹出生成合同模态框
        */
@@ -219,6 +235,7 @@
         if (this.selectedRowKeys.length) {
           this.downloadLoading = true
           import('@/vendor/Export2Excel').then(excel => {
+
             const tHeader = ['序号', '设备名称', '型号', '配置需求',  '单位', '数量', '单价', '总价', '品牌', '货期', '备注']
             const filterVal = ['sort', 'name', 'suModel', 'params', 'unit', 'number', 'price',
               'totalPrice', 'brand', 'delivery', 'remark']
@@ -295,17 +312,14 @@
        */
       toSearch() {
         if(this.searchForm.proDetailId) {
-          /*request.get('/inquiry/findProPurchase?proDetailId='+this.searchForm.proDetailId)
-            .then(response => {
-              this.purchases = response.data
-              this.loading = false
-            }).catch(()=> {
-            this.loading = false
-          })*/
           getAction('/purchase/generatePurchaseContract/findItemsAndSupplyByProjectId', { projectId: this.searchForm.proDetailId})
             .then( resp => {
               this.purchases = resp.data
-              this.loading = false
+              if (this.purchases.length > 0) {
+                this.loadCurrentTemplate(this.purchases[0].templateId)
+              }else {
+                this.loading = false
+              }
             }).catch(()=> {
               this.loading = false
             })
