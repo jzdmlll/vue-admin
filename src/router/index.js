@@ -1,11 +1,8 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-
 Vue.use(Router)
-
 /* Layout */
 import Layout from '@/layout'
-
 /**
  * Note: sub-menu only appear when route children.length >= 1
  * Detail see: https://panjiachen.github.io/vue-element-admin-site/guide/essentials/router-and-nav.html
@@ -45,7 +42,48 @@ export const constantRoutes = [
     ]
   },
   {
+    path: '/equipment',
+    component: Layout,
+    children: [
+      {
+        path: 'list',
+        component: () => import('@/pages/equipment/list'),
+        name: 'article_list',
+        meta: { title: '设备管理',  affix: true }
+      },
+    ]
+  },
+  {
+    path: '/equipment',
+    component: Layout,
+    children: [
+      {
+        path: 'app',
+        component: () => import('@/pages/equipment/app'),
+        name: 'article_list',
+        meta: { title: '设备库存管理',  affix: true }
+      },
+    ]
+  },
+  {
+    path: '/chapter',
+    component: Layout,
+    children: [
+      {
+        path: 'check',
+        component: () => import('@/pages/chapter/check'),
+        name: 'article_list',
+        meta: { title: '设备管理',  affix: true }
+      },
+    ]
+  },
+  {
     path: '/login',
+    component: () => import('@/views/login/index'),
+    hidden: true
+  },
+  {
+    path: '/equipment',
     component: () => import('@/views/login/index'),
     hidden: true
   },

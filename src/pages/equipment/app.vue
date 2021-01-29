@@ -32,18 +32,18 @@
         :scroll="{x:2500}"
       >
         <a-table-column :width="100" key="id" data-index="id" title="id" v-if="false"/>
-        <a-table-column :width="150" key="projectName" data-index="projectName" title="工程名" />
-        <a-table-column :width="100" key="contractName" data-index="contractName" title="合同名" />
-        <a-table-column :width="100" key="sender" data-index="sender" title="送审人" />
-        <a-table-column :width="100" key="auditor" data-index="auditor" title="审核人" />
-        <a-table-column :width="100" key="contractNo" data-index="contractNo" title="合同编号" />
-        <a-table-column :width="100" key="auditStatus" data-index="auditStatus" title="审核状态" aligwarningn="center" >
+        <a-table-column :width="150" key="projectName" data-index="projectName" title="设备名" />
+        <a-table-column :width="100" key="contractName" data-index="contractName" title="设备序号" />
+        <a-table-column :width="100" key="sender" data-index="sender" title="采购品牌" />
+        <a-table-column :width="100" key="auditor" data-index="auditor" title="供应商名" />
+        <a-table-column :width="100" key="contractNo" data-index="contractNo" title="技术参数" />
+        <a-table-column :width="100" key="auditStatus" data-index="auditStatus" title="型号" aligwarningn="center" >
           <template slot-scope="text,scope">
             <el-tag :type="scope.auditStatus===1? 'success':scope.auditStatus=== 2?'danger':'warning'">{{scope.auditStatus ===1 ?'审核通过':scope.auditStatus=== 2?'审核否决':'正在审核'}}</el-tag>
           </template>
         </a-table-column>
-        <a-table-column :width="100" prop="senderRemark" data-index="senderRemark" title="送审备注" />
-        <a-table-column :width="100" key="auditRemark" data-index="auditRemark" title="审核备注" />
+        <a-table-column :width="100" prop="senderRemark" data-index="senderRemark" title="数量" />
+        <a-table-column :width="100" key="auditRemark" data-index="auditRemark" title="单位" />
         <a-table-column :width="200" key="senderTime" data-index="senderTime" title="送审时间" >
           <template slot-scope="text,scope">{{dateTimeFormat(scope.senderTime)}}</template>
         </a-table-column>
