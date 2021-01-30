@@ -4,11 +4,7 @@ import Cookies from 'js-cookie'
 
 import 'normalize.css/normalize.css' // a modern alternative to CSS resets
 
-<<<<<<< HEAD
-import { Descriptions,Tag,Button,Select,Layout,Table, Popconfirm, Input, Upload, Icon, Empty, Popover, Timeline, Tabs, Row, Col, InputNumber, Tooltip, Progress } from 'ant-design-vue'
-=======
-import { Skeleton, Table, Popconfirm, Input, Upload, Icon, Empty, Popover, Timeline, Tabs, Row, Col, InputNumber, Tooltip, Progress } from 'ant-design-vue'
->>>>>>> ab517146236ff58db8ffdf6137bc98d2040eadbe
+import {  Descriptions,Tag,Button,Select,Layout,Skeleton, Table, Popconfirm, Input, Upload, Icon, Empty, Popover, Timeline, Tabs, Row, Col, InputNumber, Tooltip, Progress } from 'ant-design-vue'
 import 'ant-design-vue/dist/antd.css'
 
 import Element from 'element-ui'
@@ -38,15 +34,12 @@ import * as filters from './filters' // global filters
 // if (process.env.NODE_ENV === 'production') {
 //   mockXHR()
 // }
-<<<<<<< HEAD
 Vue.use(Descriptions)
 Vue.use(Tag)
 Vue.use(Button)
 Vue.use(Layout)
 Vue.use(Select)
-=======
 Vue.use(Skeleton)
->>>>>>> ab517146236ff58db8ffdf6137bc98d2040eadbe
 Vue.use(Progress)
 Vue.use(Element, {
   size: Cookies.get('size') || 'medium' // set element-ui default size

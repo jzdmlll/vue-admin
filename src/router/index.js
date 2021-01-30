@@ -53,7 +53,7 @@ export const constantRoutes = [
       },
     ]
   },
-  {
+   {
     path: '/equipment',
     component: Layout,
     children: [
@@ -61,10 +61,23 @@ export const constantRoutes = [
         path: 'app',
         component: () => import('@/pages/equipment/app'),
         name: 'article_list',
-        meta: { title: '设备库存管理',  affix: true }
+        meta: { title: '设备签收管理',  affix: true }
       },
     ]
   },
+  {
+    path: '/equipment',
+    component: Layout,
+    children: [
+      {
+        path: 'inport',
+        component: () => import('@/pages/equipment/inport'),
+        name: 'article_list',
+        meta: { title: '设备入库管理',  affix: true }
+      },
+    ]
+  },
+ 
   {
     path: '/chapter',
     component: Layout,

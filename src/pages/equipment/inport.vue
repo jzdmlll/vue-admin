@@ -1,5 +1,5 @@
 <template>
-  <!-- 设备签收确认 -->
+  <!-- 设备管理入库确认 -->
   <div class="chapter-list">
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
       <el-select v-model="project.projectId" style="margin-right: 6px" filterable clearable placeholder="请选择项目" @change="loadcontract" value-key="name">
@@ -39,8 +39,8 @@
       
     </div>
     <div style="padding:1em;margin-bottom:1em;background:#fff">
-                <a-button v-if="selectedKeys.length>1" style="background:#42b983;color:#fefefe;" @click="toSignAll">批量签收</a-button>
-          <a-button v-if="selectedKeys.length==1" style="background:#42b983;color:#fefefe;" @click="toSign">签收</a-button>
+                <a-button v-if="selectedKeys.length>1" style="background:#42b983;color:#fefefe;" @click="toSignAll">批量入库</a-button>
+          <a-button v-if="selectedKeys.length==1" style="background:#42b983;color:#fefefe;" @click="toSign">入库</a-button>
       <a-table
         v-loading="loading"
         :data-source="devices"
@@ -273,10 +273,15 @@ onSelectChange(selectedRowKeys, selectedRows) {
           })
       },
       toSign(){
-        this.Signview=true
+        this.$confirm('将进行入库，请确认勾选项项, 是否入库?', '提示', {
+          
+          cancelButtonText: '取消',
+          confirmButtonText: '确定',
+          type: 'warning'
+        })
       },
       toSignAll(){
-        this.$confirm('将进行批量签收，请确认勾选项数量, 是否批量签收?', '提示', {
+        this.$confirm('将进行批量入库，请确认勾选项项, 是否批量入库?', '提示', {
           
           cancelButtonText: '取消',
           confirmButtonText: '确定',

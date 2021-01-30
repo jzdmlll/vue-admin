@@ -94,8 +94,6 @@
         <div style="padding:1em;margin-left:1em;margin-top:-1em;height:700px;background:#fff">
         <a-tabs default-active-key="1">
         <a-tab-pane key="1" tab="采购项清单">
-          <a-button v-if="selectedKeys.length>1" style="background:#42b983;color:#fefefe;" @click="toSearch">批量签收</a-button>
-          <a-button v-if="selectedKeys.length==1" style="background:#42b983;color:#fefefe;" @click="toSearch">签收</a-button>
         <a-table
         v-loading="loading"
         :data-source="devices"
@@ -154,6 +152,49 @@
         <a-table-column :width="100" key="firstParty" data-index="firstParty" title="甲方" />
         <a-table-column :width="100" key="secondParty" data-index="secondParty" title="乙方" />
         <a-table-column :width="100" key="type" data-index="type" title="类别" />
+        <a-table-column :width="100" title="操作" fixed="right">
+          <template slot-scope="text,scope">
+            <a-tooltip placement="topLeft" title="查看附件">
+              <a-button type="primary" icon="folder" size="small" @click="getFile(scope.id)"/>
+            </a-tooltip>
+            
+          </template>
+        </a-table-column>
+      </a-table>
+                </a-tab-pane>
+                <a-tab-pane  key="4" tab="供货清单">
+                  <a-button style="background:#42b983;color:#fefefe;" @click="subit">上传</a-button>
+<a-table
+        v-loading="loading"
+        :data-source="devices"
+        size="large"
+        :rowKey="record => record.id"
+        :row-selection="{ selectedRowKeys: selectedKeys,
+        onChange: onSelectChange,
+        getCheckboxProps: record => ({props: {disabled: record.price != 2}}) ,
+        type:'checkbox'}"
+        :scroll="{x:2000}"
+        >
+        <!-- <a-button v-if="selectKeys.length>0"/>  -->
+        <a-table-column :width="100" key="id" data-index="id" title="设备ID" v-if="false">
+          <template slot-scope="text,scope">
+            <el-tag :type="scope.auditStatus===1? 'success':scope.auditStatus=== 2?'danger':'warning'" @click="toadd">{{scope.auditStatus ===1 ?'已填写签收单':'未填写'}}</el-tag>
+          </template>
+        </a-table-column>
+        <a-table-column :width="100" key="serialNumber" align="center" data-index="serialNumber" title="设备序号" />
+        <a-table-column :width="100" key="item"  data-index="item" title="设备名" />
+        <a-table-column :width="100" key="brand" data-index="brand" title="品牌" />
+        <a-table-column :width="100" key="params" data-index="params" title="技术参数" />
+        <a-table-column :width="100" key="item"  data-index="item" title="未签收数量" />
+        <a-table-column :width="100" key="model" data-index="model" title="型号" />
+        <a-table-column :width="100" key="number" data-index="number" title="数量" />
+        <a-table-column :width="100" key="unit" data-index="unit" title="单位" />
+        <a-table-column :width="100" key="contractOrderId" data-index="contractOrderId" title="合同订单追踪ID" />
+        <a-table-column :width="100" key="supplyId" data-index="supplyId" title="供应商ID" />
+        <a-table-column :width="100" key="supplier" data-index="supplier" title="供应商" />
+        <a-table-column :width="100" key="price" data-index="price" title="供应商单价" />
+        <a-table-column :width="100" key="totalPrice" data-index="totalPrice" title="总价" />
+        <a-table-column :width="100" key="warranty" data-index="warranty" title="设备保质期" />
         <a-table-column :width="100" title="操作" fixed="right">
           <template slot-scope="text,scope">
             <a-tooltip placement="topLeft" title="查看附件">
