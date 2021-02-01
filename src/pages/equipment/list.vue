@@ -711,6 +711,46 @@
     <!-- 新增文件 -->
     <!--   文件上传   -->
     <el-dialog :title="fileTitle" :visible.sync="fileVisible2">
+      <el-form ref="form" :model="form" :rules="rule">
+        <!-- 填写项目内容 -->
+        <div :style="active === 2 ? { display: 'block' } : { display: 'none' }">
+          <a-row>
+            <a-col :span="12">
+              <el-form-item
+                label="金额"
+                label-width="80px"
+                size="small"
+                prop="contractName"
+              >
+                <el-input
+                  v-model="fileForm.count"
+                  clearable
+                  placeholder="金额"
+                  value-key="name"
+                  size="small"
+                >
+                </el-input>
+              </el-form-item>
+            </a-col>
+            <a-col :span="12">
+              <el-form-item
+                label="编号"
+                label-width="80px"
+                size="small"
+                prop="contractNo"
+              >
+                <el-input
+                  v-model="fileForm.number"
+                  clearable
+                  placeholder="编号"
+                  value-key="name"
+                  size="small"
+                >
+                </el-input>
+              </el-form-item>
+            </a-col>
+          </a-row></div
+      ></el-form>
       <div :style="active === 2 ? { display: 'block' } : { display: 'none' }">
         <a-upload-dragger
           name="file"
@@ -1261,6 +1301,7 @@ export default {
       ],
       invisible: false,
       form: {},
+      fileForm: {},
       payVisible: false,
       fileVisible2: false,
       BondStatus: false,
@@ -1443,7 +1484,10 @@ export default {
           headers: {
             "Content-Type": "application/json",
           },
-          data: JSON.stringify({ chapterAudit: this.form, files: fileList }),
+          data: JSON.stringify({
+            chapterAudit: this.fileForm,
+            files: fileList,
+          }),
         })
         .then((response) => {
           this.submitLoading = false;
