@@ -1,8 +1,10 @@
 <template>
-    <div id="equipment">
+  <div id="equipment">
+    <!--     layout          -->
     <a-layout>
-        <!--         左布局         -->
-      <a-layout-sider :width="slider1==550?'550':'0'"   :style="style1"> <!--v-if="slider1==550"-->
+      <!--   左布局      -->
+      <a-layout-sider :width="slider1 == 550 ? '550' : '0'" :style="style1">
+        <!--v-if="slider1==550"-->
         <!--      合同查询布局区域   -->
         <div style="padding:1em;margin-bottom:1em;" class="slider-header">
         <el-select v-model="project.projectId" style="margin-right: 6px" filterable clearable placeholder="请选择项目" @change="loadcontract" value-key="name">
@@ -79,25 +81,25 @@
              
          </div>
       </a-layout-sider>
-
-          <!--   右布局      -->
+      <!--   右布局      -->
       <a-layout>
-          
-          <!--  右上布局    -->
-          <!-- 
-        <a-layout-header style="padding:0px;">
-            <div style="padding:1em;margin-top:1em;margin-left:1em;"></div>
-        </a-layout-header>
-        -->
         <!--     右下布局    -->
-        <a-layout-content >
-        <div style="padding:1em;margin-left:1em;margin-top:-1em;height:700px;background:#fff">
-        <a-tabs default-active-key="1">
-        <a-tab-pane key="1" tab="采购项清单">
-        <a-table
-        v-loading="loading"
-        :data-source="devices"
-        size="large"
+        <a-layout-content>
+          <div
+            style="
+              padding: 1em;
+              margin-left: 1em;
+              margin-top: -1em;
+              height: 700px;
+              background: #fff;
+            "
+          >
+            <a-tabs default-active-key="1">
+              <a-tab-pane key="1" tab="采购项清单">
+                <a-table
+                  v-loading="loading"
+                  :data-source="devices"
+                  size="large"
         :rowKey="record => record.id"
         :row-selection="{ selectedRowKeys: selectedKeys,
         onChange: onSelectChange,
@@ -210,6 +212,9 @@
         </a-layout-content>
       </a-layout>
     </a-layout>
+    <!--     layout          -->
+
+    <!--   项目补充信息   -->
     <el-dialog :title="title" :visible.sync="visible">
       <el-steps :active="active" simple style="background: #d8f1e3;margin-bottom: 8px;padding: 13px 4%;height: 36px">
         <el-step title="填写详细内容" icon="el-icon-edit" />
@@ -254,11 +259,9 @@
         <el-button type="primary" :loading="submitLoading" size="small" @click="saveRecordHandler('form')">{{ this.active === 2?'确定':'下一步' }}</el-button>
       </div>
     </el-dialog>
-   
 
-    <!--   合同信息   -->
+    <!--   合同信息 invisible  -->
     <el-dialog :title="title1" :visible.sync="invisible">
-      
       <el-form ref="form" :model="form" :rules="rule">
         <!-- 填写项目内容 -->
         <div :style="active === 2?{display: 'block'}:{display:'none'}">
@@ -471,31 +474,71 @@
             <el-input v-model="form.remark" type="textarea" :autosize="{ minRows:3, maxRows: 10}"/>
           </el-form-item>
         </div>
-        
       </el-form>
       <div slot="footer" class="dialog-footer">
-        
-        <el-button type="primary" :loading="submitLoading" size="small" @click="saveRecordHandler('form')">{{ this.active === 2?'确定':'下一步' }}</el-button>
+        <el-button
+          type="primary"
+          :loading="submitLoading"
+          size="small"
+          @click="saveRecordHandler('form')"
+          >{{ this.active === 2 ? "确定" : "下一步" }}</el-button
+        >
       </div>
     </el-dialog>
-    <div  style="position:fixed;left:68px;bottom:0px;width:50px;height:50px;z-index:999"><el-button type="success" icon="el-icon-caret-left" @click="expand"></el-button></div>
-    <div  style="position:fixed;right:18px;bottom:0px;width:50px;height:50px;"><el-button type="success" icon="el-icon-caret-right" @click="reduce"></el-button></div>
+    <!--   合同信息   -->
+
+    <!--  收缩标签(下面的页面宽度控制)   -->
+    <div
+      style="
+        position: fixed;
+        left: 68px;
+        bottom: 0px;
+        width: 50px;
+        height: 50px;
+        z-index: 999;
+      "
+    >
+      <el-button
+        type="success"
+        icon="el-icon-caret-left"
+        @click="expand"
+      ></el-button>
+    </div>
+    <div
+      style="
+        position: fixed;
+        right: 18px;
+        bottom: 0px;
+        width: 50px;
+        height: 50px;
+      "
+    >
+      <el-button
+        type="success"
+        icon="el-icon-caret-right"
+        @click="reduce"
+      ></el-button>
+    </div>
+    <!--  收缩标签(下面的页面宽度控制)   -->
   </div>
 </template>
 <script>
-  import request from '@/utils/request'
-  import qs from 'querystring'
-  import '@/styles/auto-style.css'
-  import {getUser} from '@/utils/auth'
-  import { getAction, postActionByJson, postActionByQueryString } from '@/api/manage'
-  import { dateTimeFormat } from '@/utils/format'
-  import elDragDialog from '@/directive/el-drag-dialog'
+import request from "@/utils/request";
+import qs from "querystring";
+import "@/styles/auto-style.css";
+import { getUser } from "@/utils/auth";
+import {
+  getAction,
+  postActionByJson,
+  postActionByQueryString,
+} from "@/api/manage";
+import { dateTimeFormat } from "@/utils/format";
+import elDragDialog from "@/directive/el-drag-dialog";
 export default {
-
-    data(){
-      const fileUploadUrl = process.env.VUE_APP_BASE_API + 'file/uploadCache'
-      const rowSelection = {
-  onChange: (selectedRowKeys, selectedRows) => {
+  data() {
+    const fileUploadUrl = process.env.VUE_APP_BASE_API + "file/uploadCache";
+    const rowSelection = {
+      onChange: (selectedRowKeys, selectedRows) => {
     selectedRows.map(item=>{
       alert(item.mainContent)
     })
@@ -567,16 +610,15 @@ export default {
             {required: true, message: '不能为空', trigger: 'blur'}
           ]
 */
-        },
-        }
-        
-    },
-    created(){
-      this.init()
-      this.loadproject()
-    },
-    methods:{
-      getUser,
+      },
+    };
+  },
+  created() {
+    this.init();
+    this.loadproject();
+  },
+  methods: {
+    getUser,
       expand(){
 this.slider1=100
       },
@@ -723,22 +765,19 @@ this.slider1=550
 
       }
     }
-}
+      });
+    },
+  },
+};
 </script>
-
-
 <style lang="scss" scoped>
-
 #components-layout-demo-basic .ant-layout-header,
-
-
 #components-layout-demo-basic .ant-layout-sider {
   background: #fefefe;
   color: #fff;
 
 }
 #components-layout-demo-basic .ant-layout-content {
-  
   color: #fff;
 
 }
@@ -748,31 +787,30 @@ this.slider1=550
 #components-layout-demo-basic > .ant-layout:last-child {
   margin: 0;
 }
- .el-row {
-    margin-bottom: 20px;
-    &:last-child {
-      margin-bottom: 0;
-    }
+.el-row {
+  margin-bottom: 20px;
+  &:last-child {
+    margin-bottom: 0;
   }
-  .el-col {
-    border-radius: 4px;
-  }
-  .bg-purple-dark {
-    background: #99a9bf;
-  }
-  .bg-purple {
-    background: #d3dce6;
-  }
-  .bg-purple-light {
-    background: #e5e9f2;
-  }
-  .grid-content {
-    border-radius: 4px;
-    min-height: 36px;
-  }
-  .row-bg {
-    padding: 10px 0;
-    background-color: #f9fafc;
-  }
-  
+}
+.el-col {
+  border-radius: 4px;
+}
+.bg-purple-dark {
+  background: #99a9bf;
+}
+.bg-purple {
+  background: #d3dce6;
+}
+.bg-purple-light {
+  background: #e5e9f2;
+}
+.grid-content {
+  border-radius: 4px;
+  min-height: 36px;
+}
+.row-bg {
+  padding: 10px 0;
+  background-color: #f9fafc;
+}
 </style>
