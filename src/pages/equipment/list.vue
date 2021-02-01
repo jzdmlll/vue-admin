@@ -715,24 +715,7 @@
         <!-- 填写项目内容 -->
         <div :style="active === 2 ? { display: 'block' } : { display: 'none' }">
           <a-row>
-            <a-col :span="12">
-              <el-form-item
-                label="金额"
-                label-width="80px"
-                size="small"
-                prop="contractName"
-              >
-                <el-input
-                  v-model="fileForm.count"
-                  clearable
-                  placeholder="金额"
-                  value-key="name"
-                  size="small"
-                >
-                </el-input>
-              </el-form-item>
-            </a-col>
-            <a-col :span="12">
+            <a-col :span="24">
               <el-form-item
                 label="编号"
                 label-width="80px"
@@ -743,6 +726,59 @@
                   v-model="fileForm.number"
                   clearable
                   placeholder="编号"
+                  value-key="name"
+                  size="small"
+                >
+                </el-input>
+              </el-form-item>
+            </a-col>
+          </a-row>
+          <a-row>
+            <a-col :span="8">
+              <el-form-item
+                label="应付款"
+                label-width="80px"
+                size="small"
+                prop="contractName"
+              >
+                <el-input
+                  v-model="fileForm.price"
+                  clearable
+                  placeholder="应付款"
+                  value-key="name"
+                  size="small"
+                >
+                </el-input>
+              </el-form-item>
+            </a-col>
+            <a-col :span="8">
+              <el-form-item
+                label="单位"
+                label-width="80px"
+                size="small"
+                prop="contractNo"
+              >
+                <el-input
+                  v-model="fileForm.unitMoney"
+                  clearable
+                  placeholder="单位"
+                  value-key="name"
+                  size="small"
+                >
+                </el-input>
+              </el-form-item>
+            </a-col>
+            <a-col :span="8">
+              <el-form-item
+                label="货币"
+                label-width="80px"
+                size="small"
+                prop="price"
+              >
+                <el-input
+                  v-model="fileForm.currecy"
+                  clearable
+                  placeholder="货币"
                   value-key="name"
                   size="small"
                 >
