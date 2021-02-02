@@ -521,7 +521,7 @@
     <!--     layout          -->
 
     <!--   查看已付款信息  alreadyVisible -->
-    <el-dialog :title="title" :visible.sync="alreadyVisible">
+    <el-dialog :title="title" :visible.sync="alreadyVisible" v-el-drag-dialog>
       <a-table
         :pagination="false"
         v-loading="loading"
@@ -581,7 +581,7 @@
     </el-dialog>
 
     <!--   已付款新增弹窗 payVisible  -->
-    <el-dialog :title="title" :visible.sync="payVisible">
+    <el-dialog :title="title" :visible.sync="payVisible" v-el-drag-dialog>
       <el-form ref="form" :model="form" :rules="rule">
         <!-- 填写项目内容 -->
         <div :style="active === 2 ? { display: 'block' } : { display: 'none' }">
@@ -650,7 +650,7 @@
     <!--   已付款新增弹窗   -->
 
     <!-- 新增文件 -->
-    <el-dialog :title="fileTitle" :visible.sync="fileVisible">
+    <el-dialog :title="fileTitle" :visible.sync="fileVisible" v-el-drag-dialog>
       <a-table
         :pagination="false"
         v-loading="loading"
@@ -710,7 +710,7 @@
     </el-dialog>
     <!-- 新增文件 -->
     <!--   文件上传   -->
-    <el-dialog :title="fileTitle" :visible.sync="fileVisible2">
+    <el-dialog :title="fileTitle" :visible.sync="fileVisible2" v-el-drag-dialog>
       <el-form ref="form" :model="form" :rules="rule">
         <!-- 填写项目内容 -->
         <div :style="active === 2 ? { display: 'block' } : { display: 'none' }">
@@ -733,18 +733,19 @@
               </el-form-item>
             </a-col>
           </a-row>
+          <!--
           <a-row>
             <a-col :span="8">
               <el-form-item
-                label="应付款"
+                label="金额"
                 label-width="80px"
                 size="small"
-                prop="contractName"
+                prop="price"
               >
                 <el-input
                   v-model="fileForm.price"
                   clearable
-                  placeholder="应付款"
+                  placeholder="金额"
                   value-key="name"
                   size="small"
                 >
@@ -785,8 +786,10 @@
                 </el-input>
               </el-form-item>
             </a-col>
-          </a-row></div
-      ></el-form>
+          </a-row>
+          -->
+        </div></el-form
+      >
       <div :style="active === 2 ? { display: 'block' } : { display: 'none' }">
         <a-upload-dragger
           name="file"
@@ -819,7 +822,7 @@
     <!--   文件上传   -->
 
     <!--   合同信息 invisible  -->
-    <el-dialog :title="title1" :visible.sync="invisible">
+    <el-dialog :title="title1" :visible.sync="invisible" v-el-drag-dialog>
       <el-form ref="form" :model="form" :rules="rule">
         <!-- 填写项目内容 -->
         <div :style="active === 2 ? { display: 'block' } : { display: 'none' }">
@@ -935,36 +938,32 @@
           <a-row>
             <a-col :span="8">
               <el-form-item
-                label="预定付款时间"
+                label="预计付款时间"
                 label-width="80px"
                 size="small"
-                prop="firstParty"
+                prop="schedulerPayTime"
               >
-                <el-input
+                <el-date-picker
                   v-model="form.schedulerPayTime"
-                  clearable
-                  placeholder="预定付款时间"
-                  value-key="name"
-                  size="small"
+                  type="datetime"
+                  placeholder="选择日期时间"
                 >
-                </el-input>
+                </el-date-picker>
               </el-form-item>
             </a-col>
             <a-col :span="8">
               <el-form-item
-                label="预定到货时间"
+                label="预计付款时间"
                 label-width="80px"
                 size="small"
-                prop="secondParty"
+                prop="schedulerDeliveryTime"
               >
-                <el-input
+                <el-date-picker
                   v-model="form.schedulerDeliveryTime"
-                  clearable
-                  placeholder="预定到货时间"
-                  value-key="name"
-                  size="small"
+                  type="datetime"
+                  placeholder="预计到货时间"
                 >
-                </el-input>
+                </el-date-picker>
               </el-form-item>
             </a-col>
             <a-col :span="8">
@@ -1263,6 +1262,7 @@
 <!-- script  -->
 <script>
 import request from "@/utils/request";
+import elDragDialog from "@/directive/el-drag-dialog";
 import qs from "querystring";
 import "@/styles/auto-style.css";
 import { getUser } from "@/utils/auth";
@@ -1272,8 +1272,8 @@ import {
   postActionByQueryString,
 } from "@/api/manage";
 import { dateTimeFormat } from "@/utils/format";
-import elDragDialog from "@/directive/el-drag-dialog";
 export default {
+  directives: { elDragDialog },
   data() {
     const fileUploadUrl = process.env.VUE_APP_BASE_API + "file/uploadCache";
     const rowSelection = {
@@ -1390,6 +1390,7 @@ export default {
   created() {
     this.init();
     this.loadproject();
+    this.findFile();
   },
   methods: {
     getUser,
@@ -1414,7 +1415,7 @@ export default {
       alert(this.project.projectId);
       getAction("url", {
         projectID: this.project.projectId,
-        contractId: "this.project.contractId",
+        contractId: this.project.contractId,
       }).then((resp) => {
         this.contractinfo = resp.data;
       });
@@ -1509,19 +1510,27 @@ export default {
         this.active--;
       }
     },
+    findFile() {
+      getAction("/equipment/invoice/invoiceUpload").then((item) => {
+        this.$message({ message: "response.message", type: "success" });
+      });
+    },
     subNewFile() {
       const fileList = this.fileList.map((item) => {
-        return { id: item.id, name: item.name, url: item.url, type: 1 };
+        return { id: item.id, name: item.name, url: item.url };
       });
+      this.fileForm.contractId = this.project.contractId;
+      this.fileForm.operator = parseInt(getUser());
       request
         .request({
-          url: "/chapter/chapterAudit/insertChapterAudit",
+          url: "/equipment/invoice/invoiceUpload",
+
           method: "post",
           headers: {
             "Content-Type": "application/json",
           },
           data: JSON.stringify({
-            chapterAudit: this.fileForm,
+            EquipmentInvoice: this.fileForm,
             files: fileList,
           }),
         })
@@ -1627,4 +1636,3 @@ export default {
   background-color: #f9fafc;
 }
 </style>
-

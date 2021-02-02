@@ -1,5 +1,5 @@
 <template>
-  <!-- 设备管理入库确认 -->
+  <!-- 设备管理库存展示 -->
   <div class="chapter-list">
     <div
       class="btns"
@@ -46,8 +46,8 @@
       </el-select>
 
       <el-select v-model="searchForm.auditStatus">
-        <el-option value="0" label="已入库" />
-        <el-option value="1" label="未入库" />
+        <el-option value="0" label="无库存" />
+        <el-option value="1" label="有库存" />
       </el-select>
       <el-date-picker
         style="margin-left: 10px"
@@ -87,14 +87,6 @@
         :data-source="devices"
         size="large"
         :rowKey="(record) => record.id"
-        :row-selection="{
-          selectedRowKeys: selectedKeys,
-          onChange: onSelectChange,
-          getCheckboxProps: (record) => ({
-            props: { disabled: record.price != 2 },
-          }),
-          type: 'checkbox',
-        }"
         :scroll="{ x: 2000 }"
       >
         <!-- <a-button v-if="selectKeys.length>0"/>  -->
@@ -146,9 +138,15 @@
         />
         <a-table-column
           :width="100"
-          key="item"
-          data-index="item"
-          title="未签收数量"
+          key="model"
+          data-index="model"
+          title="入库数量"
+        />
+        <a-table-column
+          :width="100"
+          key="model"
+          data-index="model"
+          title="出库数量"
         />
         <a-table-column
           :width="100"
