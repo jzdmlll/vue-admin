@@ -196,7 +196,7 @@
               resp.data[0].tableColumn = JSON.parse(resp.data[0].tableColumn)
               this.currentTemplate = resp.data[0]
             })
-            .finally(()=> {
+            .catch(()=> {
               this.loading = false
             })
         }
@@ -335,19 +335,19 @@
        */
       toSearch() {
         if(this.searchForm.proDetailIds) {
+          this.loading = true
           //查询项目文件
           getAction('/file/findByProId',{proId : this.searchForm.proDetailId})
             .then(resp => {
               this.files = resp.data
             })
           postActionByQueryString('/purchase/generatePurchaseContract/findItemsAndSupplyByProjectId', { projectIds: this.searchForm.proDetailIds, name: this.searchForm.name})
-            .then( resp => {
-              this.purchases = resp.data
-              if (this.purchases.length > 0) {
-                this.loadCurrentTemplate(this.purchases[0].templateId)
-              }else {
-                this.loading = false
+            .then(async resp => {
+              if (resp.data.length > 0) {
+                await this.loadCurrentTemplate(resp.data[0].templateId)
               }
+              this.purchases = resp.data
+              this.loading = false
             }).catch(()=> {
               this.loading = false
             })

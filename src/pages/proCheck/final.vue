@@ -5,8 +5,14 @@
       <el-button :style="hasSelected?{display: 'inline-block'}:{display: 'none'}" type="primary" size="small" @click="toCheck(key=1)">通过</el-button>
       <el-button :style="hasSelected?{display: 'inline-block'}:{display: 'none'}" type="danger" size="small" @click="toCheck(key=2)">拒绝</el-button>
       <el-button :style="hasSelected?{display: 'inline-block'}:{display: 'none'}" type="info" size="small" @click="toCheck(key=0)">撤销</el-button>
-      <el-select v-model="form.proDetailId" style="margin-right: 6px" filterable clearable placeholder="请选择项目" value-key="name">
+      <el-select @change="selectChange" v-model="form.proDetailId" style="margin-right: 6px" filterable clearable placeholder="请选择项目" value-key="name">
         <el-option v-for="item in projects" :key="item.id" :label="item.name" :value="item.id" />
+      </el-select>
+      <el-select v-model="form.inquiryName" style="margin-right: 6px" filterable clearable placeholder="请选择询价设备" value-key="name">
+        <el-option v-for="item in inquiries" :key="item.name" :label="item.name" :value="item.name">
+          <span>{{item.name}}</span>
+          <el-tag size="mini" type="success" style="float: right;transform: translate(0, 7px)">{{item['count(1)']}}</el-tag>
+        </el-option>
       </el-select>
       <el-button style="margin-right: 6px" type="primary" :loading="searchLoading" icon="el-icon-search" size="small" @click="loadData">查询</el-button>
       <div class="helper">
@@ -262,6 +268,8 @@
     directives: { elDragDialog },
     data() {
       return {
+        inquiries: [],
+
         inquiryKeys: ['model', 'params', 'meter', 'measuringRange', 'meterSignal', 'connectionMode',
           'tube', 'unit', 'number'
         ],
@@ -286,6 +294,7 @@
         dynamicColumns: {suppliers: [], columns: [], compareIds: []},
         selectedRowKeys: [],
         form: {
+          inquiryName: ''
         },
         projects: [],
         submitForm:{ checkCompareIds: [], uncheckCompareIds: [], allInquiryIds: [], remarks: []},
@@ -308,6 +317,19 @@
       this.loadProjects()
     },
     methods: {
+      selectChange(value) {
+        this.loadInquiries(value)
+      },
+      loadInquiries(id) {
+        if(id) {
+          alert(1)
+          this.form.inquiryName = ''
+          getAction('/finallyCheck/findInquiryNameByProId', {proId: id})
+            .then(resp => {
+              this.inquiries = resp.data
+            })
+        }
+      },
       /**
        * 查询询价模板
        */
@@ -342,7 +364,7 @@
         if (this.form.proDetailId) {
           this.searchLoading = true
           this.dataLoading = true
-          getAction('/finallyCheck/findDraftComparePrice', {proDetailId: this.form.proDetailId})
+          getAction('/finallyCheck/findDraftComparePrice', {proDetailId: this.form.proDetailId, name: this.form.inquiryName})
             .then(resp => {
               this.data = resp.data
               this.dynamicColumns.suppliers = []

@@ -24,6 +24,9 @@
                 </a-tooltip>
               </template>
             </a-table-column>
+            <a-table-column>
+
+            </a-table-column>
             <a-table-column
               key="operation"
               title="操作"
@@ -503,7 +506,7 @@
               resp.data[0].tableColumn = JSON.parse(resp.data[0].tableColumn)
               this.currentTemplate = resp.data[0]
             })
-            .finally(() => {
+            .catch(() => {
               this.loading = false
             })
         }
@@ -768,16 +771,15 @@
             method: 'get',
             params: this.searchForm
           })
-            .then(response => {
+            .then(async(response) => {
               response.data.map(item => {
                 item.detailList = []
               })
-              this.inquiryList = response.data
-              if (this.inquiryList.length > 0) {
-                this.loadCurrentTemplate(this.inquiryList[0]['templateId'])
-              }else {
-                this.loading = false
+              if (response.data.length > 0) {
+                await this.loadCurrentTemplate(response.data[0]['templateId'])
               }
+              this.inquiryList = response.data
+              this.loading = false
             })
             .catch(() => {
               this.loading = false

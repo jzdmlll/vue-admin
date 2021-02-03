@@ -393,7 +393,7 @@
               resp.data[0].tableColumn = JSON.parse(resp.data[0].tableColumn)
               this.currentTemplate = resp.data[0]
             })
-            .finally(()=> {
+            .catch(()=> {
               this.plansLoading = false
             })
         }
@@ -737,13 +737,12 @@
         this.currentTemplate = {}
         this.plansLoading = true
         getAction('/purchase/purchasePlan/findItemsByProjectId', { projectId: projectId })
-          .then( resp => {
-            this.plans = resp.data
-            if (this.plans[0].templateId) {
-              this.loadCurrentTemplate(this.plans[0].templateId)
-            }else {
-              this.plansLoading = false
+          .then(async resp => {
+            if (resp.data.length > 0) {
+              await this.loadCurrentTemplate(resp.data[0].templateId)
             }
+            this.plans = resp.data
+            this.plansLoading = false
           })
           .catch(()=>{
             this.plansLoading = false

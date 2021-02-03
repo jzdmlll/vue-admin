@@ -400,14 +400,13 @@
         if (this.searchForm.proDetailId) {
           this.loading = true
           request.get('/inquiry/findByProDetailId?proDetailId='+this.searchForm.proDetailId)
-            .then(response => {
-              this.inquiryList = response.data
+            .then(async(response) => {
               this.currentTemplate = {}
-              if (this.inquiryList.length > 0) {
-                this.loadCurrentTemplate(this.inquiryList[0]['templateId'])
-              }else {
-                this.loading = false
+              if (response.data.length > 0) {
+                await this.loadCurrentTemplate(response.data[0]['templateId'])
               }
+              this.inquiryList = response.data
+              this.loading = false
             }).catch(()=>{
               this.loading = false
             })
@@ -434,11 +433,10 @@
               resp.data[0].tableColumn = JSON.parse(resp.data[0].tableColumn)
               this.currentTemplate = resp.data[0]
             })
-            .finally(()=> {
+            .catch(()=> {
               this.loading = false
             })
         }
-
       },
     }
   }
