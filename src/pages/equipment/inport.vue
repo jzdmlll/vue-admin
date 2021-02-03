@@ -472,7 +472,18 @@ export default {
         cancelButtonText: "取消",
         confirmButtonText: "确定",
         type: "warning",
-      });
+      })
+        .then(() => {
+          postActionByQueryString("url", {
+            confirm: this.selectedKeys,
+          }).then((item) => {});
+        })
+        .catch(() => {
+          this.$message({
+            type: "info",
+            message: "已取消操作",
+          });
+        });
     },
     toSignAll() {
       this.$confirm("将进行批量入库，请确认勾选项项, 是否批量入库?", "提示", {
@@ -481,11 +492,11 @@ export default {
         type: "warning",
       })
         .then(() => {
-          /*postActionByJson('url',{data:this.userInfo})
-          .then(item=>{
-
-          })*/
+          postActionByQueryString("url", {
+            confirm: this.selectedKeys,
+          }).then((item) => {});
         })
+
         .catch(() => {
           this.$message({
             type: "info",

@@ -84,6 +84,12 @@
         @click="toSign"
         >签收</a-button
       >
+      <a-button
+        v-if="selectedKeys.length == 1"
+        style="background: #42b983; color: #fefefe"
+        @click="toSub"
+        >补充信息</a-button
+      >
       <a-table
         v-loading="loading"
         :data-source="devices"
@@ -206,10 +212,10 @@
           data-index="warranty"
           title="设备保质期"
         />
-        <a-table-column :width="100" title="操作" fixed="right">
+        <a-table-column :width="200" title="操作" align="center" fixed="right">
           <template slot-scope="text, scope">
             <a-tooltip placement="topLeft" title="查看附件">
-              <a-button
+              <el-button
                 type="primary"
                 icon="folder"
                 size="small"
@@ -257,12 +263,50 @@
         >
       </div>
     </el-dialog>
+    <!--   附件查看     -->
     <el-dialog v-el-drag-dialog title="附件查看" :visible.sync="fileVisible">
       <div>
         <a v-for="file in files" :key="file.id" :href="file.url"
           ><button>{{ file.name }}</button></a
         >
         <br />
+      </div>
+    </el-dialog>
+    <!-- 补充信息模态框      -->
+    <el-dialog title="补充信息" :visible.sync="infoVisible">
+      <el-form ref="form" :model="form" :rules="rule">
+        <!-- 填写项目内容 -->
+        <div :style="active === 2 ? { display: 'block' } : { display: 'none' }">
+          <a-row>
+            <a-col :span="12">
+              <el-form-item
+                label="补充信息字段待定"
+                label-width="80px"
+                size="small"
+                prop="projectName"
+              >
+                <el-input
+                  v-model="extra.number"
+                  clearable
+                  placeholder="补充信息字段待定"
+                  value-key="name"
+                  size="small"
+                >
+                </el-input> </el-form-item
+            ></a-col>
+            <a-col :span="12"></a-col>
+          </a-row>
+        </div>
+        <!-- 上传项目文件 -->
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button
+          type="primary"
+          :loading="submitLoading"
+          size="small"
+          @click="toAddInfo('form')"
+          >{{ this.active === 2 ? "确定" : "下一步" }}</el-button
+        >
       </div>
     </el-dialog>
   </div>
@@ -286,9 +330,11 @@ export default {
     return {
       filemark: {},
       modify: {},
+      extra: {},
       fileUploadUrl,
       searchForm: { time: "" },
       fileVisible: false,
+      infoVisible: false,
       form: {
         projectName: "",
         contractName: "",
@@ -359,6 +405,21 @@ export default {
   methods: {
     dateTimeFormat,
     getUser,
+    toAddInfo() {
+      postActionByQueryString("url", {
+        data: this.extra.number,
+        id: this.selectedKeys,
+      })
+        .then((item) => {
+          alert("success");
+        })
+        .then(() => {
+          alert("error");
+        });
+    },
+    toSub() {
+      this.infoVisible = true;
+    },
     modifyInfo(record) {
       this.form = record;
       this.$delete(this.form, "auditRemark");
@@ -491,7 +552,7 @@ export default {
         .catch(() => {
           this.$message({
             type: "info",
-            message: "已取消删除",
+            message: "已取消操作",
           });
         });
     },
