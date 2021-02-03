@@ -9,6 +9,7 @@
       </el-select>
       <el-input type="text" size="small" v-model="searchForm.name"></el-input>
       <el-button style="margin-right: 6px" type="primary" icon="el-icon-search" size="small" @click="toSearch">查询</el-button>
+      <el-link v-for="item in files" type="primary" :download="item.name" target="_blank" :href = "item.url">{{item.name}} | </el-link>
     </div>
     <div style="padding:1em;margin-bottom:1em;background:#fff">
       <a-table
@@ -139,7 +140,7 @@
           })
       };
       return {
-
+        files: [],
         currentTemplate: {},
 
         searchForm: { proDetailIds: [] },
@@ -334,6 +335,11 @@
        */
       toSearch() {
         if(this.searchForm.proDetailIds) {
+          //查询项目文件
+          getAction('/file/findByProId',{proId : this.searchForm.proDetailId})
+            .then(resp => {
+              this.files = resp.data
+            })
           postActionByQueryString('/purchase/generatePurchaseContract/findItemsAndSupplyByProjectId', { projectIds: this.searchForm.proDetailIds, name: this.searchForm.name})
             .then( resp => {
               this.purchases = resp.data
