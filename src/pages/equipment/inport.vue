@@ -6,7 +6,7 @@
       style="padding: 1em; margin-bottom: 1em; background: #fff"
     >
       <el-select
-        v-model="project.projectId"
+        v-model="searchForm.projectId"
         style="margin-right: 6px"
         filterable
         clearable
@@ -18,11 +18,11 @@
           v-for="item in project"
           :key="item.id"
           :label="item.projectName"
-          :value="item.projectName"
+          :value="item.projectId"
         />
       </el-select>
       <el-select
-        v-model="project.contractId"
+        v-model="searchForm.contractId"
         style="margin-right: 6px"
         filterable
         clearable
@@ -30,9 +30,9 @@
         value-key="name"
       >
         <el-option
-          v-for="item in project"
+          v-for="item in project2"
           :key="item.id"
-          :label="item.contractId"
+          :label="item.contractName"
           :value="item.contractId"
         >
           <span>{{ item.contractId }}</span>
@@ -45,10 +45,11 @@
         </el-option>
       </el-select>
 
-      <el-select v-model="searchForm.auditStatus">
-        <el-option value="0" label="已入库" />
-        <el-option value="1" label="未入库" />
+      <el-select v-model="searchForm.confirm">
+        <el-option value="0" label="已签收" />
+        <el-option value="1" label="未签收" />
       </el-select>
+
       <el-date-picker
         style="margin-left: 10px"
         v-model="searchForm.time"
@@ -61,6 +62,7 @@
         end-placeholder="结束日期"
       >
       </el-date-picker>
+
       <el-button
         type="primary"
         icon="el-icon-search"
@@ -324,22 +326,32 @@ export default {
         { id: "008", price: "2", mainContent: "500" },
         { id: "009", price: "2", mainContent: "500" },
       ],
-      loading: "true",
+      loading: false,
       submitLoading: false,
       form1: { proDetailId: "" },
       fileList: [],
       selectedKeys: [],
       files: [],
       project: [
-        { projectName: "001", contractId: "002" },
-        { projectName: "002", contractId: "004" },
+        {
+          projectName: "001",
+          projectId: "id001",
+        },
+        {
+          projectName: "002",
+          projectId: "id002",
+        },
+      ],
+      project2: [
+        { contractId: "id002", contractName: "003" },
+        { contractId: "id004", contractName: "004" },
       ],
       Signview: false,
       form1: [],
     };
   },
   created() {
-    this.loadProjects();
+    this.loadproject();
     this.init();
   },
   methods: {
@@ -361,12 +373,30 @@ export default {
     openFile() {
       this.fileVisible = true;
     },
-    async loadProjects() {
-      await request
-        .get("/chapter/chapterAudit/findAllChapterAuditor")
-        .then((response) => {
-          this.form1 = response.data;
+    loadproject() {
+      getAction("url2")
+        .then((resp) => {
+          this.project = resp.data;
+          this.form.projectId =
+            resp.data.projectId; /* form用来暂存它的projectId信息,防止点击×后没值  */
+          this.loading = false;
+        })
+        .catch(() => {
+          this.loading = false;
+        })
+        .finally(() => {
+          this.loading = false;
         });
+    },
+    /*     获取合同列表     */
+    loadcontract() {
+      getAction("url", { projectId: this.searchForm.projectId }).then(
+        (resp) => {
+          this.project2 = resp.data;
+          this.form.contractId =
+            resp.data.contractId; /* form用来暂存它的contractId信息,防止点击×后没值  */
+        }
+      );
     },
     uploadStatusChange(info) {
       if (info.file.status === "uploading" || info.file.response.error === 0) {
@@ -407,10 +437,12 @@ export default {
           url: "/chapter/chapterAudit/findChapterAuditorInfos",
           method: "get",
           params: {
-            projectName: this.searchForm.name,
+            projectId: this.searchForm.projectId,
+            contractId: this.searchForm.contractId,
             startTime: this.searchForm.time[0],
             overTime: this.searchForm.time[1],
-            auditStatus: this.searchForm.auditStatus,
+            /* 签收状态字段待定  */
+            confirm: this.searchForm.confirm,
           },
         })
         .then((response) => {

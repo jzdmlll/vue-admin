@@ -34,7 +34,7 @@
             <el-option
               v-for="item in project"
               :key="item.id"
-              :label="item.contractId"
+              :label="item.contractName"
               :value="item.contractId"
             >
               <span>{{ item.contractId }}</span>
@@ -52,8 +52,11 @@
             >查询</a-button
           >
         </div>
-        <!--      合同显示布局区域        -->
-        <div style="padding: 1em; margin-top: 1em; height: 605px">
+        <!--      合同显示布局区域   -->
+        <div
+          v-if="contractinfo[0].title != ''"
+          style="padding: 1em; margin-top: 1em; height: 605px"
+        >
           <a-row>
             <a-descriptions
               :title="contractinfo[0].title"
@@ -90,7 +93,23 @@
                 {{ contractinfo[0].performanceBound }}
               </a-descriptions-item>
               <a-descriptions-item :span="2" label="状态">
-                {{ contractinfo[0].performanceBondStatus }}
+                <el-tag
+                  :type="
+                    contractinfo[0].performanceBondStatus == 0
+                      ? 'warning'
+                      : contractinfo[0].performanceBondStatus == 1
+                      ? 'success'
+                      : 'danger'
+                  "
+                >
+                  {{
+                    contractinfo[0].performanceBondStatus == 0
+                      ? "无保证金"
+                      : contractinfo[0].performanceBondStatus == 1
+                      ? "已支付"
+                      : "未支付"
+                  }}
+                </el-tag>
               </a-descriptions-item>
               <a-descriptions-item :span="2" label="履约金支付时间">
                 {{ contractinfo[0].performanceBoundPayTime }}
@@ -649,12 +668,12 @@
     </el-dialog>
     <!--   已付款新增弹窗   -->
 
-    <!-- 新增文件 -->
+    <!-- 新增文件 供货发票 -->
     <el-dialog :title="fileTitle" :visible.sync="fileVisible" v-el-drag-dialog>
       <a-table
         :pagination="false"
         v-loading="loading"
-        :data-source="devices"
+        :data-source="fileDisplay"
         size="large"
         :rowKey="(record) => record.id"
       >
@@ -686,21 +705,25 @@
           :width="100"
           key="serialNumber"
           align="center"
-          data-index="serialNumber"
+          data-index="src"
           title="文件"
-        />
+        >
+          <template scope="text,record">
+            <img :src="text" alt="error" />
+          </template>
+        </a-table-column>
         <a-table-column
           :width="100"
           key="serialNumber"
           align="center"
-          data-index="serialNumber"
+          data-index="operator"
           title="操作人"
         />
         <a-table-column
           :width="100"
           key="serialNumber"
           align="center"
-          data-index="serialNumber"
+          data-index="time"
           title="上传时间"
         />
       </a-table>
@@ -1314,6 +1337,13 @@ export default {
         { id: "008", price: "2", mainContent: "500" },
         { id: "009", price: "2", mainContent: "500" },
       ],
+      fileDisplay: [
+        {
+          src: "file:///C:/Users/fennir/Desktop/001.png",
+          operator: "007",
+          time: "2020-1-1",
+        },
+      ],
       searchForm: { test: "123" },
       visible: false,
       title: "填写已付款信息",
@@ -1321,7 +1351,7 @@ export default {
       selectedRowKeys: [],
       contractinfo: [
         {
-          title: "新钢自动化部采购合同",
+          title: "",
           payType: "货到付款",
           operator: "小辣椒",
           needPay: "230",
@@ -1329,7 +1359,7 @@ export default {
           schedulerPayTime: "2021-1-29 20:59:21",
           schedulerDeliveryTime: "2021-1-29 20:59:21",
           performanceBound: "50",
-          performanceBondStatus: "已支付",
+          performanceBondStatus: "0",
           performanceBoundPayTime: "2021-1-29 20:59:21",
           performanceBoundDeliverTime: "2021-1-29 20:59:21",
           remark: "采购200件电脑",
@@ -1390,7 +1420,6 @@ export default {
   created() {
     this.init();
     this.loadproject();
-    this.findFile();
   },
   methods: {
     getUser,
@@ -1411,18 +1440,27 @@ export default {
         return false;
       }
     },
+    /*  根据项目ID 和 合同ID 查询内容  */
     toSearch() {
       alert(this.project.projectId);
       getAction("url", {
         projectID: this.project.projectId,
         contractId: this.project.contractId,
-      }).then((resp) => {
-        this.contractinfo = resp.data;
-      });
+      })
+        .then((resp) => {
+          this.contractinfo =
+            resp.data; /*   this.contractinfo 是显示合同内容   */
+        })
+        .catch(() => {
+          /* 测试数据  */
+          this.contractinfo[0].title = "自动化部";
+          /* 测试数据  */
+        });
     },
     subFile(record) {
       this.fileTitle = record;
       this.fileVisible = true;
+      this.findFile();
     },
     addpay() {
       this.payVisible = true;
@@ -1439,15 +1477,19 @@ export default {
     loadproject() {
       getAction("url").then((resp) => {
         this.project = resp.data;
-        this.form.projectId = resp.data.projectId;
+        this.form.projectId =
+          resp.data.projectId; /* form用来暂存它的projectId信息,防止点击×后没值  */
       });
     },
+    /*     获取合同列表     */
     loadcontract() {
       getAction("url", { projectId: this.project.projectId }).then((resp) => {
-        this.contract = resp.data;
-        this.form.contractId = resp.data.contractId;
+        this.project2 = resp.data;
+        this.form.contractId =
+          resp.data.contractId; /* form用来暂存它的contractId信息,防止点击×后没值  */
       });
     },
+    /*     已付款新增支付款项目   */
     toSubpay() {
       alert(this.payment.needPay);
       postActionByJson("url", {
@@ -1457,6 +1499,7 @@ export default {
         console.log(item);
       });
     },
+    /*       取消的功能，批量签收更换了页面       */
     onSelectChange(selectedRowKeys, selectedRows) {
       //alert("123")
       // if(selectedRows.length == 0) {
@@ -1510,11 +1553,15 @@ export default {
         this.active--;
       }
     },
+    /*   查看供货发票文件的上传内容   */
     findFile() {
-      getAction("/equipment/invoice/invoiceUpload").then((item) => {
+      getAction("/equipment/invoice/findInvoice", {
+        contractId: this.project.contractId,
+      }).then((item) => {
         this.$message({ message: "response.message", type: "success" });
       });
     },
+    /*   提交新的供货发票文件    */
     subNewFile() {
       const fileList = this.fileList.map((item) => {
         return { id: item.id, name: item.name, url: item.url };
