@@ -829,7 +829,6 @@
                 this.excelRows ++
               }
             })
-            console.log(this.$refs.upload.files[0])
             if(this.excelRows > 0){
 
               let formData = new FormData();

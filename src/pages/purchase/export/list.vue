@@ -4,9 +4,10 @@
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
       <el-button v-if="selectedRowKeys.length>0"  type="primary" icon="el-icon-document" size="small" :loading="downloadLoading" @click="handleDownload">导出Excel</el-button>
       <el-button v-if="selectedRowKeys.length>0"  type="primary" icon="el-icon-document" size="small" @click="addContract">生成采购合同</el-button>
-      <el-select v-model="searchForm.proDetailId" style="margin-right: 6px" filterable clearable placeholder="请选择项目" value-key="name">
+      <el-select multiple v-model="searchForm.proDetailIds" style="margin-right: 6px" filterable clearable placeholder="请选择项目" value-key="name">
         <el-option v-for="item in projects" :key="item.id" :label="item.projectName" :value="item.id" />
       </el-select>
+      <el-input type="text" size="small" v-model="searchForm.name"></el-input>
       <el-button style="margin-right: 6px" type="primary" icon="el-icon-search" size="small" @click="toSearch">查询</el-button>
     </div>
     <div style="padding:1em;margin-bottom:1em;background:#fff">
@@ -25,6 +26,7 @@
           </template>
         </a-table-column>
         <a-table-column defaultSortOrder="ascend" :sorter="(a, b) => a.serialNumber-b.serialNumber" title="序号" key="serialNumber" data-index="serialNumber" align="center" :width="50" />
+        <a-table-column :width="100" align="center" ellipsis="true" key="purchaseProName" title="项目" data-index="purchaseProName"></a-table-column>
         <a-table-column :width="100" ellipsis="true" key="item" title="设备" data-index="item" align="center"/>
         <a-table-column
           :width="100"
@@ -83,8 +85,14 @@
         <el-form-item label="合同名" label-width="80px" size="small" prop="contractName">
           <el-input type="text" v-model="form.contractName"></el-input>
         </el-form-item>
+        <el-form-item label="类型" label-width="80px" size="small" prop="type">
+          <el-radio-group @change="radioChange" v-model="form.type">
+            <el-radio :label="0">我方合同</el-radio>
+            <el-radio :label="1">对方合同</el-radio>
+          </el-radio-group>
+        </el-form-item>
         <el-form-item label="合同编号" label-width="80px" size="small" prop="contractNo">
-          <el-input type="text" v-model="form.contractNo"></el-input>
+          <el-input type="text" v-model="form.contractNo" :suffix-icon="form.contractNoLoading==true?'el-icon-loading':''"></el-input>
         </el-form-item>
         <el-form-item label="备注" label-width="80px" size="small" prop="remark">
           <el-input type="textarea" v-model="form.remark"></el-input>
@@ -134,14 +142,14 @@
 
         currentTemplate: {},
 
-        searchForm: {},
+        searchForm: { proDetailIds: [] },
         purchases: [],
         loading: true,
         downloadLoading: false,
         selectedRowKeys: [],
         projects: [],
         visible: false,
-        form: {},
+        form: { type: 0, contractNoLoading: false },
         role: {},
 
         selectSupplier: null,
@@ -166,6 +174,19 @@
       this.role = this.$store.getters.roles[0]
     },
     methods: {
+      radioChange(value) {
+        if (value == 1) {
+          this.form.contractNoLoading = true
+          getAction('/purchase/contract/automaticGenerationContractNo', {})
+            .then(resp => {
+              this.$set(this.form, 'contractNo', resp.data)
+              this.form.contractNoLoading = false
+            })
+            .catch(() => {
+              this.form.contractNoLoading = false
+            })
+        }
+      },
       loadCurrentTemplate(id) {
         if (id) {
           getAction('/inquiry/template/findInquiryTemplate', {id: id})
@@ -185,6 +206,7 @@
        */
       addContract() {
         this.visible = true
+        this.form.type = 0
       },
       /**
        * 修改供货价
@@ -216,7 +238,7 @@
             form.operator = getUser()
             form.projectId = this.searchForm.proDetailId
 
-            postActionByJson('/purchase/purchaseContractGenerate/insertContractInfo', { purchaseContract: form, itemIds: this.selectedRowKeys })
+            postActionByJson('/purchase/purchaseContractGenerate/contractGenerate', { purchaseContract: form, itemIds: this.selectedRowKeys })
               .then( resp => {
                 this.$message({ message: resp.message, type: 'success' })
                 this.visible = false
@@ -311,8 +333,8 @@
        * 顶部 查询按钮 点击事件
        */
       toSearch() {
-        if(this.searchForm.proDetailId) {
-          getAction('/purchase/generatePurchaseContract/findItemsAndSupplyByProjectId', { projectId: this.searchForm.proDetailId})
+        if(this.searchForm.proDetailIds) {
+          postActionByQueryString('/purchase/generatePurchaseContract/findItemsAndSupplyByProjectId', { projectIds: this.searchForm.proDetailIds, name: this.searchForm.name})
             .then( resp => {
               this.purchases = resp.data
               if (this.purchases.length > 0) {

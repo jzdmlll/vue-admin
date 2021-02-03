@@ -2,6 +2,7 @@
   <div class="compare_compare">
     <div class="btns" style="margin-bottom:1em;background:#fff;position:relative;padding: 1em">
       <el-button type="primary" size="mini" style="background: #1890ff;border-color: #1890ff" @click="back">返回</el-button>
+      <el-button type="success" size="mini" @click="toCollect">汇总</el-button>
       <span :style="opacity==1?{opacity: opacity}:{opacity: 0, display: 'none'}" class="draw-fixed-button el-icon-arrow-down my-transition" @click="()=>{this.drawer=true; this.loadInquiries()}"></span>
     </div>
     <div class="table-container" style="margin-bottom: 50px">
@@ -182,6 +183,18 @@
     </el-dialog>
 
 
+    <el-dialog v-el-drag-dialog title="汇总" :visible.sync="collectDialog.visible">
+      <el-table
+        size="mini"
+        show-summary
+        border
+        :data="collects"
+        :loading="collectsLoading"
+      >
+        <el-table-column :width="100" prop="name" label="询价设备" align="center"/>
+        <el-table-column v-for="supplier in suppliers" :prop="supplier" :label="supplier" align="center" />
+      </el-table>
+    </el-dialog>
     <div class="footer" :style="selectedRowKey[Object.keys(selectedRowKey)[0]] > 0?{display: 'block'}:{display: 'none'}">
       <el-button :loading="submitLoading"  style="right:0;margin: 0 2em 0 0" type="primary" size="small" @click="submitCompare">{{submitLoading?'':'选用'}}</el-button>
     </div>
@@ -208,6 +221,13 @@
         customRender: 'customRender',
       }
       return {
+        suppliers: [],
+        collects: [],
+        collectsLoading: false,
+
+        collectDialog: {
+          visible: false
+        },
 
         currentTemplate: {},
 
@@ -259,6 +279,27 @@
       this.init()
     },
     methods: {
+      toCollect() {
+        this.collectDialog.visible = true
+        this.collectsLoading = true
+        this.collects = []
+        this.suppliers = []
+        this.compares.map(item => {
+          let inquiry = {}
+          inquiry.id = item.inquiry.id
+          inquiry.name = item.inquiry.name
+          item.quotes.map(quote => {
+            if (quote.businessAudit == 1 && quote.technicalAudit == 1) {
+              inquiry[quote.supplier] = quote.suPrice
+              if (!this.suppliers.includes(quote.supplier)) {
+                this.suppliers.push(quote.supplier)
+              }
+            }
+          })
+          this.collects.push(inquiry)
+        })
+        this.collectsLoading = false
+      },
       loadCurrentTemplate(id) {
         if (id) {
           getAction('/inquiry/template/findInquiryTemplate', {id: id})

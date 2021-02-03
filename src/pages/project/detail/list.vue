@@ -246,6 +246,7 @@ export default {
       }else {
       this.$refs[form1].validate((valid) => {
         if (valid) {
+          this.submitLoading = true
           const form = [...this.outputs]
           let url = null
           if(this.currentTemplate.tree == 0) {
@@ -263,7 +264,11 @@ export default {
           }).then( response => {
             this.$message({ message: response.message, type: 'success' })
             this.visible2 = false
+            this.submitLoading = false
           })
+            .catch(() => {
+              this.submitLoading = false
+            })
         } else {
           console.log('error commit')
           return false
@@ -322,6 +327,7 @@ export default {
               }
             }else {
               let no = item['序号']+''
+              no = no.trim()
 
               if(!no.includes('.') && Object.keys(item).length <= 2) {
                 if (parent['name']) {
