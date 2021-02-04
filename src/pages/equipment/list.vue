@@ -1,14 +1,17 @@
-<!--  html  -->
 <template>
-  <div id="equipment">
-    <!--     layout          -->
+  <div class="equipment">
+    <!--     设备管理          -->
     <a-layout>
       <!--   左布局      -->
-      <a-layout-sider :width="slider1 == 550 ? '550' : '0'" :style="style1">
+      <a-layout-sider class="my-transition" width="550"
+        style="padding:0px;background:#fefefe" :style="{marginLeft: margin+'px'}">
+        <div class="fix-btn" @click="changeMargin">
+          <i :class="margin==0?'el-icon-s-fold':'el-icon-s-unfold'" style="font-size: 24px;line-height: 48px; color: #fff"></i>
+        </div>
         <!--      合同查询布局区域   -->
         <div style="padding: 1em; margin-bottom: 1em" class="slider-header">
           <el-select
-            v-model="project.projectId"
+            v-model="searchForm.projectId"
             style="margin-right: 6px"
             filterable
             clearable
@@ -20,11 +23,11 @@
               v-for="item in project"
               :key="item.id"
               :label="item.projectName"
-              :value="item.projectName"
+              :value="item.id"
             />
           </el-select>
           <el-select
-            v-model="project.contractId"
+            v-model="searchForm.contractId"
             style="margin-right: 6px"
             filterable
             clearable
@@ -32,7 +35,7 @@
             value-key="name"
           >
             <el-option
-              v-for="item in project"
+              v-for="item in contracts"
               :key="item.id"
               :label="item.contractName"
               :value="item.contractId"
@@ -168,7 +171,7 @@
               background: #fff;
             "
           >
-            <a-tabs default-active-key="1">
+            <a-tabs default-active-key="1" size="large">
               <a-tab-pane key="1" tab="采购项清单">
                 <a-table
                   v-loading="loading"
@@ -1246,7 +1249,7 @@
     <!--   合同信息   -->
 
     <!--  收缩标签(下面的页面宽度控制)   -->
-    <div
+<!--    <div
       style="
         position: fixed;
         left: 68px;
@@ -1277,7 +1280,7 @@
         @click="reduce"
       ></el-button>
     </div>
-    <!--  收缩标签(下面的页面宽度控制)   -->
+    &lt;!&ndash;  收缩标签(下面的页面宽度控制)   &ndash;&gt;-->
   </div>
 </template>
 <!--  html  -->
@@ -1319,16 +1322,15 @@ export default {
       },
     };
     return {
+      contracts: [],
       test: [{ data: "test123" }],
       rowSelection,
+      margin: 0,
       payment: {},
       fileUploadUrl,
       selectedKeys: [],
       alreadyVisible: false,
       fileVisible: false,
-      slider1: 550,
-      style1: "padding:0px;background:#fefefe;",
-      style2: "padding:0px;background:#fefefe;",
       selectSupplier: null,
       loading: true,
       devices: [
@@ -1344,7 +1346,7 @@ export default {
           time: "2020-1-1",
         },
       ],
-      searchForm: { test: "123" },
+      searchForm: {},
       visible: false,
       title: "填写已付款信息",
       title1: "填写合同信息",
@@ -1422,23 +1424,12 @@ export default {
     this.loadproject();
   },
   methods: {
+    changeMargin(){
+      this.margin = this.margin == 0?-550:0
+    },
     getUser,
     alreadyPayMethod() {
       this.alreadyVisible = true;
-    },
-    expand() {
-      this.slider1 = 100;
-    },
-    reduce() {
-      this.slider1 = 550;
-    },
-    choose() {
-      alert("123");
-      if (this.stylish == 1) {
-        return true;
-      } else {
-        return false;
-      }
     },
     /*  根据项目ID 和 合同ID 查询内容  */
     toSearch() {
@@ -1475,19 +1466,19 @@ export default {
     },
     /*     获取项目列表     */
     loadproject() {
-      getAction("url").then((resp) => {
-        this.project = resp.data;
-        this.form.projectId =
-          resp.data.projectId; /* form用来暂存它的projectId信息,防止点击×后没值  */
-      });
+      getAction("/purchase/project/findAllLike")
+        .then((resp) => {
+          this.project = resp.data;
+          //this.form.projectId = resp.data.projectId; /* form用来暂存它的projectId信息,防止点击×后没值  */
+      })
     },
     /*     获取合同列表     */
     loadcontract() {
-      getAction("url", { projectId: this.project.projectId }).then((resp) => {
-        this.project2 = resp.data;
-        this.form.contractId =
-          resp.data.contractId; /* form用来暂存它的contractId信息,防止点击×后没值  */
-      });
+      getAction("/purchase/contract/findByProjectId", { projectId: this.searchForm.projectId })
+        .then((resp) => {
+        this.contracts = resp.data;
+
+      })
     },
     /*     已付款新增支付款项目   */
     toSubpay() {
@@ -1541,10 +1532,6 @@ export default {
     },
     toadd() {
       this.visible = true;
-    },
-    toLeft() {
-      this.style1 = this.style2;
-      alert(this.style1);
     },
     cancelHandler() {
       if (this.active === 1) {
@@ -1642,44 +1629,60 @@ export default {
 
 <!--  css -->
 <style lang="scss" scoped>
-#components-layout-demo-basic .ant-layout-header,
-#components-layout-demo-basic .ant-layout-sider {
-  background: #fefefe;
-  color: #fff;
-}
-#components-layout-demo-basic .ant-layout-content {
-  color: #fff;
-}
-#components-layout-demo-basic > .ant-layout {
-  margin-bottom: 48px;
-}
-#components-layout-demo-basic > .ant-layout:last-child {
-  margin: 0;
-}
-.el-row {
-  margin-bottom: 20px;
-  &:last-child {
-    margin-bottom: 0;
+  .equipment {
+    .fix-btn {
+      background: #a7b8d7;
+      width: 48px;
+      height: 48px;
+      border-radius: 0 5px 5px 0;
+      top: 50%;
+      position: absolute;
+      transform: translate(0, -50%);
+      right: -48px;
+      line-height: 48px;
+      text-align: center;
+      z-index: 9999;
+      cursor: pointer;
+    }
+    #components-layout-demo-basic .ant-layout-header,
+    #components-layout-demo-basic .ant-layout-sider {
+      background: #fefefe;
+      color: #fff;
+    }
+    #components-layout-demo-basic .ant-layout-content {
+      color: #fff;
+    }
+    #components-layout-demo-basic > .ant-layout {
+      margin-bottom: 48px;
+    }
+    #components-layout-demo-basic > .ant-layout:last-child {
+      margin: 0;
+    }
+    .el-row {
+      margin-bottom: 20px;
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+    .el-col {
+      border-radius: 4px;
+    }
+    .bg-purple-dark {
+      background: #99a9bf;
+    }
+    .bg-purple {
+      background: #d3dce6;
+    }
+    .bg-purple-light {
+      background: #e5e9f2;
+    }
+    .grid-content {
+      border-radius: 4px;
+      min-height: 36px;
+    }
+    .row-bg {
+      padding: 10px 0;
+      background-color: #f9fafc;
+    }
   }
-}
-.el-col {
-  border-radius: 4px;
-}
-.bg-purple-dark {
-  background: #99a9bf;
-}
-.bg-purple {
-  background: #d3dce6;
-}
-.bg-purple-light {
-  background: #e5e9f2;
-}
-.grid-content {
-  border-radius: 4px;
-  min-height: 36px;
-}
-.row-bg {
-  padding: 10px 0;
-  background-color: #f9fafc;
-}
 </style>

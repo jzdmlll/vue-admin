@@ -176,11 +176,11 @@
         <el-dialog v-el-drag-dialog title="批量导入报价" class="importDialog" :visible.sync="visible2">
           <el-form ref="form1" :model="form1" :rules="codeRules" status-icon>
             <div>
-              <el-form-item label="" label-width="0px" size="small" prop="proDetailId">
+              <!--<el-form-item label="" label-width="0px" size="small" prop="proDetailId">
                 <el-select v-model="form1.proDetailId" filterable clearable placeholder="请选择项目" value-key="name" size="small">
                   <el-option v-for="item in projects" :key="item.id" :label="item.name" :value="item.id" />
                 </el-select>
-              </el-form-item>
+              </el-form-item>-->
               <div style="margin: 8px 0;position: relative">
                 <el-button @click="clickFileInput" type="primary" size="small"><a-icon type="file-excel" style="font-size: 12px;margin-right: 5px"/>excel导入</el-button>
                 <input type="file" ref="upload" accept=".xls,.xlsx" @change="readExcel" class="outputlist_upload">
@@ -230,7 +230,7 @@
 
           </el-form>
           <div slot="footer" class="dialog-footer">
-            <el-button size="small" @click="visible = false">取消</el-button>
+            <el-button size="small" @click="poolChooseVisible = false">取消</el-button>
             <el-button type="primary" size="small" @click="poolChooseSubmitHandler">提交</el-button>
           </div>
         </el-dialog>
@@ -826,7 +826,6 @@
               var num = Object.keys(item).length
               console.log(item)
               if( item['序号'] && num > 2){
-                alert(1)
                 that.outputs.push(item);
                 this.excelRows ++
               }
@@ -889,9 +888,15 @@
       },
       dateFormat,
       batchImport() {
-        this.visible2 = true
-        this.submitLoading = false
-        this.importData = ''
+        if (this.searchForm.proDetailId) {
+          this.visible2 = true
+          this.form1.proDetailId = this.searchForm.proDetailId
+          this.submitLoading = false
+          this.importData = ''
+        }else {
+          this.$message({type: 'warning', message: '请选择项目'})
+        }
+
         //this.loadProChecks()
       },
       removeCheck(role) {

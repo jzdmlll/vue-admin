@@ -322,7 +322,6 @@
       },
       loadInquiries(id) {
         if(id) {
-          alert(1)
           this.form.inquiryName = ''
           getAction('/finallyCheck/findInquiryNameByProId', {proId: id})
             .then(resp => {

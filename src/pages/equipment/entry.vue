@@ -1,6 +1,6 @@
 <template>
-  <!-- 设备签收确认 -->
-  <div class="chapter-list">
+  <!-- 设备管理入库确认 -->
+  <div class="equipment-entry">
     <div
       class="btns"
       style="padding: 1em; margin-bottom: 1em; background: #fff"
@@ -76,19 +76,13 @@
         v-if="selectedKeys.length > 1"
         style="background: #42b983; color: #fefefe"
         @click="toSignAll"
-        >批量签收</a-button
+        >批量入库</a-button
       >
       <a-button
         v-if="selectedKeys.length == 1"
         style="background: #42b983; color: #fefefe"
         @click="toSign"
-        >签收</a-button
-      >
-      <a-button
-        v-if="selectedKeys.length == 1"
-        style="background: #42b983; color: #fefefe"
-        @click="toSub"
-        >补充信息</a-button
+        >入库</a-button
       >
       <a-table
         v-loading="loading"
@@ -212,10 +206,10 @@
           data-index="warranty"
           title="设备保质期"
         />
-        <a-table-column :width="200" title="操作" align="center" fixed="right">
+        <a-table-column :width="100" title="操作" fixed="right">
           <template slot-scope="text, scope">
             <a-tooltip placement="topLeft" title="查看附件">
-              <el-button
+              <a-button
                 type="primary"
                 icon="folder"
                 size="small"
@@ -230,7 +224,7 @@
     <el-dialog :title="title" :visible.sync="Signview">
       <el-form ref="form" :model="form" :rules="rule">
         <!-- 填写项目内容 -->
-        <div :style="active === 2 ? { display: 'block' } : { display: 'none' }">
+        <div :style="active === 1 ? { display: 'block' } : { display: 'none' }">
           <a-row>
             <a-col :span="12">
               <el-form-item
@@ -240,7 +234,7 @@
                 prop="projectName"
               >
                 <el-input
-                  v-model="number.number"
+                  v-model="form.number"
                   clearable
                   placeholder="签收数量"
                   value-key="name"
@@ -259,54 +253,16 @@
           :loading="submitLoading"
           size="small"
           @click="saveRecordHandler('form')"
-          >{{ this.active === 2 ? "确定" : "下一步" }}</el-button
+          >{{ this.active === 1 ? "确定" : "下一步" }}</el-button
         >
       </div>
     </el-dialog>
-    <!--   附件查看     -->
     <el-dialog v-el-drag-dialog title="附件查看" :visible.sync="fileVisible">
       <div>
         <a v-for="file in files" :key="file.id" :href="file.url"
           ><button>{{ file.name }}</button></a
         >
         <br />
-      </div>
-    </el-dialog>
-    <!-- 补充信息模态框      -->
-    <el-dialog title="补充信息" :visible.sync="infoVisible">
-      <el-form ref="form" :model="form" :rules="rule">
-        <!-- 填写项目内容 -->
-        <div :style="active === 2 ? { display: 'block' } : { display: 'none' }">
-          <a-row>
-            <a-col :span="12">
-              <el-form-item
-                label="补充信息字段待定"
-                label-width="80px"
-                size="small"
-                prop="projectName"
-              >
-                <el-input
-                  v-model="extra.number"
-                  clearable
-                  placeholder="补充信息字段待定"
-                  value-key="name"
-                  size="small"
-                >
-                </el-input> </el-form-item
-            ></a-col>
-            <a-col :span="12"></a-col>
-          </a-row>
-        </div>
-        <!-- 上传项目文件 -->
-      </el-form>
-      <div slot="footer" class="dialog-footer">
-        <el-button
-          type="primary"
-          :loading="submitLoading"
-          size="small"
-          @click="toAddInfo('form')"
-          >{{ this.active === 2 ? "确定" : "下一步" }}</el-button
-        >
       </div>
     </el-dialog>
   </div>
@@ -330,11 +286,9 @@ export default {
     return {
       filemark: {},
       modify: {},
-      extra: {},
       fileUploadUrl,
       searchForm: { time: "" },
       fileVisible: false,
-      infoVisible: false,
       form: {
         projectName: "",
         contractName: "",
@@ -348,7 +302,6 @@ export default {
         mainContent: "",
       },
       rule: {
-        /*
         projectName: [{ required: true, message: "不能为空", trigger: "blur" }],
         contractName: [
           { required: true, message: "不能为空", trigger: "blur" },
@@ -362,9 +315,9 @@ export default {
           { required: true, message: "不能为空", trigger: "blur" },
         ],
         auditor: [{ required: true, message: "不能为空", trigger: "blur" }],
-        mainContent: [{ required: true, message: "不能为空", trigger: "blur" }],*/
+        mainContent: [{ required: true, message: "不能为空", trigger: "blur" }],
       },
-      active: 2,
+      active: 1,
       visible: false,
       title: "请确认签收信息",
       devices: [
@@ -379,7 +332,6 @@ export default {
       fileList: [],
       selectedKeys: [],
       files: [],
-      number: { number: "" },
       project: [
         {
           projectName: "001",
@@ -405,21 +357,6 @@ export default {
   methods: {
     dateTimeFormat,
     getUser,
-    toAddInfo() {
-      postActionByQueryString("url", {
-        data: this.extra.number,
-        id: this.selectedKeys,
-      })
-        .then((item) => {
-          alert("success");
-        })
-        .then(() => {
-          alert("error");
-        });
-    },
-    toSub() {
-      this.infoVisible = true;
-    },
     modifyInfo(record) {
       this.form = record;
       this.$delete(this.form, "auditRemark");
@@ -436,7 +373,6 @@ export default {
     openFile() {
       this.fileVisible = true;
     },
-    /*  用来加载项目下拉和合同的页面一样的   */
     loadproject() {
       getAction("url2")
         .then((resp) => {
@@ -495,7 +431,6 @@ export default {
       });
       this.selectedKeys = rows;
     },
-    /*  查询函数  */
     toSearch() {
       request
         .request({
@@ -522,24 +457,18 @@ export default {
           this.loading = false;
         });
     },
-
     init() {
-      /*request
+      request
         .get("/chapter/chapterAudit/findChapterAuditorInfos")
         .then((response) => {
-          
+          /* this.devices = response.data */
         })
         .finally(() => {
           this.loading = false;
-        });*/
+        });
     },
-    /*    签收   */
     toSign() {
-      this.Signview = true;
-    },
-    /*  批量签收 */
-    toSignAll() {
-      this.$confirm("将进行批量签收，请确认勾选项数量, 是否批量签收?", "提示", {
+      this.$confirm("将进行入库，请确认勾选项项, 是否入库?", "提示", {
         cancelButtonText: "取消",
         confirmButtonText: "确定",
         type: "warning",
@@ -556,6 +485,25 @@ export default {
           });
         });
     },
+    toSignAll() {
+      this.$confirm("将进行批量入库，请确认勾选项项, 是否批量入库?", "提示", {
+        cancelButtonText: "取消",
+        confirmButtonText: "确定",
+        type: "warning",
+      })
+        .then(() => {
+          postActionByQueryString("url", {
+            confirm: this.selectedKeys,
+          }).then((item) => {});
+        })
+
+        .catch(() => {
+          this.$message({
+            type: "info",
+            message: "已取消删除",
+          });
+        });
+    },
     cancelHandler() {
       if (this.active === 1) {
         this.visible = false;
@@ -564,12 +512,11 @@ export default {
       }
     },
     toAdd() {
-      this.title = "新增信息";
+      this.title = "发起用章申请";
       this.active = 1;
       this.form = {};
       this.visible = true;
     },
-    /*  单个签收  */
     saveRecordHandler(form) {
       this.$refs[form].validate((valid) => {
         if (valid) {
@@ -584,7 +531,6 @@ export default {
               });
               this.form.sender = parseInt(getUser());
               delete this.form.role;
-              /*  请求改参数   */
               request
                 .request({
                   url: "/chapter/chapterAudit/insertChapterAudit",
@@ -593,8 +539,8 @@ export default {
                     "Content-Type": "application/json",
                   },
                   data: JSON.stringify({
-                    number: this.number.number,
-                    contractId: this.selectedKeys[0],
+                    chapterAudit: this.form,
+                    files: fileList,
                   }),
                 })
                 .then((response) => {
@@ -658,7 +604,7 @@ export default {
 };
 </script>
 <style lang="scss" scoped>
-.chapter-list {
+.equipment-entry {
   /deep/.el-form-item__content {
     height: auto;
     line-height: 32px;

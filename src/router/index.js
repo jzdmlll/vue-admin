@@ -41,7 +41,7 @@ export const constantRoutes = [
       }
     ]
   },
-  {
+  /*{
     path: '/equipment',
     component: Layout,
     children: [
@@ -59,7 +59,7 @@ export const constantRoutes = [
     children: [
       {
         path: 'app',
-        component: () => import('@/pages/equipment/app'),
+        component: () => import('@/pages/equipment/sign'),
         name: 'article_list',
         meta: { title: '设备签收管理',  affix: true }
       },
@@ -71,7 +71,7 @@ export const constantRoutes = [
     children: [
       {
         path: 'inport',
-        component: () => import('@/pages/equipment/inport'),
+        component: () => import('@/pages/equipment/entry'),
         name: 'article_list',
         meta: { title: '设备入库管理',  affix: true }
       },
@@ -89,7 +89,7 @@ export const constantRoutes = [
       },
     ]
   },
- 
+
   {
     path: '/chapter',
     component: Layout,
@@ -101,7 +101,7 @@ export const constantRoutes = [
         meta: { title: '设备管理',  affix: true }
       },
     ]
-  },
+  },*/
   {
     path: '/login',
     component: () => import('@/views/login/index'),

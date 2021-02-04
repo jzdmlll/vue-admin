@@ -1,6 +1,6 @@
 <template>
   <!-- 设备管理库存确认 -->
-  <div class="chapter-list">
+  <div class="equipment-stock">
     <div
       class="btns"
       style="padding: 1em; margin-bottom: 1em; background: #fff"
@@ -362,7 +362,6 @@ export default {
   },
   methods: {
     dateTimeFormat,
-    getUser,
     modifyInfo(record) {
       this.form = record;
       this.$delete(this.form, "auditRemark");
@@ -599,7 +598,7 @@ export default {
 };
 </script>
 <style lang="scss" scoped>
-.chapter-list {
+.equipment-stock {
   /deep/.el-form-item__content {
     height: auto;
     line-height: 32px;
