@@ -77,6 +77,18 @@ export const constantRoutes = [
       },
     ]
   },
+  {
+    path: '/equipment',
+    component: Layout,
+    children: [
+      {
+        path: 'stock',
+        component: () => import('@/pages/equipment/stock'),
+        name: 'article_list',
+        meta: { title: '设备库存',  affix: true }
+      },
+    ]
+  },
  
   {
     path: '/chapter',
