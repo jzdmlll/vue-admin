@@ -13,10 +13,11 @@
         :rowKey="record => record.id"
         :loading="templatesLoading"
         :data-source="templates"
-        :scroll="templates.length>0?{x: 900}:{}"
+        :scroll="templates.length>0?{x: 1500}:{}"
         >
         <a-table-column :width="60" align="center" key="id" title="id" data-index="id" />
         <a-table-column :width="100" align="center" key="name" title="name" data-index="name" />
+        <a-table-column :width="200" align="center" key="purchaseKeys" title="purchaseKeys" data-index="purchaseKeys" />
         <a-table-column :width="200" align="center" key="jsonKeys" title="jsonKeys" data-index="jsonKeys" />
         <a-table-column align="center" key="tableColumn" title="tableColumn" data-index="tableColumn" />
         <a-table-column :width="100" align="center" key="tree" title="tree" data-index="tree" />
@@ -46,8 +47,10 @@
           </el-switch>
         </el-form-item>
         <el-form-item size="mini" label="jsonKeys" label-width="80px" prop="jsonKeys">
-          <!--<el-input v-model="dialog.form.keys" type="textarea" autocomplete="off" size="small"></el-input>-->
           <json-editor ref="jsonEditor" v-model="dialog.form.jsonKeys" />
+        </el-form-item>
+        <el-form-item size="mini" label="purchaseKeys" label-width="80px" prop="purchaseKeys">
+          <json-editor ref="jsonEditor" v-model="dialog.form.purchaseKeys" />
         </el-form-item>
         <el-button style="margin: 0 0 8px 90px" type="primary" size="mini" @click="getAutoColumn">生成</el-button>
         <el-form-item size="mini" label="tableColumn" label-width="80px" prop="tableColumn">
@@ -88,6 +91,7 @@
           visible: false,
           form: {
             jsonKeys: '',
+            purchaseKeys: '',
             tableColumn: ''
           }
         },
@@ -127,6 +131,7 @@
         this.dialog.title = '新增模板'
         this.dialog.visible = true
         this.dialog.form.jsonKeys = JSON.parse(jsonTemplate)
+        this.dialog.form.id = null
         this.getAutoColumn()
       },
       editTemplate(record) {
@@ -134,6 +139,7 @@
         this.dialog.visible = true
         this.dialog.form = JSON.parse(JSON.stringify(record))
         this.dialog.form.jsonKeys = JSON.parse(record.jsonKeys)
+        this.dialog.form.purchaseKeys = JSON.parse(record.purchaseKeys)
         this.dialog.form.tableColumn = JSON.parse(record.tableColumn)
       },
       deleteTemplate(record) {
@@ -187,6 +193,9 @@
               let form = this.dialog.form
               if ('object' == typeof form.jsonKeys) {
                 form.jsonKeys = JSON.stringify(form.jsonKeys)
+              }
+              if ('object' == typeof form.purchaseKeys) {
+                form.purchaseKeys = JSON.stringify(form.purchaseKeys)
               }
               if ('object' == typeof form.tableColumn) {
                 form.tableColumn = JSON.stringify(form.tableColumn)

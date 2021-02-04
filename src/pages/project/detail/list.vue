@@ -73,7 +73,7 @@
           <el-form-item label="项目名称" label-width="80px" size="small" prop="name">
             <el-input v-model="form.name" autocomplete="off" />
           </el-form-item>
-          <el-form-item label="项目利率" label-width="80px" size="small" prop="proRate">
+         <!-- <el-form-item label="项目利率" label-width="80px" size="small" prop="proRate">
             <a-input-number
               :default-value="10"
               v-model="form.proRate"
@@ -82,7 +82,7 @@
               :formatter="value => `${value}%`"
               :parser="value => value.replace('%', '')"
             />
-          </el-form-item>
+          </el-form-item>-->
           <el-form-item label="项目内容" label-width="80px" size="small" prop="code">
             <el-input v-model="form.content" type="textarea" />
           </el-form-item>
@@ -246,24 +246,33 @@ export default {
       }else {
       this.$refs[form1].validate((valid) => {
         if (valid) {
-          const form = [...this.outputs]
-          let url = null
-          if(this.currentTemplate.tree == 0) {
-            url = '/inquiry/batchAddInquiry'
+          if (this.outputs.length>0) {
+            this.submitLoading = true
+            const form = [...this.outputs]
+            let url = null
+            if(this.currentTemplate.tree == 0) {
+              url = '/inquiry/batchAddInquiry'
+            }else {
+              url = '/inquiry/batchAddInquiryTree'
+            }
+            request.request({
+              url: url,
+              method: 'post',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              data: JSON.stringify({inquiryList: form})
+            }).then( response => {
+              this.$message({ message: response.message, type: 'success' })
+              this.visible2 = false
+              this.submitLoading = false
+            })
+              .catch(() => {
+                this.submitLoading = false
+              })
           }else {
-            url = '/inquiry/batchAddInquiryTree'
+            this.$message({type: 'warning', message: 'excel解析失败'})
           }
-          request.request({
-            url: url,
-            method: 'post',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            data: JSON.stringify({inquiryList: form})
-          }).then( response => {
-            this.$message({ message: response.message, type: 'success' })
-            this.visible2 = false
-          })
         } else {
           console.log('error commit')
           return false
@@ -322,6 +331,7 @@ export default {
               }
             }else {
               let no = item['序号']+''
+              no = no.trim()
 
               if(!no.includes('.') && Object.keys(item).length <= 2) {
                 if (parent['name']) {

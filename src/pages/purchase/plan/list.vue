@@ -7,7 +7,6 @@
       <el-button style="margin-right: 6px" type="primary" size="small" @click="toAddItems">新增采购项</el-button>
       <el-button @click="importHandle" type="primary" size="small"><a-icon type="file-excel" style="font-size: 12px;margin-right: 5px"/>excel导入</el-button>
       <input type="file" ref="upload" accept=".xls,.xlsx" @change="readExcel" class="outputlist_upload">
-
       <el-select v-model="searchForm.purchaseProId" style="margin-right: 6px" filterable clearable placeholder="请选择采购项目" value-key="name">
         <el-option v-for="item in purchasePros" :key="item.id" :label="item.projectName" :value="item.id" />
       </el-select>
@@ -208,7 +207,7 @@
         </el-row>
         <div v-if="addItemsForm.currentTemplate&&addItemsForm.currentTemplate.tableColumn&&addItemsForm.currentTemplate.tableColumn.length>0">
           <el-divider><i class="el-icon-mobile-phone"> {{addItemsForm.currentTemplate.name}}</i></el-divider>
-          <el-row v-if="index%2 == 0" v-for="(item, index) in column = addItemsForm.currentTemplate.tableColumn.filter(item => item.commons == false)">
+          <el-row v-if="index%2 == 0" v-for="(item, index) in column = addItemsForm.currentTemplate.tableColumn.filter(item => item.commons == false)" :key="item.key">
             <el-col :sm="24" :lg="12">
               <el-form-item :label="item.title" label-width="80px" :prop="item.key">
                 <el-input v-model="addItemsForm[item.key]" autocomplete="off" size="small" />
@@ -223,7 +222,7 @@
         </div>
       </el-form>
       <div slot="footer" class="dialog-footer">
-        <el-button size="small" @click="inquiryVisible = false">取消</el-button>
+        <el-button size="small" @click="itemDialogVisible = false">取消</el-button>
         <el-button type="primary" size="small" @click="addItemsSubmit('addItemsForm')">提交</el-button>
       </div>
     </el-dialog>
@@ -231,7 +230,7 @@
       <el-form ref="importForm" :model="importForm" status-icon>
         <div>
           <div style="margin: 8px 0 26px 0;position: relative;">
-            <el-select size="small" v-model="importForm.template" placeholder="请选择解析模板" value-key="name" style="margin:0 0 8px 1em">
+            <el-select size="small" :disabled="currentTemplate.id?true:false" v-model="importForm.template" placeholder="请选择解析模板" value-key="name" style="margin:0 0 8px 1em">
               <el-option v-for="item in excelTemplates" :key="item.id" :label="item.name" :value="item" />
             </el-select>
             <el-button @click="clickFileInput" type="primary" size="small"><a-icon type="file-excel" style="font-size: 12px;margin-right: 5px"/>excel导入</el-button>
@@ -324,7 +323,7 @@
         poolDialogVisible: false,
         poolForm: {},
         sendInquiryItem: [],
-        excelKeys: {
+        /*excelKeys: {
           序号: 'serialNumber',
           设备名称: 'item',
           型号: 'model',
@@ -334,7 +333,7 @@
           设备厂家: 'brand',
           货期: 'requiredDelivery',
           备注: 'remark'
-        },
+        },*/
 
         rules: {
           currentTemplate: [
@@ -372,6 +371,20 @@
       this.init()
     },
     methods: {
+      importHandler() {
+        if (this.outputs.length > 0) {
+          postActionByJson('/purchase/purchasePlan/excelPurchaseItems', { purchaseItems: this.outputs})
+            .then(resp => {
+              this.$message({ type: 'success', message: resp.message})
+              this.importDialogVisible = false
+            })
+            .catch(() => {
+              this.importDialogVisible = false
+            })
+        }else {
+
+        }
+      },
       loadCurrentTemplate(id) {
         if (id) {
           getAction('/inquiry/template/findInquiryTemplate', {id: id})
@@ -380,14 +393,14 @@
               resp.data[0].tableColumn = JSON.parse(resp.data[0].tableColumn)
               this.currentTemplate = resp.data[0]
             })
-            .finally(()=> {
+            .catch(()=> {
               this.plansLoading = false
             })
         }
-
       },
       importHandle() {
         if (this.searchForm.purchaseProId) {
+          this.importForm.template = this.currentTemplate
           this.importDialogVisible = true
         }else {
           this.$message({type: 'warning', message: '请选择采购项目'})
@@ -515,32 +528,63 @@
             const ws = XLSX.utils.sheet_to_json(workbook.Sheets[wsname]);//生成json表格内容
             console.log(ws)
             this.outputs = [];//清空接收数据
+
+            let parent = {}
+            let children = []
+            let userId = getUser()
+            this.currentTemplate.purchaseKeys = JSON.parse(this.currentTemplate.purchaseKeys)
             ws.map(item => {
-              if(item['序号']&&item['设备名称']){
-                let data = {}
-                let keys = Object.keys(item)
-                keys.map(key => {
-                  data[this.excelKeys[key]] = item[key]
-                })
-                data.projectId = this.searchForm.purchaseProId
-                data.operator = getUser()
-                this.outputs.push(data);
-                this.excelRows ++
+              if(this.currentTemplate.tree == 0) {
+                var num = Object.keys(item).length;
+                if( num>2 && item['序号']){
+                  let keyArray = Object.keys(item)
+                  let inquiry = {}
+                  keyArray.map(key => {
+                    if (this.currentTemplate.purchaseKeys[key] != undefined)
+                      inquiry[this.currentTemplate.purchaseKeys[key]] = item[key]
+                  })
+                  inquiry['projectId'] = this.searchForm.purchaseProId
+                  inquiry['operator'] = userId
+                  inquiry['templateId'] = this.currentTemplate.id
+                  this.outputs.push(inquiry);
+                }
+              }else {
+                let no = item['序号']+''
+
+                if(!no.includes('.') && Object.keys(item).length <= 2) {
+                  if (parent['name']) {
+                    parent['children'] = children
+                    parent['projectId'] = this.searchForm.purchaseProId
+                    this.outputs.push(parent)
+                    parent = {}
+                    children = []
+                  }
+
+                  parent['sort'] = no
+                  var keys = Object.keys(item)
+                  parent['name'] = item[keys[1]]
+
+                }else {
+                  let keyArray = Object.keys(item)
+                  let inquiry = {}
+                  keyArray.map(key => {
+                    if (this.currentTemplate.purchaseKeys[key] != undefined)
+                      inquiry[this.currentTemplate.purchaseKeys[key]] = item[key]
+                  })
+                  inquiry['projectId'] = this.searchForm.purchaseProId
+                  inquiry['operator'] = userId
+                  inquiry['templateId'] = this.currentTemplate.id
+                  children.push(inquiry)
+                }
               }
+              this.excelRows ++
             })
+            if(this.currentTemplate.tree == 1) {
+              parent['children'] = children
+              parent['projectId'] = this.searchForm.purchaseProId
+              this.outputs.push(parent)
+            }
             console.log(this.outputs)
-            this.$confirm('是否确定导入？', '提示', {
-              confirmButtonText: '确定',
-              cancelButtonText: '取消',
-              type: 'warning'
-            }).then(() => {
-              postActionByJson('/purchase/purchasePlan/excelPurchaseItems', { purchaseItems: this.outputs } )
-                .then(resp => {
-                  this.$message({ message: resp.message, type: 'success' })
-                  this.toSearch()
-                })
-            })
-            this.excelRows = null
             this.$refs.upload.value = '';
           } catch (e) {
             console.log(e)
@@ -692,14 +736,13 @@
       loadPlans(projectId) {
         this.currentTemplate = {}
         this.plansLoading = true
-        request.get("/purchase/purchasePlan/findItemsByProjectId?projectId="+projectId)
-          .then( resp => {
-            this.plans = resp.data
-            if (this.plans[0].templateId) {
-              this.loadCurrentTemplate(this.plans[0].templateId)
-            }else {
-              this.plansLoading = false
+        getAction('/purchase/purchasePlan/findItemsByProjectId', { projectId: projectId })
+          .then(async resp => {
+            if (resp.data.length > 0) {
+              await this.loadCurrentTemplate(resp.data[0].templateId)
             }
+            this.plans = resp.data
+            this.plansLoading = false
           })
           .catch(()=>{
             this.plansLoading = false

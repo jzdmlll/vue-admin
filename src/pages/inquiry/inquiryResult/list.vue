@@ -193,6 +193,9 @@
               resp.data[0].tableColumn = JSON.parse(resp.data[0].tableColumn)
               this.currentTemplate = resp.data[0]
             })
+            .catch(() => {
+              this.loading = false
+            })
         }
       },
       tableRowClassName(row, index){
@@ -321,11 +324,11 @@
       loadPurchases() {
         if(this.searchForm.proDetailId) {
           request.get('/inquiry/findProPurchase?proDetailId='+this.searchForm.proDetailId)
-            .then(response => {
-              this.purchases = response.data
-              if (this.purchases.length > 0){
-                this.loadCurrentTemplate(response.data[0].inquiry.templateId)
+            .then(async response => {
+              if (response.data.length > 0){
+                await this.loadCurrentTemplate(response.data[0].inquiry.templateId)
               }
+              this.purchases = response.data
               this.loading = false
             }).catch(()=> {
             this.loading = false

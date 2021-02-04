@@ -6,6 +6,7 @@
       <el-select v-model="searchForm.purProjectId" style="margin-right: 6px" filterable clearable placeholder="请选择项目" value-key="name">
         <el-option v-for="item in purchasePros" :key="item.id" :label="item.projectName" :value="item.id" />
       </el-select>
+      <el-input v-model="searchForm.contractName" type="text" size="small" placeholder="合同名" clearable/>
       <el-button type="primary" icon="el-icon-search" size="mini" @click="toSearch">查询</el-button>
     </div>
     <el-card shadow="never">
@@ -72,9 +73,9 @@
           </template>
         </a-table-column>
         <a-table-column align="center" :width="120" key="remark" title="备注" data-index="remark" />
-        <a-table-column fixed="right" align="center" :width="220" key="action" title="操作">
+        <a-table-column fixed="right" align="center" :width="234" key="action" title="操作">
           <template slot-scope="text, record, index">
-            <el-button v-if="record.firstAudit==null && record.secondAudit==null && record.threeAudit==null" @click="toCheck(record)" type="primary" size="mini" style="padding: 7px 10px;">送审</el-button>
+            <el-button v-if="record.firstAudit==null && record.secondAudit==null && record.threeAudit==null" @click="toCheck(record)" type="success" icon="el-icon-s-promotion" size="mini" style="padding: 7px 10px;">送审</el-button>
             <el-button  @click="upload(record, index)" :loading="uploadLoading[index]" type="primary" size="mini" style="padding: 7px 10px;" icon="el-icon-upload">附件</el-button>
             <el-button  @click="deleteContract(record, index)" icon="el-icon-delete" type="danger" size="mini" style="padding: 7px 10px;">删除</el-button>
           </template>
@@ -163,7 +164,6 @@
 
     <el-dialog title="上传附件" :visible.sync="uploadDialogVisible">
       <el-form :model="uploadForm">
-        {{uploadKey}}
         <el-row>
           <el-col :span="12">
             <el-form-item label="合同名" label-width="80px" prop="contractName">{{uploadForm.contractName}}</el-form-item>
@@ -480,9 +480,12 @@
           projectId = this.searchForm.purProjectId
         }
         this.contractsLoading = true
-        request.get('/purchase/contract/findByProjectId?projectId='+projectId)
+        getAction('/purchase/contract/findByProjectId', { projectId: projectId, contractName: this.searchForm.contractName})
           .then(resp => {
             this.contracts = resp.data
+            this.contractsLoading = false
+          })
+          .catch(() => {
             this.contractsLoading = false
           })
       },
