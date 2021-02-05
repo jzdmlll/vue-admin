@@ -259,10 +259,10 @@
     </el-dialog>
     <el-dialog v-el-drag-dialog title="附件查看" :visible.sync="fileVisible">
       <div>
-        <a v-for="file in files" :key="file.id" :href="file.url"
-          ><button>{{ file.name }}</button></a
-        >
-        <br />
+        <a v-for="file in files" :key="file.id" :href="file.url">
+          <button>{{ file.name }}</button>
+        </a>
+        <br/>
       </div>
     </el-dialog>
   </div>

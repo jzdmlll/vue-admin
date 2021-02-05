@@ -90,7 +90,7 @@
     <!-- 模态框 -->
     <el-dialog v-el-drag-dialog title="选择产品池产品" class="poolDialog" :visible.sync="poolDialogVisible">
       <el-form :model="poolForm" status-icon>
-        <el-row>
+        <el-row :gutter="10">
           <el-col :sm="24" :lg="12">
             <el-form-item label="采购项" label-width="80px" prop="item">{{poolForm.item}}</el-form-item>
           </el-col>
@@ -230,6 +230,7 @@
       <el-form ref="importForm" :model="importForm" status-icon>
         <div>
           <div style="margin: 8px 0 26px 0;position: relative;">
+            {{importForm.template}}
             <el-select size="small" :disabled="currentTemplate.id?true:false" v-model="importForm.template" placeholder="请选择解析模板" value-key="name" style="margin:0 0 8px 1em">
               <el-option v-for="item in excelTemplates" :key="item.id" :label="item.name" :value="item" />
             </el-select>
@@ -291,7 +292,7 @@
       };
       return {
         submitLoading: false,
-        importForm: {},
+        importForm: {template: {}},
         importDialogVisible: false,
 
         excelTemplates: [],
@@ -377,9 +378,10 @@
             .then(resp => {
               this.$message({ type: 'success', message: resp.message})
               this.importDialogVisible = false
+              this.toSearch()
             })
             .catch(() => {
-              this.importDialogVisible = false
+
             })
         }else {
 
@@ -532,20 +534,20 @@
             let parent = {}
             let children = []
             let userId = getUser()
-            this.currentTemplate.purchaseKeys = JSON.parse(this.currentTemplate.purchaseKeys)
+            this.importForm.template.purchaseKeys = JSON.parse(this.importForm.template.purchaseKeys)
             ws.map(item => {
-              if(this.currentTemplate.tree == 0) {
+              if(this.importForm.template.tree == 0) {
                 var num = Object.keys(item).length;
                 if( num>2 && item['序号']){
                   let keyArray = Object.keys(item)
                   let inquiry = {}
                   keyArray.map(key => {
-                    if (this.currentTemplate.purchaseKeys[key] != undefined)
-                      inquiry[this.currentTemplate.purchaseKeys[key]] = item[key]
+                    if (this.importForm.template.purchaseKeys[key] != undefined)
+                      inquiry[this.importForm.template.purchaseKeys[key]] = item[key]
                   })
                   inquiry['projectId'] = this.searchForm.purchaseProId
                   inquiry['operator'] = userId
-                  inquiry['templateId'] = this.currentTemplate.id
+                  inquiry['templateId'] = this.importForm.template.id
                   this.outputs.push(inquiry);
                 }
               }else {
@@ -568,18 +570,18 @@
                   let keyArray = Object.keys(item)
                   let inquiry = {}
                   keyArray.map(key => {
-                    if (this.currentTemplate.purchaseKeys[key] != undefined)
-                      inquiry[this.currentTemplate.purchaseKeys[key]] = item[key]
+                    if (this.importForm.template.purchaseKeys[key] != undefined)
+                      inquiry[this.importForm.template.purchaseKeys[key]] = item[key]
                   })
                   inquiry['projectId'] = this.searchForm.purchaseProId
                   inquiry['operator'] = userId
-                  inquiry['templateId'] = this.currentTemplate.id
+                  inquiry['templateId'] = this.importForm.template.id
                   children.push(inquiry)
                 }
               }
               this.excelRows ++
             })
-            if(this.currentTemplate.tree == 1) {
+            if(this.importForm.template.tree == 1) {
               parent['children'] = children
               parent['projectId'] = this.searchForm.purchaseProId
               this.outputs.push(parent)

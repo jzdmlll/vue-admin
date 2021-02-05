@@ -4,7 +4,7 @@ import Cookies from 'js-cookie'
 
 import 'normalize.css/normalize.css' // a modern alternative to CSS resets
 
-import {  Descriptions,Tag,Button,Select,Layout,Skeleton, Table, Popconfirm, Input, Upload, Icon, Empty, Popover, Timeline, Tabs, Row, Col, InputNumber, Tooltip, Progress } from 'ant-design-vue'
+import { Cascader, Descriptions,Tag,Button,Select,Layout,Skeleton, Table, Popconfirm, Input, Upload, Icon, Empty, Popover, Timeline, Tabs, Row, Col, InputNumber, Tooltip, Progress } from 'ant-design-vue'
 import 'ant-design-vue/dist/antd.css'
 
 import Element from 'element-ui'
@@ -34,6 +34,7 @@ import * as filters from './filters' // global filters
 // if (process.env.NODE_ENV === 'production') {
 //   mockXHR()
 // }
+Vue.use(Cascader)
 Vue.use(Descriptions)
 Vue.use(Tag)
 Vue.use(Button)

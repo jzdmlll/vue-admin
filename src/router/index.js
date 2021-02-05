@@ -41,6 +41,18 @@ export const constantRoutes = [
       }
     ]
   },
+  {
+    path: '/equipment',
+    component: Layout,
+    children: [
+      {
+        path: 'list-bak',
+        component: () => import('@/pages/equipment/list-bak'),
+        name: 'article_list',
+        meta: { title: '设备管理',  affix: true }
+      },
+    ]
+  },
   /*{
     path: '/equipment',
     component: Layout,
