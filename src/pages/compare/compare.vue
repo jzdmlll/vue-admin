@@ -169,7 +169,7 @@
           <el-table-column :show-overflow-tooltip="true" prop="supplier" label="供应商" />
           <el-table-column :show-overflow-tooltip="true" prop="params" label="技术参数" />
           <el-table-column :show-overflow-tooltip="true" prop="model" label="品牌型号" />
-          <el-table-column :show-overflow-tooltip="true" prop="price" label="单价" />
+          <el-table-column :show-overflow-tooltip="true" prop="quote" label="单价" />
           <el-table-column :show-overflow-tooltip="true" prop="number" label="数量" />
           <el-table-column :show-overflow-tooltip="true" prop="delivery" label="货期" />
           <el-table-column :show-overflow-tooltip="true" prop="remark" label="备注" />
