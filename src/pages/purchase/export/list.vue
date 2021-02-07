@@ -176,17 +176,15 @@
     },
     methods: {
       radioChange(value) {
-        if (value == 1) {
-          this.form.contractNoLoading = true
-          getAction('/purchase/contract/automaticGenerationContractNo', {})
-            .then(resp => {
-              this.$set(this.form, 'contractNo', resp.data)
-              this.form.contractNoLoading = false
-            })
-            .catch(() => {
-              this.form.contractNoLoading = false
-            })
-        }
+        this.form.contractNoLoading = true
+        getAction('/purchase/contract/automaticGenerationContractNo', {})
+          .then(resp => {
+            this.$set(this.form, 'contractNo', resp.data)
+            this.form.contractNoLoading = false
+          })
+          .catch(() => {
+            this.form.contractNoLoading = false
+          })
       },
       loadCurrentTemplate(id) {
         if (id) {
