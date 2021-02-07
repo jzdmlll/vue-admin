@@ -7,8 +7,8 @@
         <navbar />
         <tags-view v-if="needTagsView" />
       </div>
-      <div style="padding:1em;background:#edf1f1">
-        <app-main />
+      <div style="background:#edf1f1">
+        <app-main style="padding: 1em"/>
       </div>
       <right-panel v-if="showSettings">
         <settings />
