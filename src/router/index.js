@@ -42,12 +42,12 @@ export const constantRoutes = [
     ]
   },
   {
-    path: '/equipment',
+    path: '/stock',
     component: Layout,
     children: [
       {
         path: 'list-bak',
-        component: () => import('@/pages/equipment/list-bak'),
+        component: () => import('@/pages/stock/list-bak'),
         name: 'article_list',
         meta: { title: '设备管理',  affix: true }
       },
