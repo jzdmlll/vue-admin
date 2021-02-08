@@ -314,11 +314,17 @@
     methods: {
 
       deleteContract(row, index){
-        postActionByQueryString('/purchase/contract/deleteById',row)
-        .then(resp => {
-          this.$message({ message: resp.message, type: 'success' })
-          this.toSearch()
-          this.rowClick(row)
+        this.$confirm('是否确定删除？', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          postActionByQueryString('/purchase/contract/deleteById',row)
+            .then(resp => {
+              this.$message({ message: resp.message, type: 'success' })
+              this.toSearch()
+              this.rowClick(row)
+            })
         })
       },
       uploadHandler() {

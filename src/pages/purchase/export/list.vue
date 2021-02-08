@@ -87,7 +87,7 @@
           <el-input type="text" v-model="form.contractName"></el-input>
         </el-form-item>
         <el-form-item label="类型" label-width="80px" size="small" prop="type">
-          <el-radio-group @change="radioChange" v-model="form.type">
+          <el-radio-group v-model="form.type">
             <el-radio :label="0">我方合同</el-radio>
             <el-radio :label="1">对方合同</el-radio>
           </el-radio-group>
@@ -175,17 +175,6 @@
       this.role = this.$store.getters.roles[0]
     },
     methods: {
-      radioChange(value) {
-        this.form.contractNoLoading = true
-        getAction('/purchase/contract/automaticGenerationContractNo', {})
-          .then(resp => {
-            this.$set(this.form, 'contractNo', resp.data)
-            this.form.contractNoLoading = false
-          })
-          .catch(() => {
-            this.form.contractNoLoading = false
-          })
-      },
       loadCurrentTemplate(id) {
         if (id) {
           getAction('/inquiry/template/findInquiryTemplate', {id: id})
@@ -204,8 +193,19 @@
        * 弹出生成合同模态框
        */
       addContract() {
-        this.visible = true
+
         this.form.type = 0
+        this.form.contractNoLoading = true
+        getAction('/purchase/contract/automaticGenerationContractNo', {})
+          .then(resp => {
+            this.$set(this.form, 'contractNo', resp.data)
+            this.form.contractNoLoading = false
+          })
+          .catch(() => {
+            this.form.contractNoLoading = false
+          })
+
+        this.visible = true
       },
       /**
        * 修改供货价
