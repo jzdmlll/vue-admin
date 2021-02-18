@@ -75,9 +75,10 @@
         <a-table-column align="center" :width="120" key="remark" title="备注" data-index="remark" />
         <a-table-column fixed="right" align="center" :width="234" key="action" title="操作">
           <template slot-scope="text, record, index">
-            <el-button v-if="record.firstAudit==null && record.secondAudit==null && record.threeAudit==null" @click="toCheck(record)" type="success" icon="el-icon-s-promotion" size="mini" style="padding: 7px 10px;">送审</el-button>
-            <el-button  @click="upload(record, index)" :loading="uploadLoading[index]" type="primary" size="mini" style="padding: 7px 10px;" icon="el-icon-upload">附件</el-button>
-            <el-button  @click="deleteContract(record, index)" icon="el-icon-delete" type="danger" size="mini" style="padding: 7px 10px;">删除</el-button>
+            <el-button @click.native.stop="toCheck(record)" v-if="record.firstAudit==null && record.secondAudit==null && record.threeAudit==null" type="success" icon="el-icon-s-promotion" size="mini" style="padding: 7px 10px;">送审</el-button>
+            <el-button @click.native.stop="setProp(record.id)" v-else-if="calculateProgress(record.firstAudit, record.secondAudit, record.threeAudit) == 100" size="mini" type="primary" icon="el-icon-setting" style="padding: 7px 10px;">属性</el-button>
+            <el-button @click.native.stop="upload(record, index)" :loading="uploadLoading[index]" type="primary" size="mini" style="padding: 7px 10px;" icon="el-icon-upload">附件</el-button>
+            <el-button @click.native.stop="deleteContract(record, index)" icon="el-icon-delete" type="danger" size="mini" style="padding: 7px 10px;">删除</el-button>
           </template>
         </a-table-column>
       </a-table>
@@ -204,6 +205,54 @@
       </div>
     </el-dialog>
 
+    <el-dialog v-el-drag-dialog title="合同属性" :visible.sync="attrDialogVisible">
+      <el-form ref="attrDialogForm" :model="attrDialogForm" :rules="rules" status-icon>
+        <el-row :gutter="10">
+          <el-col :lg="8" :sm="24">
+            <el-form-item label="付款方式" label-width="80px" size="small" prop="paymentMethod">
+              <el-select v-model="attrDialogForm.paymentMethod" placeholder="应付款" size="small">
+                <el-option v-for="item in ['预付款', '货到付款', '款到发货']" :key="item" :value="item" :label="item"/>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :lg="8" :sm="24">
+            <el-form-item label="应付款(元)" label-width="80px" size="small" prop="payable">
+              <el-input v-model="attrDialogForm.payable" clearable placeholder="应付款金额" size="small" />
+            </el-form-item>
+          </el-col>
+          <el-col :lg="8" :sm="24">
+            <el-form-item label="付款时间" label-width="80px" size="small" prop="payableTime">
+              <el-date-picker v-model="attrDialogForm.payableTime" value-format="timestamp" clearable placeholder="预计付款时间" size="small" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-form-item label="是否有保证金" label-width="80px" size="small" prop="isBond">
+          <el-switch
+            v-model="attrDialogForm.isBond"
+            active-color="#13ce66"
+            active-value="1"
+            inactive-value="0"
+          />
+        </el-form-item>
+        <el-row v-if="attrDialogForm&&attrDialogForm.isBond == 1" :gutter="10">
+          <el-col :lg="12" :sm="24">
+            <el-form-item label="保证金(元)" label-width="80px" size="small" prop="bond">
+              <el-input v-model="attrDialogForm.bond" clearable placeholder="保证金金额" size="small" />
+            </el-form-item>
+          </el-col>
+          <el-col :lg="12" :sm="24">
+            <el-form-item label="付款时间" label-width="80px" size="small" prop="bondTime">
+              <el-date-picker v-model="attrDialogForm.bondTime" value-format="timestamp" clearable placeholder="保证金付款时间" size="small" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button size="small" @click="attrDialogVisible = false">取 消</el-button>
+        <el-button type="primary" size="small" @click="attrDialogHandler">提 交</el-button>
+      </div>
+    </el-dialog>
+
   </div>
 </template>
 <script>
@@ -215,10 +264,13 @@
   import { dateTimeFormat } from '@/utils/format'
   import { getAction, postActionByJson, postActionByQueryString } from '@/api/manage'
   import { beforeUpload, uploadStatusChange } from '@/utils/upload'
+  import elDragDialog from '@/directive/el-drag-dialog'
+
 
   const fileUploadUrl = process.env.VUE_APP_BASE_API + 'file/uploadCache'
 
   export default {
+    directives: { elDragDialog },
     data() {
 
       var validNo = (rule, value, callback) => {
@@ -238,6 +290,9 @@
       };
       return {
         fileUploadUrl,
+
+        attrDialogVisible: false,
+        attrDialogForm: {},
 
         uploadForm: {},
         fileList: [],
@@ -283,7 +338,16 @@
           ],
           projectId: [
             { required: true, message: '不能为空', trigger: 'blur'}
-          ]
+          ],
+          paymentMethod: [
+            { required: true, message: '不能为空', trigger: 'blur'}
+          ],
+          payable: [
+            { required: true, pattern: /^(\-|\+)?\d+(\.\d+)?$/, message: '格式不正确', trigger: 'blur' }
+          ],
+          bond: [
+            { required: true, pattern: /^(\-|\+)?\d+(\.\d+)?$/, message: '格式不正确', trigger: 'blur' }
+          ],
         },
 
         toCheckDialogForm: {},
@@ -312,7 +376,38 @@
       };
     },
     methods: {
-
+      attrDialogHandler() {
+        this.$refs['attrDialogForm'].validate((valid) => {
+          if (valid) {
+            // alert(1)
+            this.attrDialogForm.operator = getUser()
+            postActionByQueryString('/stock/contractAttribute/saveOrUpdateStockContractAttribute', this.attrDialogForm)
+              .then(resp => {
+                this.$message({ type: 'success', message: resp.message })
+                this.attrDialogVisible = false
+              })
+          }else {
+            console.log('error commit')
+            return false
+          }
+        })
+      },
+      async setProp(id) {
+        this.attrDialogForm.contractId = id
+        await this.loadContractAttr(id)
+        this.attrDialogVisible = true
+      },
+      loadContractAttr(contractId) {
+        getAction('/stock/contractAttribute/findByContractId', { contractId: contractId })
+          .then( resp => {
+            if (resp.data) {
+              this.attrDialogForm = resp.data
+            }
+          })
+          .catch(()=> {
+            this.attrDialogVisible = true
+          })
+      },
       deleteContract(row, index){
         this.$confirm('是否确定删除？', '提示', {
           confirmButtonText: '确定',

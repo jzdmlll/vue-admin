@@ -34,7 +34,7 @@
         // WebSocket与普通的请求所用协议有所不同，ws等同于http，wss等同于https
         var userId = getUser()
         var url = process.env.VUE_APP_BASE_API.replace("https://","ws://").replace("http://","ws://")+"websocket/"+userId;
-        this.websock = new WebSocket(url);
+        this.websock = new WebSocket(url+'?token='+getToken());
         this.websock.onopen = this.websocketonopen;
         this.websock.onerror = this.websocketonerror;
         this.websock.onmessage = this.websocketonmessage;
@@ -68,7 +68,7 @@
         }
       },
       websocketclose: function (e) {
-        //console.log("connection closed (" + e.code + ")");
+        console.log("connection closed (" + e.code + ")");
       }
     }
   }

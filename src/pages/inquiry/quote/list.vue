@@ -176,11 +176,11 @@
         <el-dialog v-el-drag-dialog title="批量导入报价" class="importDialog" :visible.sync="visible2">
           <el-form ref="form1" :model="form1" :rules="codeRules" status-icon>
             <div>
-              <!--<el-form-item label="" label-width="0px" size="small" prop="proDetailId">
-                <el-select v-model="form1.proDetailId" filterable clearable placeholder="请选择项目" value-key="name" size="small">
-                  <el-option v-for="item in projects" :key="item.id" :label="item.name" :value="item.id" />
+              <el-form-item label="供应商" label-width="80px" size="small" prop="proDetailId">
+                <el-select style="margin-left: 8px" v-model="form1.supplierId" filterable clearable placeholder="请选择供应商" value-key="name" size="small">
+                  <el-option v-for="item in suppliers" :key="item.id" :label="item.name" :value="item.id" />
                 </el-select>
-              </el-form-item>-->
+              </el-form-item>
               <div style="margin: 8px 0;position: relative">
                 <el-button @click="clickFileInput" type="primary" size="small"><a-icon type="file-excel" style="font-size: 12px;margin-right: 5px"/>excel导入</el-button>
                 <input type="file" ref="upload" accept=".xls,.xlsx" @change="readExcel" class="outputlist_upload">
@@ -388,6 +388,7 @@
     data() {
       const fileUploadUrl = process.env.VUE_APP_BASE_API + 'file/uploadCache'
       return {
+        suppliers: [],
 
         currentTemplate: {},
 
@@ -497,6 +498,12 @@
       })
     },
     methods: {
+      loadSuppliers() {
+        getAction('/supply/supplier/findSupplierByParams', {})
+          .then(resp => {
+            this.suppliers = resp.data
+          })
+      },
       loadCurrentTemplate(id) {
         if (id) {
           this.currentTemplate = {}
@@ -797,7 +804,11 @@
         //this.loadProChecks()
       },
       clickFileInput() {
-        this.$refs.upload.dispatchEvent(new MouseEvent('click'))
+        if (this.form1.supplierId) {
+          this.$refs.upload.dispatchEvent(new MouseEvent('click'))
+        }else {
+          this.$message({ type: 'warning', message: '请选择供应商'})
+        }
       },
       readExcel(e) {//表格导入
         var that = this;
@@ -864,6 +875,7 @@
             form.files.push(this.file)
             form.proDetailId = this.form1.proDetailId
             form.operator = userId
+            form.supplierId = this.form1.supplierId
             request.request({
               url: '/quote/batchAddQuote',
               method: 'post',
@@ -889,6 +901,7 @@
       dateFormat,
       batchImport() {
         if (this.searchForm.proDetailId) {
+          this.loadSuppliers()
           this.visible2 = true
           this.form1.proDetailId = this.searchForm.proDetailId
           this.submitLoading = false
