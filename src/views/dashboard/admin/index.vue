@@ -5,6 +5,14 @@
     <el-row style="background:#fff;padding:16px 16px 0;margin-bottom:32px;">
       <line-chart :chart-data="lineChartData" />
     </el-row>
+    <el-row style="position: relative;width: 100%;height: 400px;padding: 1em;background: #fff">
+      <el-col :sm="12" :lg="19" style="height: 100%">
+        <bar-chart height="100%"/>
+      </el-col>
+      <el-col :sm="12" :lg="5" style="height: 100%">
+
+      </el-col>
+    </el-row>
     <div style="padding: 1em;background: #fff;">
       <a-row type="flex" justify="start" :gutter="3">
         <a-col :sm="24" :lg="12">

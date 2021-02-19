@@ -178,7 +178,7 @@
             <div>
               <el-form-item label="供应商" label-width="80px" size="small" prop="proDetailId">
                 <el-select style="margin-left: 8px" v-model="form1.supplierId" filterable clearable placeholder="请选择供应商" value-key="name" size="small">
-                  <el-option v-for="item in suppliers" :key="item.id" :label="item.name" :value="item.id" />
+                  <el-option v-for="item in suppliers" :key="item.id" :label="item.supplier" :value="item.id" />
                 </el-select>
               </el-form-item>
               <div style="margin: 8px 0;position: relative">

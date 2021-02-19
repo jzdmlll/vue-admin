@@ -20,7 +20,6 @@
           <el-button type="primary" icon="el-icon-search" size="small" @click="toSearch">查询</el-button>
           <i @click="changeMargin" class="sider-btn my-transition" :class="margin==0?'el-icon-s-fold':'el-icon-s-unfold'"></i>
         </div>
-        <el-button type="primary" size="small" @click="showContractInfoDialog" style="float: right;" >补充合同信息</el-button>
         <!--      合同显示布局区域   -->
         <div style="padding: 0 0 1em 0">
           <a-row>
@@ -34,8 +33,7 @@
               <a-descriptions-item :span="2" label="录入人">{{ contractAttribute.operator }}</a-descriptions-item>
               <a-descriptions-item :span="2" label="应付款">{{ contractAttribute.payable }}</a-descriptions-item>
               <a-descriptions-item :span="2" label="已付款">
-                <el-tag type="success" @click="alreadyPayMethod">{{ contractAttribute.alreadyPayment }}
-                </el-tag>
+                <el-tag v-if="contractAttribute.id" type="success" @click="alreadyPayMethod">{{ contractAttribute.alreadyPayment }}</el-tag>
               </a-descriptions-item>
 
               <a-descriptions-item :span="2" label="预定到货时间">{{ contractAttribute.schedulerPayTime }}</a-descriptions-item>
@@ -44,21 +42,19 @@
               <a-descriptions-item :span="2" label="履约金">{{ contractAttribute.performanceBound }}</a-descriptions-item>
               <a-descriptions-item :span="2" label="状态">
                 <el-tag
-                  :type="contractAttribute.performanceBondStatus == 0? 'warning':
-                         contractAttribute.performanceBondStatus == 1? 'success': 'danger'"
+                  v-if="contractAttribute.id"
+                  :type="contractAttribute.performanceBondStatus == 0? 'warning':contractAttribute.performanceBondStatus == 1? 'success': 'danger'"
                 >
-                  {{ contractAttribute.performanceBondStatus == 0 ? "无保证金" :
-                  contractAttribute.performanceBondStatus == 1 ? "已支付" : "未支付" }}
+                  {{ contractAttribute.performanceBondStatus == 0 ? "无保证金" : contractAttribute.performanceBondStatus == 1 ? "已支付" : "未支付" }}
                 </el-tag>
               </a-descriptions-item>
               <a-descriptions-item :span="2" label="履约金支付时间">{{ contractAttribute.performanceBoundPayTime }}</a-descriptions-item>
               <a-descriptions-item :span="2" label="履约金归还时间">{{ contractAttribute.performanceBoundDeliverTime }}</a-descriptions-item>
               <a-descriptions-item :span="4" label="合同附件状态">
-                <a-row>
-                  <a-col :span="8"><el-tag @click="subFile('供货发票')">供货发票</el-tag></a-col>
-                  <a-col :span="8"><el-tag @click="subFile('付款通知单')">付款通知单</el-tag></a-col>
-                  <a-col :span="8"><el-tag @click="subFile('实际付款状态')">实际付款状态</el-tag></a-col>
-                </a-row>
+                <el-row :gutter="10" class="attr-row" v-if="contractAttribute.id">
+                  <el-col :span="12" ><el-tag @click="subFile('供货发票', contractAttribute)">供货发票</el-tag></el-col>
+                  <el-col :span="12" ><el-tag @click="subFile('付款通知单', contractAttribute)">付款通知单</el-tag></el-col>
+                </el-row>
               </a-descriptions-item>
               <a-descriptions-item :span="4" :col="2" label="备注">{{ contractAttribute.remark }}</a-descriptions-item>
             </a-descriptions>
@@ -105,14 +101,17 @@
       </a-layout-content>
     </a-layout>
 
-    <!--   补充合同信息 模态框  -->
+    <!--   发票、付款通知单 模态框  -->
     <el-dialog :title="contractInfoDialog.title" :visible.sync="contractInfoDialog.visible" v-el-drag-dialog>
-      <el-form ref="form" :model="contractInfoDialog.form" :rules="rule">
-        <el-row :gutter="10">
-          <el-col></el-col>
-          <el-col></el-col>
-        </el-row>
-      </el-form>
+      <a-table
+        :pagination="false"
+        v-loading="contractInfoDialog.tableLoading"
+        :data-source="contractInfoDialog.data"
+        size="middle"
+        :rowKey="(record) => record.id"
+      >
+
+      </a-table>
     </el-dialog>
   </div>
 </template>
@@ -168,13 +167,27 @@
       }
     },
     methods: {
-        /**
-         * 弹出合同属性信息模态框事件
-         */
-      showContractInfoDialog() {
-        this.contractInfoDialog.visible = true
+      subFile(type, record) {
+        if (record.id) {
+          this.contractInfoDialog.title = type
+          this.contractInfoDialog.visible = true
+          this.contractInfoDialog.tableLoading = true
+          let url = null
+          if (type == '供货发票') {
+            url = '/stock/invoice/findInvoice'
+          }else {
+            url = '/stock/actualAccount/findByContractId'
+          }
+          getAction(url, { contractId: record.contractId})
+            .then(resp => {
+              this.contractInfoDialog.data = resp.data
+              this.contractInfoDialog.tableLoading = false
+            })
+            .catch(() => {
+              this.contractInfoDialog.tableLoading = false
+            })
+        }
       },
-      subFile(type) {},
       alreadyPayMethod() {},
       /**
        * 点击查询事件
@@ -278,6 +291,14 @@
       right: -57px;
       border: 1px dashed #d5d5d5;
       background: #fff;
+    }
+    .attr-row {
+      .el-col {
+        text-align: center;
+        span {
+          cursor: pointer;
+        }
+      }
     }
   }
 }

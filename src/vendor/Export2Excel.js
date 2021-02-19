@@ -151,7 +151,7 @@ export function export_json_to_excel({
   filename,
   merges = [],
   autoWidth = true,
-  bookType = 'xlsx'
+  bookType = 'xls'
 } = {}) {
   /* original data */
   filename = filename || 'excel-list'

@@ -25,7 +25,13 @@
         :loading="loading"
         :data-source="inquiryList"
         :row-class-name="tableRowClassName"
-        :row-selection="{ selectedRowKeys: selectedId, onChange: handleSelectionChange,}"
+        :row-selection="{ selectedRowKeys: selectedId, onChange: handleSelectionChange, selections: [{
+            key: 'all-data',
+            text: '全选',
+            onSelect: () => {
+              this.selectedId =  inquiryList.map(item=>{return item.id});
+            },
+        }]}"
         :scroll="inquiryList.length > 0 ?{ x: 1200}:{}">
         <a-table-column v-if="currentTemplate.tree == 1" :ellipsis="true" :width="100" align="center" key="parentId" title="大类" data-index="parentId"/>
         <a-table-column v-for="item in currentTemplate.tableColumn" ellipsis="true" :width="item.width" :align="item.align" :key="item.key" :title="item.title" :dataIndex="item.dataIndex">
