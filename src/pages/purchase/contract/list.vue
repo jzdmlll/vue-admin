@@ -94,15 +94,19 @@
         :data-source="contractSupplies"
         :rowKey="record => record.id"
         :loading="contractSuppliesLoading"
-        :scroll="windowWidth < 768 && contractSupplies.length > 0 ?{ x: 1400}:{}"
+        :scroll="contractSupplies.length > 0 ?{ x: 1300}:{}"
       >
         <a-table-column defaultSortOrder="ascend" :sorter="(a, b) => a.serialNumber-b.serialNumber" title="序号" key="serialNumber" data-index="serialNumber" align="center" :width="50" />
         <a-table-column :width="100" ellipsis="true" key="item" title="设备" data-index="item" align="center"/>
-        <a-table-column :width="100" ellipsis="true" key="supplier" title="供应商" data-index="supplier" align="center" />
-        <a-table-column :width="100" ellipsis="true" key="brand" title="品牌" data-index="brand" align="center"/>
-        <a-table-column :width="100" ellipsis="true" key="model" title="规格型号" data-index="model" align="center"/>
-        <a-table-column :width="70" key="price" title="单价" data-index="price" align="center"/>
-        <a-table-column :width="80" key="totalPrice" title="总价" data-index="totalPrice" align="center"/>
+        <a-table-column :width="100" ellipsis="true" key="purchaseSupply.supplier" title="供应商" data-index="purchaseSupply.supplier" align="center" />
+        <a-table-column :width="100" ellipsis="true" key="purchaseSupply.brand" title="品牌" data-index="purchaseSupply.brand" align="center"/>
+        <a-table-column :width="100" ellipsis="true" key="purchaseSupply.model" title="规格型号" data-index="purchaseSupply.model" align="center"/>
+        <a-table-column :width="70" key="purchaseSupply.price" title="单价" data-index="purchaseSupply.price" align="center"/>
+        <a-table-column :width="80" title="总价" align="center">
+          <template slot-scope="text, record">
+            {{record.purchaseSupply.price*record.purchaseSupply.number}}
+          </template>
+        </a-table-column>
         <a-table-column :width="50" key="unit" title="单位" data-index="unit" align="center"/>
         <a-table-column :width="70" key="number" title="数量" data-index="number" align="center"/>
         <a-table-column :width="100" ellipsis="true" key="itemsParams" title="技术要求" data-index="itemsParams" align="center"/>
@@ -486,7 +490,7 @@
           on: {
             click: () => {
               this.contractSuppliesLoading = true
-              getAction('/purchase/contractManagement/findItemsInfoByContractId', {contractId: row.id})
+              getAction('/purchase/contractManagement/findPurchaseMessageByContractId', {contractId: row.id})
                 .then( resp => {
                   this.contractSupplies = resp.data
                   this.contractSuppliesLoading = false

@@ -148,7 +148,7 @@ module.exports = {
               test: productionGzipExtensions,
               threshold: 10240,
               minRatio: 0.8,
-              deleteOriginalAssets: false
+              deleteOriginalAssets: true
             }))
         }
       )

@@ -103,18 +103,19 @@
             </el-button>
           </template>
         </a-table-column>
-        <a-table-column v-if="item.key != 'name' && item.key != 'brand'" v-for="item in currentTemplate.tableColumn" ellipsis="true" :width="item.width" :align="item.align" :key="item.key" :title="item.title" :dataIndex="item.dataIndex" />
         <a-table-column :width="100" ellipsis="true" key="quote.suBrand" title="品牌" data-index="quote.suBrand" align="center"/>
-        <a-table-column :width="100" ellipsis="true" key="quote.suModel" title="规格型号" data-index="quote.suModel" align="center"/>
+        <a-table-column :width="100" ellipsis="true" key="inquiry.model" title="询价型号" data-index="inquiry.model" align="center"/>
+        <a-table-column :width="100" ellipsis="true" key="quote.suModel" title="商家型号" data-index="quote.suModel" align="center"/>
+        <a-table-column :width="100" ellipsis="true" key="inquiry.params" title="配置需求" data-index="inquiry.params" align="center"/>
+        <a-table-column :width="100" ellipsis="true" key="quote.suParams" title="商家参数" data-index="quote.suParams" align="center"/>
         <a-table-column :width="100" ellipsis="true" key="inquiry.price" title="比价报价" data-index="inquiry.price" align="center"/>
         <a-table-column :width="100" ellipsis="true" key="inquiry.finallyPrice" title="最终报价" data-index="inquiry.finallyPrice" align="center"/>
         <a-table-column :width="100" ellipsis="true" key="inquiry.correctPrice" title="修正报价" data-index="inquiry.correctPrice" align="center"/>
         <a-table-column :width="60" key="inquiry.unit" title="单位" data-index="inquiry.unit" align="center"/>
         <a-table-column :width="60" key="inquiry.number" title="数量" data-index="inquiry.number" align="center"/>
         <a-table-column :width="60" key="quote.suPrice" title="供应商单价" data-index="quote.suPrice" align="center"/>
-        <a-table-column :width="100" ellipsis="true" key="inquiry.params" title="技术要求" data-index="inquiry.params" align="center"/>
         <a-table-column :width="100" ellipsis="true" key="quote.suDelivery" title="货期" data-index="quote.suDelivery" align="center"/>
-        <a-table-column :width="100" ellipsis="true" key="inquiry.remark" title="备注" data-index="inquiry.remark" align="center"/>
+        <a-table-column :width="100" ellipsis="true" key="quote.suRemark" title="商家备注" data-index="inquiry.remark" align="center"/>
         <a-table-column :width="120" key="action" title="操作" align="center" fixed="right">
           <template slot-scope="text, record">
            <!-- <el-button v-if="role.name == '采购员' || role.name == '管理员'" @click="editPrice('供货价', record.quote)" type="success" icon="el-icon-edit" size="mini" style="padding: 7px 10px;">供货价</el-button>
@@ -157,6 +158,7 @@
         customRender: 'customRender',
       }
       return {
+        filename: '',
         currentTemplate: {},
         searchForm: { time: []},
         purchases: [],
@@ -212,6 +214,7 @@
             click: () => {
               this.searchForm.proDetailId = row.id
               this.currentPro = row.name
+              this.filename = row.name + '-询价结果'
               this.selectKey = row.id
               this.loadPurchases()
             }
@@ -262,8 +265,8 @@
         if (this.selectedRowKeys.length) {
           this.downloadLoading = true
           import('@/vendor/Export2Excel').then(excel => {
-            const tHeader = ['序号', '设备名称', '型号', '配置需求',  '单位', '数量', '单价', '总价', '品牌', '货期', '备注']
-            const filterVal = ['sort', 'name', 'suModel', 'params', 'unit', 'number', 'price',
+            const tHeader = ['序号', '设备名称', '询价型号', '商家型号', '配置需求', '商家参数', '单位', '数量', '单价', '总价', '品牌', '货期', '备注']
+            const filterVal = ['sort', 'name', 'model', 'suModel', 'params', 'suParams', 'unit', 'number', 'price',
               'totalPrice', 'brand', 'delivery', 'remark']
             let list = []
             this.purchases.map(item=>{
@@ -271,15 +274,17 @@
                 list.push({
                   sort: item.inquiry.sort,
                   name: item.inquiry.name,
+                  model: item.inquiry.model,
                   suModel: item.quote.suModel,
                   params: item.inquiry.params,
+                  suParams: item.quote.suParams,
                   unit: item.inquiry.unit,
                   number: item.inquiry.number,
                   price: item.inquiry.finallyPrice,
                   totalPrice: item.inquiry.correctPrice * item.inquiry.number,
                   brand: item.quote.suBrand,
                   delivery: item.quote.suDelivery,
-                  remark: item.inquiry.remark,
+                  remark: item.quote.suRemark,
                 })
               }
             })
@@ -309,7 +314,7 @@
         }
         let rows = []
         selectedRows.map(item => {
-          if (!item.inquiry.itemId) {
+          if (true||!item.inquiry.itemId) {
             rows.push(item.quote.id)
           }
         })

@@ -24,7 +24,7 @@
           :loading="comparesLoading"
           :row-class-name="tableRowClassName"
           :customRow="rowClickAnt"
-          :scroll="{x: 1360}"
+          :scroll="{x: 1460}"
           :row-selection="{ selectedRowKeys: selectedRowKey[card.inquiry.id], onChange: onSelectChange, type: 'radio' }"
           >
           <a-table-column :width="100" key="supplier" title="供应商" data-index="supplier" />
@@ -42,6 +42,16 @@
           <a-table-column :width="100" align="center" key="suDelivery" title="货期" data-index="suDelivery" />
           <a-table-column :width="100" align="center" key="warranty" title="质保期" data-index="warranty" />
           <a-table-column :width="100" align="center" key="technicalRemark" title="技审备注" data-index="technicalRemark" />
+          <a-table-column :width="100" align="center" key="suRemark" title="商家备注" data-index="suRemark" />
+          <a-table-column :width="100" align="center" key="image" title="图片" data-index="image">
+            <template slot-scope="text, record">
+              <el-image @click.native.stop fit="contain" style="height: 40px; width:auto" :src="text" :preview-src-list="[text]" v-if="text!=null && text != ''">
+                <div slot="error" class="image-slot">
+                  <i class="el-icon-picture-outline"></i>
+                </div>
+              </el-image>
+            </template>
+          </a-table-column>
           <a-table-column :width="100" align="center" key="compareRemark" title="比价备注" data-index="compareRemark" />
 
           <a-table-column :width="100" key="action" title="操作" align="center" fixed="right">
@@ -73,9 +83,17 @@
           :loading="inquiriesLoading"
           :data-source="inquiries"
           :scroll="{x: 1400}"
-          :row-selection="{ selectedRowKeys: selectedInquiryIds,
-           onChange: onInquirySelectChange,
-           getCheckboxProps: record => ({props: {disabled: record.unSendNum > 0}}) }"
+          :row-selection="{
+            selectedRowKeys: selectedInquiryIds,
+            onChange: onInquirySelectChange,
+            getCheckboxProps: record => ({props: {disabled: record.unSendNum > 0}}),
+            selections: [{
+            key: 'all-data',
+            text: '全选',
+            onSelect: () => {
+              this.selectedInquiryIds =  inquiries.map(item=>{return item.id});
+            },
+        }]}"
           >
           <a-table-column :sorter="(a, b) => a.unCompareNum - b.unCompareNum" defaultSortOrder="descend" key="unCompareNum" title="状态" :width="100" data-index="unCompareNum" align="center">
             <template slot-scope="text, record, index">

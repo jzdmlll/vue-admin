@@ -41,7 +41,7 @@ export const constantRoutes = [
       }
     ]
   },
-  {
+  /*{
     path: '/stock',
     component: Layout,
     children: [
@@ -52,7 +52,7 @@ export const constantRoutes = [
         meta: { title: '设备管理',  affix: true }
       },
     ]
-  },
+  },*/
   /*{
     path: '/equipment',
     component: Layout,

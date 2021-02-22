@@ -235,7 +235,6 @@
           if (valid) {
             let form = this.form
             form.operator = getUser()
-            form.projectId = this.searchForm.proDetailId
 
             postActionByJson('/purchase/purchaseContractGenerate/contractGenerate', { purchaseContract: form, itemIds: this.selectedRowKeys })
               .then( resp => {
@@ -257,28 +256,39 @@
           this.downloadLoading = true
           import('@/vendor/Export2Excel').then(excel => {
 
-            const tHeader = ['序号', '设备名称', '型号', '配置需求',  '单位', '数量', '单价', '总价', '品牌', '货期', '备注']
-            const filterVal = ['sort', 'name', 'suModel', 'params', 'unit', 'number', 'price',
+            const tHeader = ['序号', '设备名称', '供应商', '型号', '配置需求', '商家参数', '单位', '数量', '单价', '总价', '品牌', '货期', '备注']
+            const filterVal = ['sort', 'name', 'supplier', 'suModel', 'params', 'suParams', 'unit', 'number', 'price',
               'totalPrice', 'brand', 'delivery', 'remark']
+            let suppliers = []
             let list = []
             let sort = 0
             this.purchases.map(item=>{
               sort ++
-              if(this.selectedRowKeys.includes(item.quote.id)){
+              if(this.selectedRowKeys.includes(item.id)){
                 list.push({
                   sort: sort,
-                  name: item.inquiry.name,
-                  suModel: item.quote.suModel,
-                  params: item.inquiry.params,
-                  unit: item.inquiry.unit,
-                  number: item.inquiry.number,
-                  price: item.inquiry.finallyPrice,
-                  totalPrice: item.inquiry.correctPrice * item.inquiry.number,
-                  brand: item.quote.suBrand,
-                  delivery: item.quote.suDelivery,
-                  remark: item.inquiry.remark,
+                  name: item.item,
+                  supplier: item.purchaseSupply.supplier,
+                  suModel: item.purchaseSupply.model,
+                  params: item.params,
+                  suParams: item.purchaseSupply.params,
+                  unit: item.unit,
+                  number: item.number,
+                  price: item.purchaseSupply.price,
+                  totalPrice: item.purchaseSupply.price * item.number,
+                  brand: item.purchaseSupply.brand,
+                  delivery: item.purchaseSupply.delivery,
+                  remark: item.purchaseSupply.remark,
                 })
+                if (!suppliers.includes(item.purchaseSupply.supplier)) {
+                  suppliers.push(item.purchaseSupply.supplier)
+                }
               }
+            })
+            this.filename = ''
+            suppliers.map(supplier => {
+              alert(supplier)
+              this.filename += '【'+supplier+'】'
             })
             const data = this.formatJson(filterVal, list)
             excel.export_json_to_excel({
@@ -313,11 +323,11 @@
         let rows = []
         selectedRows.map(item => {
 
-          if (!item.contractId) {
+          if (true||!item.contractId) {
             if(this.selectSupplier == null) {
               this.selectSupplier = item.purchaseSupply.supplier
             }
-            if (item.id && (item.purchaseSupply.supplier == this.selectSupplier || !this.selectSupplier)) {
+            if (true||(item.id && (item.purchaseSupply.supplier == this.selectSupplier || !this.selectSupplier))) {
               rows.push(item.id)
             }else {
               this.$message({type: 'info', message: '只能选同一个供应商'})

@@ -232,14 +232,6 @@
       getUser,
       modifyInfo(record){
         this.form=record
-        this.$delete(this.form,'auditRemark')
-        this.$delete(this.form,'file')
-        this.$delete(this.form,'id')
-        this.$delete(this.form,'isActive')
-        this.$delete(this.form,'auditTime')
-        this.$delete(this.form,'auditStatus')
-        this.$delete(this.form,'senderTime')
-        this.form.auditor=''
         this.visible = true
         this.active=1
       },
@@ -329,7 +321,6 @@
                   return { id: item.id, name: item.name, url: item.url, type: 1 }
                 })
                 this.form.sender = parseInt(getUser())
-                delete this.form.role
                 request.request({
                   url: '/chapter/chapterAudit/insertChapterAudit',
                   method: 'post',

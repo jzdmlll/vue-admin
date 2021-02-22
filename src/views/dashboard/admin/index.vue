@@ -7,10 +7,14 @@
     </el-row>
     <el-row style="position: relative;width: 100%;height: 400px;padding: 1em;background: #fff">
       <el-col :sm="12" :lg="19" style="height: 100%">
-        <bar-chart height="100%"/>
+        <h3 style="padding: 1em">xxx项目</h3>
+        <bar-chart height="80%" :chart-data="barChartData"/>
       </el-col>
       <el-col :sm="12" :lg="5" style="height: 100%">
-
+        <h3 style="padding: 1em">项目完成进度</h3>
+        <ul>
+          <li></li>
+        </ul>
       </el-col>
     </el-row>
     <div style="padding: 1em;background: #fff;">
@@ -198,6 +202,11 @@ export default {
     return {
       status: ['未审核', '通过', '拒绝'],
       lineChartData: [],
+      barChartData: {
+        xAxis: ['询价', '报价', '技审', '商审', '比价', '终审'],
+        finishedData: [200, 192, 120, 144, 160, 130],
+        unfinishedData: [180, 160, 151, 106, 145, 150]
+      },
       allChartData: {
         projects: {
           actualData: []

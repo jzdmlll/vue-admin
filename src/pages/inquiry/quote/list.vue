@@ -78,6 +78,18 @@
                   </div>
                 </a-tooltip>
               </template>
+
+              <template slot="technicalRemark" slot-scope="text, record">
+                <a-tooltip placement="topLeft" :title="text+''">
+                  <span @click="handleCopy(text, $event)">{{ text }}</span>
+                </a-tooltip>
+              </template>
+              <template slot="businessRemark" slot-scope="text, record">
+                <a-tooltip placement="topLeft" :title="text+''">
+                  <span @click="handleCopy(text, $event)">{{ text }}</span>
+                </a-tooltip>
+              </template>
+
               <template slot="operation" slot-scope="text, record, index">
                 <div class="editable-row-operations" style="text-align: center">
               <span v-if="record.editable" >
@@ -150,7 +162,6 @@
                   :before-upload="beforeUpload"
                   :file-list="fileList1"
                   @change="uploadStatusChange1"
-                  accept="*"
                 >
                   <p class="ant-upload-drag-icon">
                     <a-icon type="inbox" />
@@ -346,6 +357,7 @@
   import elDragDialog from '@/directive/el-drag-dialog'
   import { getAction, postActionByJson, postActionByQueryString } from '@/api/manage'
   import { sortBykey } from '@/utils/sort'
+  import { beforeUpload, uploadStatusChange } from '@/utils/upload'
 
   const innerColumns = [
 
@@ -388,6 +400,8 @@
     data() {
       const fileUploadUrl = process.env.VUE_APP_BASE_API + 'file/uploadCache'
       return {
+
+        uploadKey: true,
         suppliers: [],
 
         currentTemplate: {},
@@ -623,14 +637,14 @@
       poolChoose(row) {
         this.poolChooseVisible = true
         this.poolChooseForm.inquiryId = row.id
-        this.loadPool(row.name)
+        this.loadPool(row.name, row.model)
       },
-      loadPool(name) {
+      loadPool(name, model) {
         this.poolChooseLoading = true
         request.request({
           url: '/pool/findHistoryPrices',
           method: 'get',
-          params: {'name': name}
+          params: {name: name, model: model}
         }).then(resp => {
           this.poolData = resp.data
           this.poolChooseLoading = false
@@ -801,7 +815,24 @@
         this.fileList = []
         this.fileList1 = []
         this.title = '编辑询价'
-        //this.loadProChecks()
+        this.fileList = []
+        getAction('/file/findByOtherId',{otherId: this.form.id, type: 1})
+          .then(resp => {
+            resp.data.map(item => {
+              let response = item
+              response.error = 0
+              response.fileId = response.id
+              response.fileName = response.name
+              this.fileList.push({
+                uid: 0-item.id,
+                name: item.name,
+                operator: item.operator,
+                status: 'done',
+                response: response,
+                url: response.url
+              })
+            })
+          })
       },
       clickFileInput() {
         if (this.form1.supplierId) {
@@ -929,43 +960,6 @@
             this.roles = response.data
           })
       },
-      beforeUpload(file) {
-        if (file.size > 12 * 1024 * 1024) {
-          this.$message({ message: '上传文件大小不能超过12M', type: 'error' })
-          return false
-        }
-      },
-      uploadStatusChange(info) {
-        if (info.file.status === 'uploading' || info.file.response.error === 0) {
-          let fileList = [...info.fileList]
-          fileList = fileList.map(file => {
-            if (file.response) {
-              file.url = file.response.url
-              file.id = file.response.fileId
-              file.name = file.response.fileName
-              //file.type = 1
-            }
-            return file
-          })
-
-          this.fileList = fileList
-        }
-      },
-      uploadStatusChange1(info) {
-        if (info.file.status === 'uploading' || info.file.response.error === 0) {
-          let fileList = [...info.fileList]
-          fileList = fileList.map(file => {
-            if (file.response) {
-              file.url = file.response.url
-              file.id = file.response.fileId
-              file.name = file.response.fileName
-              //file.type = 2
-            }
-            return file
-          })
-          this.fileList1 = fileList
-        }
-      },
       handleChange(value, record, column) {
         this.inquiryList.forEach((item, index) => {
           if (item.id === record.proDetailId) {
@@ -1055,7 +1049,31 @@
           case 1:
             this.$refs[form].validate((valid) => {
               if (valid) {
-                this.active++
+                this.fileList1 = []
+                if (this.form.id) {
+                  getAction('/file/findByOtherId',{otherId: this.form.id, type: 2})
+                    .then(resp => {
+                      resp.data.map(item => {
+                        let response = item
+                        response.error = 0
+                        response.fileId = response.id
+                        response.fileName = response.name
+                        this.fileList1.push({
+                          uid: 0-item.id,
+                          name: item.name,
+                          operator: item.operator,
+                          status: 'done',
+                          response: response,
+                          url: response.url
+                        })
+                      })
+                    })
+                    .finally(()=> {
+                      this.active++
+                    })
+                }else {
+                  this.active++
+                }
               } else {
                 console.log('error commit')
                 return false
@@ -1064,13 +1082,16 @@
             break
           case 2:
             this.submitLoading = true
+
+
             const fileList = this.fileList.map(item => {
-              return { id: item.id, name: item.name, url: item.url, type: 3 }
+              return { id: item.id, name: item.name, url: item.url, type: 0, operator: item.response.operator }
             })
             const fileList1 = this.fileList1.map(item => {
-              return { id: item.id, name: item.name, url: item.url, type: 2 }
+              return { id: item.id, name: item.name, url: item.url, type: 0, operator: item.response.operator }
             })
-            this.form.files = [...fileList.concat(fileList1)]
+            this.form.inquiryFiles = fileList
+            this.form.technologyFiles = fileList1
             this.form.operator = parseInt(getUser())
             //this.form.proChecks = this.proChecks
             request.request({
@@ -1138,6 +1159,23 @@
           .then(response => {
             this.projects = response.data
           })
+      },
+      beforeUpload,
+      uploadStatusChange,
+      uploadStatusChange1(info) {
+        if (info.file.status === 'uploading' || info.file.response.error === 0) {
+          let fileList = [...info.fileList]
+          fileList = fileList.map(file => {
+            if (file.response) {
+              file.url = file.response.url
+              file.id = file.response.fileId
+              file.name = file.response.fileName
+            }
+            return file
+          })
+
+          this.fileList1 = fileList
+        }
       }
     }
   }
