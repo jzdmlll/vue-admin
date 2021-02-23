@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { saveAs } from 'file-saver'
-import XLSX from 'xlsx'
+import XLSX from 'xlsx-style'
 
 function generateArray(table) {
   var out = [];
@@ -202,6 +202,7 @@ export function export_json_to_excel({
         }
       }
     }
+    console.log(result)
     ws['!cols'] = result;
   }
 

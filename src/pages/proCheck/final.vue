@@ -2,6 +2,7 @@
   <!-- 最终审核 -->
   <div class="finalCheck_list">
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
+      <el-button :loading="downloadLoading" style="margin-bottom:20px" type="primary" icon="el-icon-document" @click="handleDownload">Export</el-button>
       <el-button :style="hasSelected?{display: 'inline-block'}:{display: 'none'}" type="primary" size="small" @click="toCheck(key=1)">通过</el-button>
       <el-button :style="hasSelected?{display: 'inline-block'}:{display: 'none'}" type="danger" size="small" @click="toCheck(key=2)">拒绝</el-button>
       <el-button :style="hasSelected?{display: 'inline-block'}:{display: 'none'}" type="info" size="small" @click="toCheck(key=0)">撤销</el-button>
@@ -268,6 +269,8 @@
     directives: { elDragDialog },
     data() {
       return {
+        downloadLoading: false,
+
         inquiries: [],
 
         inquiryKeys: ['model', 'params', 'meter', 'measuringRange', 'meterSignal', 'connectionMode',
@@ -317,6 +320,166 @@
       this.loadProjects()
     },
     methods: {
+      handleDownload() {
+        this.downloadLoading = true
+        import('@/vendor/Export2Excel').then(excel => {
+          let multiHeader = [['询价','','','','']]
+          let header = ['序号', '设备名称', '主要技术参数', '单位', '数量']
+
+          const filterVal = ['inquiry-sort', 'inquiry-name', 'inquiry-params', 'inquiry-unit', 'inquiry-number']
+          const columns = ['设备型号', '设备厂家', '设备单价', '设备总价', '备注']
+          const columnsVal = ['suModel', 'supplier', 'suPrice', 'suTotalPrice', 'suRemark']
+          const columns1 = ['报价单价', '报价总价']
+          const columns1Val = ['finallyPrice', 'finallyTotalPrice']
+          let list = []
+          let merges = ['A1:E1']
+          let c = [70]
+
+          let suppliers = [...this.dynamicColumns.suppliers]
+          suppliers.push('比价结果')
+          suppliers.push('核定结果')
+          suppliers.push('最低价')
+          suppliers.push('拟定报价')
+          suppliers.push('最终报价')
+
+          console.log(this.data)
+
+          suppliers.map(supplier => {
+
+            // 处理表头
+            let col = []
+            let colVal = []
+            if (supplier == '拟定报价' || supplier == '最终报价') {
+              col = columns1
+              colVal = columns1Val
+            }else {
+              col = columns
+              colVal = columnsVal
+            }
+            let length = col.length - 1
+            multiHeader[0].push(supplier)
+            col.map((column, index) => {
+              if(index > 0) {
+                multiHeader[0].push('')
+              }
+              header.push(column)
+              if(supplier == '比价结果' && column == '备注') {
+                filterVal.push(supplier+'-'+'compareRemark')
+              }else if(supplier == '核定结果' && column == '备注') {
+                filterVal.push(supplier+'-'+'finallyRemark')
+              }else {
+                filterVal.push(supplier+'-'+colVal[index])
+              }
+            })
+            let result = ''
+            if (c.length == 1) {
+              // 1位
+              if (c[0]+length< 91 ) {
+                result = String.fromCharCode(c[0])+'1:'+String.fromCharCode(c[0]+length)+'1'
+                c[0] += length+1
+              }else {
+                // 加一位
+                c.push(65)
+                result = String.fromCharCode(c[0])+'1:'+String.fromCharCode(c[1])+String.fromCharCode(c[0]-90+64+length)+'1'
+                c[1] = c[0]-90+64+length+1
+                c[0] = 65
+              }
+            }else if(c.length == 2) {
+              if (c[1]+length< 91 ) {
+                if (c[1] == 65 && c[0]+length >= 91 ) {
+                  result = String.fromCharCode(c[0])+'1:'+String.fromCharCode(c[1])+String.fromCharCode(c[0]-90+64+length)+'1'
+                  c[1] = c[0]-90+64+length+1
+                  c[0] = 65
+                }else {
+                  result = String.fromCharCode(c[0])+String.fromCharCode(c[1])+'1:'+String.fromCharCode(c[0])+String.fromCharCode(c[1]+length)+'1'
+                  c[1] += length+1
+                }
+              }else if(c[1]+length >= 91 && c[0] < 90){
+                // 第一位加1
+                c[0] ++
+                result = String.fromCharCode(c[0]-1)+String.fromCharCode(c[1])+'1:'+String.fromCharCode(c[0])+String.fromCharCode(c[1]-90+64+length)+'1'
+                c[1] = c[1]-90+64+length+1
+              }else {
+                // 加一位
+                c.push(65)
+              }
+            }else if(c.length == 3) {
+                // 三位 （待定）
+
+            }
+            merges.push(result)
+          })
+
+
+          console.log(filterVal)
+          this.data.map(item => {
+            let record = {}
+            let compareSupplier = ''
+            let minPriceSupplier = ''
+            let finallySupplier = ''
+            filterVal.map(key => {
+              var supplier = key.split('-')[0]
+              var reKey = key.split('-')[1]
+              if (item[supplier]) {
+                record[key] = item[supplier][reKey]
+                if (item[supplier]['compareStatus'] == 1) {
+                  compareSupplier = supplier
+                }
+                if (item[supplier]['minPrice'] == 1) {
+                  minPriceSupplier = supplier
+                }
+                if (item[supplier]['finallyAudit'] == 1) {
+                  finallySupplier = supplier
+                }
+              }else if(supplier=='比价结果') {
+                record[key] = item[compareSupplier][reKey]
+              }else if(supplier=='最终报价') {
+                if (item['inquiry']['finallyPrice']&&item['inquiry']['number']) {
+                  record['最终报价-finallyPrice'] = item['inquiry']['finallyPrice']
+                  record['最终报价-finallyTotalPrice'] = parseFloat(item['inquiry']['finallyPrice'])*parseFloat(item['inquiry']['number'])
+                }else {
+                  record[key] = null
+                }
+              }else if(supplier=='拟定报价') {
+                if (item['inquiry']['price']&&item['inquiry']['number']) {
+                  record['拟定报价-finallyPrice'] = item['inquiry']['price']
+                  record['拟定报价-finallyTotalPrice'] = parseFloat(item['inquiry']['price'])*parseFloat(item['inquiry']['number'])
+                }else {
+                  record[key] = null
+                }
+              }else if(supplier=='最低价'){
+                record[key] = minPriceSupplier?item[minPriceSupplier][reKey]:null
+              }else if(supplier == '核定结果') {
+                record[key] = finallySupplier?item[finallySupplier][reKey]:null
+              }
+            })
+            list.push(record)
+          })
+          console.log(list)
+          let data = this.formatJson(filterVal, list)
+          let filename = '终审导出'
+          this.projects.map(pro => {
+            if (pro.id == this.form.proDetailId) {
+              filename = pro.name + '终审导出'
+            }
+          })
+          excel.export_json_to_excel({
+            multiHeader,
+            header,
+            merges,
+            data,
+            autoWidth: true,
+            filename: filename
+          })
+          this.downloadLoading = false
+        }).catch(e => {
+          console.log(e)
+          this.downloadLoading = false
+        })
+      },
+      formatJson(filterVal, jsonData) {
+        return jsonData.map(v => filterVal.map(j => v[j]))
+      },
       selectChange(value) {
         this.loadInquiries(value)
       },

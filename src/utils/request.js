@@ -63,7 +63,7 @@ service.interceptors.response.use(
         type: 'error',
         duration: 5 * 1000
       })
-      if (res.status === 402) {
+      if (res.status === 402 || res.status === 401) {
         logout()
       }
       // 返回承诺失败对象

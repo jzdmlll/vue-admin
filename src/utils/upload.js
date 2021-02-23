@@ -1,6 +1,6 @@
 export function beforeUpload(file) {
-  if (file.size > 12 * 1024 * 1024) {
-    this.$message({ message: '上传文件大小不能超过12M', type: 'error' })
+  if (file.size > 100 * 1024 * 1024) {
+    this.$message({ message: '上传文件大小不能超过100M', type: 'error' })
     return false
   }else {
     this.uploadKey = false
