@@ -512,7 +512,7 @@
             case 60: form.firstAudit = 0;form.secondAudit = 0;break
             case 90: form.firstAudit = 0;form.secondAudit = 0;form.threeAudit = 0;break
           }
-          postActionByQueryString('/purchase/contract/saveOrUpdate', form)
+          postActionByQueryString('/purchase/contract/purchaseContractSend', form)
             .then( resp => {
               this.$message({ message: resp.message, type: 'success' })
               this.checkDialogVisible = false
