@@ -110,7 +110,6 @@
         size="middle"
         :rowKey="(record) => record.id"
       >
-
       </a-table>
     </el-dialog>
   </div>

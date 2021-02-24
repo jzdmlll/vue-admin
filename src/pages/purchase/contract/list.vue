@@ -241,12 +241,12 @@
         <el-row v-if="attrDialogForm&&attrDialogForm.isBond == 1" :gutter="10">
           <el-col :lg="12" :sm="24">
             <el-form-item label="保证金(元)" label-width="80px" size="small" prop="bond">
-              <el-input v-model="attrDialogForm.bond" clearable placeholder="保证金金额" size="small" />
+              <el-input v-model="attrDialogForm.bond" clearable placeholder="金额" size="small" />
             </el-form-item>
           </el-col>
           <el-col :lg="12" :sm="24">
-            <el-form-item label="付款时间" label-width="80px" size="small" prop="bondTime">
-              <el-date-picker v-model="attrDialogForm.bondTime" value-format="timestamp" clearable placeholder="保证金付款时间" size="small" />
+            <el-form-item label="应缴纳时间" label-width="80px" size="small" prop="bondTime">
+              <el-date-picker v-model="attrDialogForm.bondTime" value-format="timestamp" clearable placeholder="应缴纳时间" size="small" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -512,7 +512,7 @@
             case 60: form.firstAudit = 0;form.secondAudit = 0;break
             case 90: form.firstAudit = 0;form.secondAudit = 0;form.threeAudit = 0;break
           }
-          postActionByQueryString('/purchase/contract/saveOrUpdate', form)
+          postActionByQueryString('/purchase/contract/purchaseContractSend', form)
             .then( resp => {
               this.$message({ message: resp.message, type: 'success' })
               this.checkDialogVisible = false
