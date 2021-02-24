@@ -3,6 +3,7 @@
     <div class="btns" style="margin-bottom:1em;background:#fff;position:relative;padding: 1em">
       <el-button type="primary" size="mini" style="background: #1890ff;border-color: #1890ff" @click="back">返回</el-button>
       <el-button type="success" size="mini" @click="toCollect">汇总</el-button>
+      <el-button type="primary" size="small" style="float: right" @click="findProFile">查看项目附件</el-button>
       <span :style="opacity==1?{opacity: opacity}:{opacity: 0, display: 'none'}" class="draw-fixed-button el-icon-arrow-down my-transition" @click="()=>{this.drawer=true; this.loadInquiries()}"></span>
     </div>
     <div class="table-container" style="margin-bottom: 50px">
@@ -213,6 +214,19 @@
         <el-table-column v-for="supplier in suppliers" :prop="supplier" :label="supplier" align="center" />
       </el-table>
     </el-dialog>
+
+    <!--   项目文件查看模态框  -->
+    <el-dialog v-el-drag-dialog title="项目文件" :visible.sync="fileDialogVisible">
+      <a-table
+        :pagination="false"
+        v-loading="proFile.tableLoading"
+        :data-source="proFile.data"
+        size="middle"
+        :rowKey="(record) => record.id"
+      >
+      </a-table>
+    </el-dialog>
+
     <div class="footer" :style="selectedRowKey[Object.keys(selectedRowKey)[0]] > 0?{display: 'block'}:{display: 'none'}">
       <el-button :loading="submitLoading"  style="right:0;margin: 0 2em 0 0" type="primary" size="small" @click="submitCompare">{{submitLoading?'':'选用'}}</el-button>
     </div>
@@ -239,6 +253,8 @@
         customRender: 'customRender',
       }
       return {
+        proFile: {},
+        fileDialogVisible: false,
         suppliers: [],
         collects: [],
         collectsLoading: false,
@@ -297,6 +313,17 @@
       this.init()
     },
     methods: {
+      findProFile(){
+        this.fileDialogVisible = true
+        getAction('/file/findByProId', { proId: this.proDetailId})
+          .then(resp => {
+            this.proFile.data = resp.data
+            this.proFile.tableLoading = false
+          })
+          .catch(() => {
+            this.proFile.tableLoading = false
+          })
+      },
       toCollect() {
         this.collectDialog.visible = true
         this.collectsLoading = true

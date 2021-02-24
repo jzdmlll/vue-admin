@@ -121,7 +121,7 @@
       addSupplier() {
         this.dialog.title = '新增'
         this.dialog.visible = true
-        this.dialog.form.id = null
+        this.dialog.form = {}
       },
       editTemplate(record) {
         this.dialog.title = '修改'
