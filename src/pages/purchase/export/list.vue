@@ -73,9 +73,11 @@
         <a-table-column :width="100" ellipsis="true" key="purchaseSupply.params" title="实际参数" data-index="purchaseSupply.params" align="center"/>
         <a-table-column :width="100" ellipsis="true" key="purchaseSupply.warranty" title="货期" data-index="purchaseSupply.warranty" align="center"/>
         <a-table-column :width="100" ellipsis="true" key="purchaseSupply.remark" title="备注" data-index="purchaseSupply.remark" align="center"/>
+        <a-table-column :width="100" ellipsis="true" key="purchaseSupply.revisedPrice" title="被修正价" data-index="purchaseSupply.revisedPrice" align="center"/>
+        <a-table-column :width="100" ellipsis="true" key="purchaseSupply.revisedRemark" title="修正原因" data-index="purchaseSupply.revisedRemark" align="center"/>
         <a-table-column :width="120" fixed="right" key="action" title="操作" align="center">
           <template slot-scope="text, record">
-            <el-button @click="editPrice(record.purchaseSupply)" type="success" icon="el-icon-edit" size="mini" style="padding: 7px 10px;">供货价</el-button>
+            <el-button @click="editRevisePrice(record.purchaseSupply.id)" type="success" icon="el-icon-edit" size="mini" style="padding: 7px 10px;">供货价</el-button>
           </template>
         </a-table-column>
       </a-table>
@@ -102,6 +104,22 @@
       <div slot="footer" class="dialog-footer">
         <el-button size="small" @click="visible = false">取 消</el-button>
         <el-button type="primary" size="small" @click="submitHandler('form')">提 交</el-button>
+      </div>
+    </el-dialog>
+
+    <!-- 修改供货价 -->
+    <el-dialog v-el-drag-dialog title="修改供货价" :visible.sync="revisePriceVisible">
+      <el-form :model="revisePriceForm" status-icon>
+        <el-form-item label="修正供货价" label-width="80px" size="small" prop="revisePrice">
+          <el-input type="text" v-model="revisePriceForm.revisedPrice"></el-input>
+        </el-form-item>
+        <el-form-item label="修正原因" label-width="80px" size="small" prop="revisedRemark">
+          <el-input type="textarea" v-model="revisePriceForm.revisedRemark"></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button size="small" @click="revisePriceVisible = false">取 消</el-button>
+        <el-button type="primary" size="small" @click="submitRevisePrice()">提 交</el-button>
       </div>
     </el-dialog>
   </div>
@@ -140,6 +158,8 @@
           })
       };
       return {
+        revisePriceVisible: false,
+        revisePriceForm: {},
         files: [],
         currentTemplate: {},
 
@@ -207,11 +227,28 @@
 
         this.visible = true
       },
+
+      /**
+      * 弹出修正报价模态框
+      **/
+      editRevisePrice(id){
+        this.revisePriceForm.id = id
+        this.revisePriceVisible = true
+      },
+
       /**
        * 修改供货价
        */
-      editPrice(row) {
-        this.$prompt('请输入供货价', '提示', {
+      submitRevisePrice() {
+
+        this.revisePriceForm.revisePeople = getUser()
+        postActionByJson('/purchase/contract/updateSupplyPrice', this.revisePriceForm)
+          .then(resp => {
+            this.$message({ message: resp.message, type: 'success' })
+            this.revisePriceVisible = false
+            this.toSearch()
+          })
+        /*this.$prompt('请输入供货价', '提示', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
           inputPattern: /^[1-9][0-9]*([\.][0-9]{1,2})?$/,
@@ -225,7 +262,7 @@
               this.toSearch()
             })
         }).catch(() => {
-        });
+        });*/
       },
       /**
        * 生成采购合同提交 事件
