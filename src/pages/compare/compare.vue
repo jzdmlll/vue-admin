@@ -224,7 +224,16 @@
         size="middle"
         :rowKey="(record) => record.id"
       >
+        <a-table-column key="name" data-index="name" title="文件名"></a-table-column>
+        <a-table-column key="url" title="文件">
+          <template slot-scope="text, record, index">
+            <el-link :href="record.url">{{record.url}}</el-link>
+          </template>
+        </a-table-column>
+        <a-table-column key="" data-index="name" title="文件名"></a-table-column>
+
       </a-table>
+
     </el-dialog>
 
     <div class="footer" :style="selectedRowKey[Object.keys(selectedRowKey)[0]] > 0?{display: 'block'}:{display: 'none'}">
@@ -314,7 +323,6 @@
     },
     methods: {
       findProFile(){
-        this.fileDialogVisible = true
         getAction('/file/findByProId', { proId: this.proDetailId})
           .then(resp => {
             this.proFile.data = resp.data
@@ -323,6 +331,7 @@
           .catch(() => {
             this.proFile.tableLoading = false
           })
+        this.fileDialogVisible = true
       },
       toCollect() {
         this.collectDialog.visible = true
