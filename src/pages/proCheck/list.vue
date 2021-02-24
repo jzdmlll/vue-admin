@@ -161,11 +161,16 @@ export default {
       })()
     };
   },
-  created() {
+  async created() {
     //this.loadChecks()
     //this.initColumns()
-    this.loadProjects()
+    await this.loadProjects()
     this.searchForm.status = 0
+
+    if(this.$route.query && this.$route.query.proId){
+      this.$set(this.searchForm, 'proDetailId', parseInt(this.$route.query.proId))
+      this.toSearch()
+    }
   },
   methods: {
     loadCurrentTemplate(id) {

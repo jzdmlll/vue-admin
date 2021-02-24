@@ -217,8 +217,8 @@
               tHeader: ['报价型号', '报价品牌', '实际技术参数', '设备单价','设备总价','货期','质保期/售后','图片','备注'],
               filterVal: ['suModel', 'suBrand', 'suParams', 'price', 'totalPrice', 'delivery', 'warranty', 'image', 'quoteRemark']
             }
-            let tHeader = Object.keys(this.currentTemplate.jsonKeys)
-            let filterVal = Object.values(this.currentTemplate.jsonKeys)
+            let tHeader = Object.keys(this.currentTemplate.jsonKeys).filter(key=> key!='品牌推荐')
+            let filterVal = Object.values(this.currentTemplate.jsonKeys).filter(val=>val!='brand')
             tHeader = ['编号'].concat(tHeader)
             tHeader = tHeader.concat(quote.tHeader)
             filterVal = ['id'].concat(filterVal)

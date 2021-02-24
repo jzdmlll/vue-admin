@@ -2,11 +2,11 @@
   <!-- 最终审核 -->
   <div class="finalCheck_list">
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
-      <el-button :loading="downloadLoading" style="margin-bottom:20px" type="primary" icon="el-icon-document" @click="handleDownload">Export</el-button>
+      <el-button :loading="downloadLoading" style="margin-bottom:20px" type="primary" icon="el-icon-document" @click="handleDownload">导出</el-button>
       <el-button :style="hasSelected?{display: 'inline-block'}:{display: 'none'}" type="primary" size="small" @click="toCheck(key=1)">通过</el-button>
       <el-button :style="hasSelected?{display: 'inline-block'}:{display: 'none'}" type="danger" size="small" @click="toCheck(key=2)">拒绝</el-button>
       <el-button :style="hasSelected?{display: 'inline-block'}:{display: 'none'}" type="info" size="small" @click="toCheck(key=0)">撤销</el-button>
-      <el-select @change="selectChange" v-model="form.proDetailId" style="margin-right: 6px" filterable clearable placeholder="请选择项目" value-key="name">
+      <el-select @change="selectChange" v-model="form.proDetailId" style="margin-right: 6px" filterable clearable placeholder="请选择项目" value-key="id">
         <el-option v-for="item in projects" :key="item.id" :label="item.name" :value="item.id" />
       </el-select>
       <el-select v-model="form.inquiryName" style="margin-right: 6px" filterable clearable placeholder="请选择询价设备" value-key="name">
@@ -316,8 +316,12 @@
       var that = this
       that.tableHeight = document.documentElement.clientHeight-83-196
     },
-    created() {
-      this.loadProjects()
+    async created() {
+      await this.loadProjects()
+      if(this.$route.query && this.$route.query.proId){
+        this.$set(this.form, 'proDetailId', parseInt(this.$route.query.proId))
+        this.loadData()
+      }
     },
     methods: {
       handleDownload() {
@@ -342,7 +346,7 @@
           suppliers.push('拟定报价')
           suppliers.push('最终报价')
 
-          console.log(this.data)
+          //console.log(this.data)
 
           suppliers.map(supplier => {
 
@@ -411,12 +415,14 @@
           })
 
 
-          console.log(filterVal)
+          //console.log(filterVal)
+          // 处理数据
           this.data.map(item => {
             let record = {}
             let compareSupplier = ''
             let minPriceSupplier = ''
             let finallySupplier = ''
+            // 遍历表头
             filterVal.map(key => {
               var supplier = key.split('-')[0]
               var reKey = key.split('-')[1]
@@ -455,7 +461,7 @@
             })
             list.push(record)
           })
-          console.log(list)
+          //console.log(list)
           let data = this.formatJson(filterVal, list)
           let filename = '终审导出'
           this.projects.map(pro => {
@@ -471,7 +477,9 @@
             autoWidth: true,
             filename: filename
           })
-          this.downloadLoading = false
+          setTimeout(()=> {
+            this.downloadLoading = false
+          },2000)
         }).catch(e => {
           console.log(e)
           this.downloadLoading = false

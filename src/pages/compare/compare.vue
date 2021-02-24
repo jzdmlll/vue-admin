@@ -609,8 +609,8 @@
         this.drawer = false
       },
       init() {
-        if(this.$route.query.proDetailId) {
-          this.proDetailId = this.$route.query.proDetailId
+        if(this.$route.query.proId) {
+          this.proDetailId = this.$route.query.proId
         }
         /*setTimeout(() => {
           this.opacity = 1

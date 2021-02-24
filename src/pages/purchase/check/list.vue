@@ -29,9 +29,10 @@
     <el-card shadow="never" style="margin-top: 1em">
       <div slot="header" class="index-md-title">
         <span>{{level[page].title}}</span>
-        <span><el-button v-if="searchForm.contractId" style="margin-right: 6px;float:right;" type="primary" icon="el-icon-success" size="small" @click="toJudge(1)">审核通过</el-button></span>
-        <span><el-button v-if="searchForm.contractId" style="margin-right: 6px;float:right;" type="danger" icon="el-icon-close" size="small" @click="toJudge(2)">审核不通过</el-button></span>
-        <span><el-button v-if="searchForm.contractId" style="margin-right: 6px;float:right;" type="warning" icon="el-icon-paperclip" size="small" @click="getFile">查看附件</el-button></span>
+        <span v-if="contractChecks.length>0">【{{projectName}} / {{contractName}}】</span>
+        <span><el-button v-if="contractChecks.length>0" style="margin-right: 6px;float:right;" type="primary" icon="el-icon-success" size="small" @click="toJudge(1)">审核通过</el-button></span>
+        <span><el-button v-if="contractChecks.length>0" style="margin-right: 6px;float:right;" type="danger" icon="el-icon-close" size="small" @click="toJudge(2)">审核不通过</el-button></span>
+        <span><el-button v-if="contractChecks.length>0" style="margin-right: 6px;float:right;" type="warning" icon="el-icon-paperclip" size="small" @click="getFile">查看附件</el-button></span>
       </div>
       <a-table
         size="small"
@@ -83,50 +84,13 @@
     directives: { elDragDialog },
     data() {
 
-      const props = {
-        lazy: true,
-        lazyLoad(node, resolve) {
-          const { level } = node;
-          switch (level) {
-            case 0:
-              // 请求一级节点数据
-              getAction('/purchase/project/findAllLike', {})
-                .then( resp => {
-                  let nodes = []
-                  resp.data.map(item => {
-                    nodes.push({
-                      value: item.id,
-                      label: item.projectName,
-                      leaf: level >= 1
-                    })
-                  })
-                  // 通过调用resolve将子节点数据返回，通知组件数据加载完成
-                  resolve(nodes);
-                })
-              break
-            case 1:
-              // 请求二级节点数据
-              let nodes = []
-              const projectId = node.data.value
-              getAction('/purchase/contract/findByProjectId', {projectId: projectId})
-                .then( resp => {
-                  let nodes = []
-                  resp.data.map(item => {
-                    nodes.push({
-                      value: item.id,
-                      label: item.contractName,
-                      item: item,
-                      leaf: level >= 1
-                    })
-                  })
-                  // 通过调用resolve将子节点数据返回，通知组件数据加载完成
-                  resolve(nodes)
-                })
-              break
-          }
-        }
-      }
       return {
+
+        projectName: null,
+        contractName: null,
+        projects: [],
+        contracts: [],
+
         file:[],     //获取文件存放对象
         files:[],
         searchForm: {},
@@ -134,7 +98,51 @@
         contractChecks: [],
         contractChecksLoading: false,
 
-        props: props,
+        props: {
+          lazy: true,
+          lazyLoad:((node, resolve)=>{
+            const { level } = node;
+            switch (level) {
+              case 0:
+                // 请求一级节点数据
+                getAction('/purchase/project/findAllLike', {})
+                  .then( resp => {
+                    this.projects = resp.data
+                    let nodes = []
+                    resp.data.map(item => {
+                      nodes.push({
+                        value: item.id,
+                        label: item.projectName,
+                        leaf: level >= 1
+                      })
+                    })
+                    // 通过调用resolve将子节点数据返回，通知组件数据加载完成
+                    resolve(nodes);
+                  })
+                break
+              case 1:
+                // 请求二级节点数据
+                let nodes = []
+                const projectId = node.data.value
+                getAction('/purchase/contract/findByProjectId', {projectId: projectId})
+                  .then( resp => {
+                    this.contracts = resp.data
+                    let nodes = []
+                    resp.data.map(item => {
+                      nodes.push({
+                        value: item.id,
+                        label: item.contractName,
+                        item: item,
+                        leaf: level >= 1
+                      })
+                    })
+                    // 通过调用resolve将子节点数据返回，通知组件数据加载完成
+                    resolve(nodes)
+                  })
+                break
+            }
+          }),
+        },
         page: null,
         level: [
           { audit: 'firstAudit', title: '一级审核'},
@@ -148,6 +156,7 @@
       this.page = this.$route.name == '一级审核'?0:this.$route.name == '二级审核'?1:2
     },
     methods: {
+
       toSearch() {
         this.contractChecksLoading = true
         if (this.searchForm.contractId) {
@@ -184,6 +193,8 @@
       init() {
       },
       handleChange(value) {
+        this.projectName = this.projects.filter(item=>item.id==value[0])[0]['projectName']
+        this.contractName = this.contracts.filter(item=>item.id==value[1])[0]['contractName']
       },
       checkContract(contract) {
         return contract[this.level[this.page]['audit']] == 0?false:true

@@ -104,7 +104,7 @@
       handleSearch,
       toSearch() {},
       toCompare(proDetailId) {
-        this.$router.push({ path: "/compare/compare", query: { proDetailId: proDetailId}})
+        this.$router.push({ path: "/compare/compare", query: { proId: proDetailId}})
       },
       init() {
         this.loadProjects()

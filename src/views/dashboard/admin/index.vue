@@ -6,15 +6,35 @@
       <line-chart :chart-data="lineChartData" />
     </el-row>
     <el-row style="position: relative;width: 100%;height: 400px;padding: 1em;background: #fff">
-      <el-col :sm="12" :lg="19" style="height: 100%">
+      <el-col :sm="12" :lg="16" style="height: 100%">
         <h3 style="padding: 1em">xxx项目</h3>
         <bar-chart height="80%" :chart-data="barChartData"/>
       </el-col>
-      <el-col :sm="12" :lg="5" style="height: 100%">
+      <el-col :sm="12" :lg="8" style="height: 100%">
         <h3 style="padding: 1em">项目完成进度</h3>
-        <ul>
-          <li></li>
-        </ul>
+        <a-list>
+          <RecycleScroller
+            v-infinite-scroll="handleInfiniteOnLoad"
+            style="height: 280px;border-top: 1px solid #ebebeb;border-bottom: 1px solid #ebebeb"
+            :items="projects.list"
+            :item-size="60"
+            key-field="id"
+            :infinite-scroll-disabled="busy"
+            :infinite-scroll-distance="15"
+          >
+            <a-list-item slot-scope="{ item }">
+              <!--<a-list-item-meta :description="item.name">
+              </a-list-item-meta>-->
+              <div style="padding:0 8px;width: 100vw;height: 60px;line-height: 60px">
+                <a-tooltip :destroyTooltipOnHide="true" placement="topLeft" :title="item.name">
+                  <el-tag style="max-width: 150px;text-overflow:ellipsis;overflow: hidden;white-space: nowrap" effect="plain">{{item.name}}</el-tag>
+                </a-tooltip>
+                <el-divider />
+              </div>
+            </a-list-item>
+          </RecycleScroller>
+          <a-spin v-if="loading" class="demo-loading" />
+        </a-list>
       </el-col>
     </el-row>
     <div style="padding: 1em;background: #fff;">
@@ -23,7 +43,6 @@
           <el-card>
             <div slot="header" class="index-md-title">
               <span>终审待办【{{ maxPage[0] }}】</span>
-              <a v-if="dataSource1 " slot="footer" @click="goPage('终审')">前往 <a-icon type="double-right" /></a>
             </div>
             <a-table
               :dataSource="dataSource1"
@@ -34,11 +53,14 @@
               :rowKey="record => record.id"
             >
               <a-table-column ellipsis="true" key="proName" title="项目" data-index="proName"/>
-              <a-table-column ellipsis="true" key="inquiryName" title="设备名" data-index="inquiryName"/>
-              <a-table-column ellipsis="true" key="quoteSupplier" title="供应商" data-index="quoteSupplier"/>
               <a-table-column ellipsis="true" key="finallyAudit" title="状态" data-index="finallyAudit">
                 <template slot-scope="finallyAudit">
-                  <el-tag :type="finallyAudit == 0 ? 'info':(finallyAudit == 1? 'success':'danger')">{{ statu(finallyAudit) }}</el-tag>
+                  <el-tag type="danger">未完成</el-tag>
+                </template>
+              </a-table-column>
+              <a-table-column key="action" title="操作" :width="100">
+                <template slot-scope="text, record">
+                  <el-button @click="gotoOtherPage('/proCheck/final', record)" size="mini">前往 <a-icon type="double-right" /></el-button>
                 </template>
               </a-table-column>
             </a-table>
@@ -48,7 +70,6 @@
           <el-card>
             <div slot="header" class="index-md-title">
               <span>技审待办【{{ maxPage[1] }}】</span>
-              <a v-if="dataSource2 " slot="footer" @click="goPage('技审')">前往 <a-icon type="double-right" /></a>
             </div>
             <a-table
               :dataSource="dataSource2"
@@ -59,13 +80,14 @@
               :rowKey="record => record.id"
             >
               <a-table-column ellipsis="true" key="proName" title="项目" data-index="proName"/>
-              <a-table-column ellipsis="true" key="inquiryName" title="设备名" data-index="inquiryName"/>
-              <a-table-column ellipsis="true" key="quoteSupplier" title="供应商" data-index="quoteSupplier"/>
-              <a-table-column ellipsis="true" key="quoteSuParams" title="实际参数" data-index="quoteSuParams"/>
-              <a-table-column ellipsis="true" key="quoteSuModel" title="实际型号" data-index="quoteSuModel"/>
               <a-table-column ellipsis="true" key="technicalAudit" title="状态" data-index="technicalAudit">
                 <template slot-scope="technicalAudit">
-                  <el-tag :type="technicalAudit == 0 ? 'info':(technicalAudit == 1? 'success':'danger')">{{ statu(technicalAudit) }}</el-tag>
+                  <el-tag type="danger">未完成</el-tag>
+                </template>
+              </a-table-column>
+              <a-table-column key="action" title="操作" :width="100">
+                <template slot-scope="text, record">
+                  <el-button @click="gotoOtherPage('/proCheck/technology', record)" size="mini">前往 <a-icon type="double-right" /></el-button>
                 </template>
               </a-table-column>
             </a-table>
@@ -75,7 +97,6 @@
           <el-card>
             <div slot="header" class="index-md-title">
               <span>商审待办【{{ maxPage[2] }}】</span>
-              <a v-if="dataSource3 " slot="footer" @click="goPage('商审')">前往 <a-icon type="double-right" /></a>
             </div>
             <a-table
               :dataSource="dataSource3"
@@ -86,13 +107,14 @@
               :rowKey="record => record.id"
             >
               <a-table-column ellipsis="true" key="proName" title="项目" data-index="proName"/>
-              <a-table-column ellipsis="true" key="inquiryName" title="设备名" data-index="inquiryName"/>
-              <a-table-column ellipsis="true" key="quoteSupplier" title="供应商" data-index="quoteSupplier"/>
-              <a-table-column ellipsis="true" key="quoteSuBrand" title="品牌" data-index="quoteSuBrand"/>
-              <a-table-column ellipsis="true" key="quoteSuPrice" title="单价" data-index="quoteSuPrice"/>
               <a-table-column ellipsis="true" key="businessAudit" title="状态" data-index="businessAudit">
                 <template slot-scope="businessAudit">
-                  <el-tag :type="businessAudit == 0 ? 'info':(businessAudit == 1? 'success':'danger')">{{ statu(businessAudit) }}</el-tag>
+                  <el-tag type="danger">未完成</el-tag>
+                </template>
+              </a-table-column>
+              <a-table-column key="action" title="操作" :width="100">
+                <template slot-scope="text, record">
+                  <el-button @click="gotoOtherPage('/proCheck/business', record)" size="mini">前往 <a-icon type="double-right" /></el-button>
                 </template>
               </a-table-column>
             </a-table>
@@ -102,7 +124,6 @@
           <el-card>
             <div slot="header" class="index-md-title">
               <span>比价待办【{{ maxPage[3] }}】</span>
-              <a v-if="dataSource4 " slot="footer" @click="goPage('比价')">前往 <a-icon type="double-right" /></a>
             </div>
             <a-table
               :dataSource="dataSource4"
@@ -113,15 +134,14 @@
               :rowKey="record => record.id"
             >
               <a-table-column ellipsis="true" key="proName" title="项目" data-index="proName"/>
-              <a-table-column ellipsis="true" key="inquiryName" title="设备名" data-index="inquiryName"/>
-              <a-table-column ellipsis="true" key="quoteSupplier" title="供应商" data-index="quoteSupplier"/>
-              <a-table-column ellipsis="true" key="quoteSuBrand" title="品牌" data-index="quoteSuBrand"/>
-              <a-table-column ellipsis="true" key="quoteSuModel" title="实际参数" data-index="quoteSuModel"/>
-              <a-table-column ellipsis="true" key="quoteSuParams" title="实际型号" data-index="quoteSuParams"/>
-              <a-table-column ellipsis="true" key="quoteSuPrice" title="单价" data-index="quoteSuPrice"/>
               <a-table-column ellipsis="true" key="compareAudit" title="状态" data-index="compareAudit">
                 <template slot-scope="compareAudit">
-                  <el-tag :type="compareAudit == 0 ? 'info':(compareAudit == 1? 'success':'danger')">{{ statu(compareAudit) }}</el-tag>
+                  <el-tag type="danger">未完成</el-tag>
+                </template>
+              </a-table-column>
+              <a-table-column key="action" title="操作" :width="100">
+                <template slot-scope="text, record">
+                  <el-button @click="gotoOtherPage('/compare/compare', record)" size="mini">前往 <a-icon type="double-right" /></el-button>
                 </template>
               </a-table-column>
             </a-table>
@@ -131,34 +151,6 @@
       </a-row>
     </div>
 
-    <!--<el-row :gutter="32">
-      <el-col :xs="24" :sm="24" :lg="8">
-        <div class="chart-wrapper">
-          <raddar-chart />
-        </div>
-      </el-col>
-      <el-col :xs="24" :sm="24" :lg="8">
-        <div class="chart-wrapper">
-          <pie-chart />
-        </div>
-      </el-col>
-      <el-col :xs="24" :sm="24" :lg="8">
-        <div class="chart-wrapper">
-          <bar-chart />
-        </div>
-      </el-col>
-    </el-row>-->
-
-    <!--<el-row :gutter="8">
-      <el-col :xs="{span: 24}" :sm="{span: 24}" :md="{span: 24}" :lg="{span: 12}" :xl="{span: 12}" style="padding-right:8px;margin-bottom:30px;">
-        &lt;!&ndash;<transaction-table />&ndash;&gt;
-      </el-col>
-      <el-col :xs="{span: 24}" :sm="{span: 12}" :md="{span: 12}" :lg="{span: 6}" :xl="{span: 6}" style="margin-bottom:30px;">
-      </el-col>
-      <el-col :xs="{span: 24}" :sm="{span: 12}" :md="{span: 12}" :lg="{span: 6}" :xl="{span: 6}" style="margin-bottom:30px;">
-        <box-card />
-      </el-col>
-    </el-row>-->
   </div>
 </template>
 
@@ -173,6 +165,12 @@ import TransactionTable from './components/TransactionTable'
 import TodoList from './components/TodoList'
 import BoxCard from './components/BoxCard'
 import request from '@/utils/request'
+
+import infiniteScroll from 'vue-infinite-scroll'
+import { RecycleScroller } from 'vue-virtual-scroller'
+import { getAction, postActionByJson, postActionByQueryString } from '@/api/manage'
+import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
+
 import '@/styles/auto-style.css'
 
 /*let lineChartData = {
@@ -187,6 +185,7 @@ import '@/styles/auto-style.css'
 
 export default {
   name: 'DashboardAdmin',
+  directives: { infiniteScroll },
   components: {
     GithubCorner,
     PanelGroup,
@@ -196,10 +195,17 @@ export default {
     BarChart,
     TransactionTable,
     TodoList,
-    BoxCard
+    BoxCard,
+    RecycleScroller
   },
   data() {
     return {
+
+      loading: false,
+      busy: false,
+
+      projects: { list: []},
+
       status: ['未审核', '通过', '拒绝'],
       lineChartData: [],
       barChartData: {
@@ -225,8 +231,16 @@ export default {
       maxPage: [],
     }
   },
+  beforeMount() {
+    this.fetchData(res => {
+      this.data = res.list.map((item, index) => ({ ...item, index }));
+    });
+  },
   created() {
     this.init()
+    this.fetchData(res => {
+      this.data = res.list.map((item, index) => ({ ...item, index }));
+    });
     this.lineChartData = this.allChartData.projects
   },
   mounted() {
@@ -252,6 +266,29 @@ export default {
     })
   },
   methods: {
+    gotoOtherPage(url, record) {
+      this.$router.push({ path: url, query: record})
+    },
+    fetchData(callback) {
+      getAction('/project/detail/findByAll', { pageFlag: 1 })
+        .then(response => {
+          callback(response.data)
+        })
+    },
+    handleInfiniteOnLoad() {
+      const data = this.projects.list;
+      this.loading = true;
+      /*if (data.length > 100) {
+        this.$message.warning('Infinite List loaded all');
+        this.busy = true;
+        this.loading = false;
+        return;
+      }*/
+      this.fetchData(res => {
+        this.projects.list = data.concat(res.list).map((item, index) => ({ ...item, index }));
+        this.loading = false;
+      });
+    },
     lazyLoadListener(table, index) {
       const scrollDistance =table.scrollHeight - table.scrollTop - table.clientHeight;
       if(scrollDistance <= 0.5) {//等于0证明已经到底，可以请求接口
@@ -300,6 +337,7 @@ export default {
         .then(resp => {
           this.allChartData.suppliers.actualData = resp.data
         })
+      //request.get('/index/findProProcess?proName='+)
       this.loadToDoList()
     },
     goPage(page) {
@@ -351,7 +389,11 @@ export default {
   padding: 0px;
   background-color: rgb(240, 242, 245);
   position: relative;
-
+  /deep/.el-divider--horizontal {
+    margin: 8px 0 0 0;
+    bottom: 16px;
+    position: absolute;
+  }
   .github-corner {
     position: absolute;
     top: 0px;
