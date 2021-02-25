@@ -230,8 +230,6 @@
             <el-link :href="record.url">{{record.url}}</el-link>
           </template>
         </a-table-column>
-        <a-table-column key="" data-index="name" title="文件名"></a-table-column>
-
       </a-table>
 
     </el-dialog>

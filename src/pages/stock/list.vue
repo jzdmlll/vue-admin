@@ -110,6 +110,12 @@
         size="middle"
         :rowKey="(record) => record.id"
       >
+        <a-table-column key="name" data-index="name" title="文件名"></a-table-column>
+        <a-table-column key="url" title="文件">
+          <template slot-scope="text, record, index">
+            <el-link :href="record.url">{{record.url}}</el-link>
+          </template>
+        </a-table-column>
       </a-table>
     </el-dialog>
   </div>
@@ -152,7 +158,7 @@
         contractAttribute: {contractName:''}, // 合同订单信息
 
         purchaseProjects: [], // 采购项目
-        searchForm: {}, // 搜索form数据源
+        searchForm: {contract:[]}, // 搜索form数据源
 
         windowHeight: document.documentElement.clientHeight - 130, // 页面高度
         margin: 0, // left-sider 移动距离
@@ -167,6 +173,7 @@
     },
     methods: {
       subFile(type, record) {
+        console.log(record.id)
         if (record.id) {
           this.contractInfoDialog.title = type
           this.contractInfoDialog.visible = true
