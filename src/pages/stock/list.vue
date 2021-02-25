@@ -192,36 +192,39 @@
        * 点击查询事件
        */
       toSearch() {
+        console.log(this.searchForm)
+        if(this.searchForm.contract&&this.searchForm.contract.length>0) {
+          const contract = JSON.parse(this.searchForm.contract[1])
+          if (contract.id) {
 
-        const contract = JSON.parse(this.searchForm.contract[1])
+            // 查询合同订单信息
+            getAction('/stock/contractAttribute/findByContractId', {
+              contractId: contract.id
+            }).then(resp => {
+              if (resp.data) {
+                this.contractAttribute = resp.data
+              }
+              this.contractAttribute.contractName = contract.contractName
+            })
 
-        if (contract.id) {
+            // 查询合同实付款项
+            getAction('/stock/actualAccount/findByContractId', {
+              contractId: contract.id
+            }).then(resp => {
+              this.contractAttribute.actualAccounts = resp.data
+            })
 
-          // 查询合同订单信息
-          getAction('/stock/contractAttribute/findByContractId', {
-            contractId: contract.id
-          }).then(resp => {
-            if (resp.data) {
-              this.contractAttribute = resp.data
-            }
-            this.contractAttribute.contractName = contract.contractName
-          })
-
-          // 查询合同实付款项
-          getAction('/stock/actualAccount/findByContractId', {
-            contractId: contract.id
-          }).then(resp => {
-            this.contractAttribute.actualAccounts = resp.data
-          })
-
-          // 查询采购项清单信息
-          getAction('/purchase/contractManagement/findItemsInfoByContractId', {
-            contractId: contract.id
-          }).then(resp => {
-            this.purchaseItems = resp.data
-          })
+            // 查询采购项清单信息
+            getAction('/purchase/contractManagement/findItemsInfoByContractId', {
+              contractId: contract.id
+            }).then(resp => {
+              this.purchaseItems = resp.data
+            })
+          }
+          this.contractAttribute.contractName = contract.contractName
+        }else {
+          this.$message({ type: 'warning', message: '请选择合同' })
         }
-        this.contractAttribute.contractName = contract.contractName
       },
       /**
        * left-sider 收缩事件

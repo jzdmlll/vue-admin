@@ -6,11 +6,11 @@
       <line-chart :chart-data="lineChartData" />
     </el-row>
     <el-row style="position: relative;width: 100%;height: 400px;padding: 1em;background: #fff">
-      <el-col :sm="12" :lg="16" style="height: 100%">
+      <el-col :sm="12" :lg="12" style="height: 100%">
         <h3 style="padding: 1em">xxx项目</h3>
         <bar-chart height="80%" :chart-data="barChartData"/>
       </el-col>
-      <el-col :sm="12" :lg="8" style="height: 100%">
+      <el-col :sm="12" :lg="12" style="height: 100%">
         <h3 style="padding: 1em">项目完成进度</h3>
         <a-list>
           <RecycleScroller
