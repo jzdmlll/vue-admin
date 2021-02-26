@@ -51,7 +51,7 @@
       </a-table>
     </div>
     <!-- 模态框 -->
-    <el-dialog :title="title" :visible.sync="visible">
+    <el-dialog v-el-drag-dialog :title="title" :visible.sync="visible">
       <el-steps :active="active" simple style="background: #d8f1e3;margin-bottom: 8px;padding: 13px 4%;height: 36px">
         <el-step title="填写项目内容" icon="el-icon-edit" />
         <el-step title="上传项目文件" icon="el-icon-upload" />
@@ -164,15 +164,17 @@
 </template>
 <script>
 import request from '@/utils/request'
-import qs from 'querystring'
 import '@/styles/auto-style.css'
 import { getUser } from '@/utils/auth'
 import XLSX from 'xlsx'
 import { dateTimeFormat } from '@/utils/format'
 import { beforeUpload, uploadStatusChange } from '@/utils/upload'
 import { getAction, postActionByJson, postActionByQueryString } from '@/api/manage'
+import elDragDialog from "@/directive/el-drag-dialog";
 
 export default {
+  directives: { elDragDialog },
+
   data() {
     const fileUploadUrl = process.env.VUE_APP_BASE_API + 'file/uploadCache'
 

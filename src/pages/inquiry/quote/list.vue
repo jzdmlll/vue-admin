@@ -17,7 +17,7 @@
         <div style="padding:1em;margin-bottom:1em;background:#fff">
           <a-table class="parentTable" :loading="loading" size="middle" :data-source="inquiryList" :scroll="{ x: 786 }"
                    :row-class-name="tableRowClassName" @expand="expandChange" :rowKey="record => record.id">
-            <a-table-column v-for="item in currentTemplate.tableColumn" ellipsis="true" :width="item.width" :align="item.align" :key="item.key" :title="item.title" :dataIndex="item.dataIndex">
+            <a-table-column v-if="item.dataIndex!='brand'" v-for="item in currentTemplate.tableColumn" ellipsis="true" :width="item.width" :align="item.align" :key="item.key" :title="item.title" :dataIndex="item.dataIndex">
               <template slot-scope="text, record">
                 <a-tooltip placement="topLeft" :title="text+''">
                   <span @click="handleCopy(text, $event)">{{ text }}</span>

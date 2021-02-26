@@ -3,7 +3,12 @@ export function beforeUpload(file) {
     this.$message({ message: '上传文件大小不能超过100M', type: 'error' })
     return false
   }else {
-    this.uploadKey = false
+    if (this.fileNum&&this.fileList.length>=this.fileNum) {
+      this.$message({ message: '上传文件数量超过限制', type: 'error' })
+      return false
+    }else {
+      this.uploadKey = false
+    }
   }
 }
 export function uploadStatusChange(info) {

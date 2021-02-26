@@ -1,6 +1,7 @@
 <template>
   <!-- 设备管理 -->
   <div class="equipment-list">
+    {{uploadModal.form.paymentTime}}
     <a-layout>
       <!-- 侧边容器 -->
       <a-layout-sider
@@ -101,8 +102,42 @@
       </a-layout-content>
     </a-layout>
 
+    <el-dialog v-el-drag-dialog :visible.sync="uploadModal.visible" :title="uploadModal.title" append-to-body>
+      <el-form ref="uploadModalForm" :model="uploadModal.form" :rules="rules"  status-icon>
+        <el-form-item v-if="contractInfoDialog.title=='供货发票'" label="编号" label-width="80px" size="small" prop="no">
+          <el-input v-model="uploadModal.form.no" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item v-if="contractInfoDialog.title=='付款通知单'" label="金额" label-width="80px" size="small" prop="money">
+          <el-input v-model="uploadModal.form.money" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item v-if="contractInfoDialog.title=='付款通知单'" label="付款时间" label-width="80px" size="small" prop="paymentTime">
+          <el-date-picker
+            v-model="uploadModal.form.paymentTime"
+            type="datetime"
+            placeholder="选择日期时间"
+            default-time="12:00:00">
+          </el-date-picker>
+        </el-form-item>
+        <a-upload
+          name="file"
+          :action="fileUploadUrl"
+          :file-list="fileList"
+          :before-upload="beforeUpload"
+          @change="uploadStatusChange"
+        >
+          <a-button> <a-icon type="upload" /> 点击上传 </a-button>
+        </a-upload>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="uploadModal.visible = false">取 消</el-button>
+        <el-button type="primary" @click="uploadModalHandle">确 定</el-button>
+      </div>
+    </el-dialog>
     <!--   发票、付款通知单 模态框  -->
     <el-dialog :title="contractInfoDialog.title" :visible.sync="contractInfoDialog.visible" v-el-drag-dialog>
+      <div style="margin-bottom: 8px">
+        <el-button @click="showUploadModal" size="small" type="primary" icon="el-icon-upload">上传</el-button>
+      </div>
       <a-table
         :pagination="false"
         v-loading="contractInfoDialog.tableLoading"
@@ -110,10 +145,22 @@
         size="middle"
         :rowKey="(record) => record.id"
       >
-        <a-table-column key="name" data-index="name" title="文件名"></a-table-column>
-        <a-table-column key="url" title="文件">
+        <a-table-column v-if="contractInfoDialog.title=='供货发票'" key="no" data-index="no" title="发票编号" align="center"/>
+        <a-table-column v-if="contractInfoDialog.title=='付款通知单'" key="money" data-index="money" title="付款金额" align="center"/>
+        <a-table-column v-if="contractInfoDialog.title=='付款通知单'" key="paymentTime" title="付款时间" data-index="paymentTime" align="center">
+          <template slot-scope="text, record">
+            {{dateTimeFormat(text)}}
+          </template>
+        </a-table-column>
+        <a-table-column v-if="contractInfoDialog.title=='供货发票'" key="url" title="发票文件" align="center">
           <template slot-scope="text, record, index">
-            <el-link :href="record.url">{{record.url}}</el-link>
+            <el-link type="primary" :href="record.image">{{record.no}}</el-link>
+          </template>
+        </a-table-column>
+        <a-table-column key="operator" title="创建人" data-index="operator" align="center"/>
+        <a-table-column key="time" title="创建时间" data-index="time" align="center">
+          <template slot-scope="text, record">
+            {{dateTimeFormat(text)}}
           </template>
         </a-table-column>
       </a-table>
@@ -122,11 +169,12 @@
 </template>
 
 <script>
-  import elDragDialog from "@/directive/el-drag-dialog";
   import "@/styles/auto-style.css";
   import { getUser } from "@/utils/auth";
   import { getAction, postActionByJson, postActionByQueryString } from "@/api/manage";
   import { dateTimeFormat } from "@/utils/format";
+  import { beforeUpload, uploadStatusChange } from '@/utils/upload'
+  import elDragDialog from "@/directive/el-drag-dialog";
 
   export default {
     directives: { elDragDialog },
@@ -144,12 +192,28 @@
       };
     },
     data() {
+      const fileUploadUrl = process.env.VUE_APP_BASE_API + 'file/uploadCache'
       return {
 
-        contractInfoDialog: { // 合同信息模态框
-          title: '补充合同信息',
+        fileNum: 1,
+        uploadKey: true,
+
+        fileList: [],
+        fileUploadUrl,
+
+        uploadModal: {
+          title: '上传',
+          form: {},
           visible: false,
-          form: {}
+          labelCol: {},
+          wrapperCol: {}
+        },
+
+        contractInfoDialog: { // 模态框
+          title: null,
+          visible: false,
+          form: {},
+          tableLoading: false,
         },
 
         purchaseItemsLoading: false, // 采购项清单table 加载状态
@@ -163,17 +227,45 @@
         windowHeight: document.documentElement.clientHeight - 130, // 页面高度
         margin: 0, // left-sider 移动距离
 
-        rule: {
-          /*
-            projectName: [
-              {required: true, message: '不能为空', trigger: 'blur'}
-            ],*/
+        rules: {
+          no: [
+            {required: true, message: '不能为空', trigger: 'blur'}
+          ],
+          money: [
+            { required: true, pattern: /^(\-|\+)?\d+(\.\d+)?$/, message: '格式不正确', trigger: 'blur' }
+          ],
         }
       }
     },
     methods: {
+      showUploadModal() {
+        this.uploadModal.visible = true
+        this.uploadModal.title = this.contractInfoDialog.title+'上传'
+      },
+      uploadModalHandle() {
+        let url = ''
+        let form = {}
+        if (this.contractInfoDialog.title == '供货发票') {
+          url = '/stock/invoice/invoiceUpload'
+          form = {
+            stockInvoice: this.uploadModal.form,
+            files: this.fileList
+          }
+        }else {
+          url = '/stock/actualAccount/addActualAccount'
+          form = this.uploadModal.form
+        }
+        this.uploadModal.form.operator = getUser()
+        this.uploadModal.form.contractId = this.contractAttribute.contractId
+        postActionByJson(url, form).then(resp => {
+          this.$message({ type:'success', message: resp.message })
+          this.uploadModal.visible = false
+          this.subFile(this.contractInfoDialog.title, this.contractAttribute)
+        }).catch(() => {
+          this.uploadModal.visible = false
+        })
+      },
       subFile(type, record) {
-        console.log(record.id)
         if (record.id) {
           this.contractInfoDialog.title = type
           this.contractInfoDialog.visible = true
@@ -199,9 +291,9 @@
        * 点击查询事件
        */
       toSearch() {
-        console.log(this.searchForm)
         if(this.searchForm.contract&&this.searchForm.contract.length>0) {
           const contract = JSON.parse(this.searchForm.contract[1])
+          this.contractAttribute = { contractName: contract.contractName }
           if (contract.id) {
 
             // 查询合同订单信息
@@ -280,6 +372,9 @@
       filter(inputValue, path) {
         return path.some(option => option.label.toLowerCase().indexOf(inputValue.toLowerCase()) > -1);
       },
+      dateTimeFormat,
+      beforeUpload,
+      uploadStatusChange
     }
   }
 </script>
@@ -310,6 +405,10 @@
       }
     }
   }
+
+}
+/deep/.el-picker-panel {
+  z-index: 2900!important
 }
 </style>
 
