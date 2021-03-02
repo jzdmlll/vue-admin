@@ -46,46 +46,46 @@
         :data-source="contractChecks"
         :rowKey="record => record.id"
         :loading="contractChecksLoading"
-        :scroll="{ x: 2000}"
+        :scroll="{ x: 1300}"
         :pagination="false"
         style="margin-top:20px;"
       >
         <a-table-column :width="100" key="id" title="id" data-index="id" align="center" v-if="false"/>
-        <a-table-column :width="100" key="contractName" title="合同名" data-index="contractName" align="center"/>
-        <a-table-column :width="100" key="contractNo" title="合同编号" data-index="contractNo" align="center"/>
-        <a-table-column :width="100" key="price" title="金额" data-index="price" align="center"/>
+        <a-table-column :width="150" key="contractNo" title="合同编号" data-index="contractNo" align="center"/>
+        <a-table-column :width="100" key="price" title="金额" data-index="price" align="center">
+          <template slot-scope="text, record">
+            <el-tag effect="plain">￥{{text}}</el-tag>
+          </template>
+        </a-table-column>
+        <a-table-column key="senderRemark" title="送审备注" data-index="senderRemark" align="center"/>
+        <a-table-column :width="80" key="sender" title="送审人" data-index="sender" align="center">
+          <template slot-scope="text, record">
+            {{userMap[text]?userMap[text]:text}}
+          </template>
+        </a-table-column>
+        <a-table-column :width="80" title="送审时间" align="center">
+          <template slot-scope="text,record">{{dateTimeFormat(record.senderTime)}}</template>
+        </a-table-column>
         <a-table-column :width="60" key="firstparty" title="甲方" data-index="firstParty" align="center"/>
         <a-table-column :width="80" key="secondParty" title="乙方" data-index="secondParty" align="center"/>
         <a-table-column :width="80" key="type" title="类别" data-index="type" align="center"/>
-        <a-table-column :width="80" key="sender" title="送审人" data-index="sender" align="center"/>
-        <a-table-column  title="送审时间" align="center">
-          <template slot-scope="text,record">{{dateTimeFormat(record.senderTime)}}</template>
-        </a-table-column>
-        <a-table-column :width="500" key="mainContent" title="主要内容" data-index="mainContent" align="center"/>
-        <a-table-column  key="senderRemark" title="送审备注" data-index="senderRemark" align="center"/>
-        <a-table-column :width="200" ellipsis="true" title="操作" align="center">
+
+        <a-table-column key="mainContent" title="主要内容" data-index="mainContent" align="center"/>
+
+        <a-table-column :width="200" fixed="right" ellipsis="true" title="操作" align="center">
           <template slot-scope="text, record">
-            <a-tooltip placement="topLeft" title="通过">
-              <a-button type="primary" icon="check" size="small" @click="judge(record.id)"/>
-            </a-tooltip>
-            <a-tooltip placement="topLeft" title="否决">
-              <a-button type="primary" icon="close" size="small" @click="deny(record.id)"/>
-            </a-tooltip>
-            <a-tooltip placement="topLeft" title="查看附件">
-              <a-button type="primary" icon="audit" size="small" @click="getFile(record.id)"/>
-            </a-tooltip>
-            <a-tooltip placement="topLeft" title="删除">
-              <a-button type="primary" icon="delete" size="small" @click="todelete(record.id)"/>
-            </a-tooltip>
+            <el-button type="primary" size="mini" @click="judge(record.id)">通过</el-button>
+            <el-button type="danger" size="mini" @click="deny(record.id)">否决</el-button>
+            <el-button type="warning" icon="audit" size="mini" @click="getFile(record.id)">附件</el-button>
           </template>
         </a-table-column>
       </a-table>
     </el-card>
     <el-dialog :model="file" v-el-drag-dialog title="附件查看" :visible.sync="visible">
-      <div>
-        <a target="_blank" v-for='file in files' :key="file.id" :href='file.url'><button>{{file.name}}</button></a>
+        <el-tag effect="plain" :type="type[Math.floor(Math.random() * 5)]">
+          <a target="_blank" v-for='file in files' :key="file.id" :href='file.url'>{{file.name}}</a>
+        </el-tag>
         <br>
-      </div>
     </el-dialog>
 
     <el-dialog :model="file" v-el-drag-dialog title="审核备注" :visible.sync="judgeVisible">
@@ -109,6 +109,7 @@
   import elDragDialog from '@/directive/el-drag-dialog'
   import {dateFormat} from '@/utils/format'
   import { dateTimeFormat } from '@/utils/format'
+
   export default {
     directives: { elDragDialog },
     data() {
@@ -157,6 +158,9 @@
         }
       }
       return {
+
+        userMap: {},
+
         file:[],     //获取文件存放对象
         status: [{process:'未审核',value:0}, {process:'通过',value:1}, {process:'拒绝',value:2}],
         files:[],
@@ -166,6 +170,9 @@
         visiblePublish:'none',
         contractChecksLoading: false,
         projects:[],
+
+        type: ['', 'success', 'info', 'danger', 'warning'],
+
         props: props,
         judgeVisible:false,
         page: null,
@@ -181,6 +188,12 @@
 
     },
     methods: {
+      loadAllUser() {
+        getAction("/user/findAllIdToName", {})
+          .then(resp => {
+            this.userMap = resp.data
+          })
+      },
       dateTimeFormat,
       judge(info)
       {
@@ -262,6 +275,7 @@
       },
       init() {
         this.loadProjects()
+        this.loadAllUser()
       },
       async loadProjects() {
         await request.get('/chapter/chapterAudit/findAllProjectName')
@@ -273,7 +287,7 @@
       },
       checkContract(contract) {
         return contract[this.level[this.page]['audit']] == 0?false:true
-      }
+      },
     }
   }
 </script>
