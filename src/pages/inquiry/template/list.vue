@@ -24,9 +24,12 @@
         <a-table-column :width="100" align="center" key="time" title="time" data-index="time">
           <template slot-scope="text, record">{{dateTimeFormat(text)}}</template>
         </a-table-column>
-        <a-table-column :width="160" fixed="right" align="center" key="action" title="操作">
+        <a-table-column :width="180" fixed="right" align="center" key="action" title="操作">
           <template slot-scope="text, record">
-            <el-button @click="editTemplate(record)" type="primary" size="mini" icon="el-icon-edit"></el-button>
+            <el-link target="_blank" :href="'http://218.87.96.53:8006/images/'+encodeURIComponent(record.name)+'.xlsx'" :underline="false">
+              <el-button type="success" size="mini" icon="el-icon-download"></el-button>
+            </el-link>
+            <el-button style="margin-left:10px" @click="editTemplate(record)" type="primary" size="mini" icon="el-icon-edit"></el-button>
             <el-button @click="deleteTemplate(record)" type="danger" size="mini" icon="el-icon-delete"></el-button>
           </template>
         </a-table-column>
@@ -95,7 +98,6 @@
             tableColumn: ''
           }
         },
-
         rules: {
           name: [
             { required: true, message: '不能为空', trigger: 'blur'}
