@@ -45,19 +45,19 @@
         style="margin-top:20px;"
       >
         <a-table-column :width="60" key="serialNumber" title="序号" data-index="serialNumber" align="center"/>
-        <a-table-column :width="100" key="item" title="设备" data-index="item" align="center"/>
-        <a-table-column :width="100" key="brand" title="品牌" data-index="brand" align="center"/>
-        <a-table-column :width="100" key="supplier" title="厂家" data-index="supplier" align="center"/>
+        <a-table-column :width="150" key="item" title="设备" data-index="item" align="center"/>
+        <a-table-column :width="100" key="purchaseSupply.brand" title="品牌" data-index="purchaseSupply.brand" align="center"/>
+        <a-table-column :width="100" key="purchaseSupply.supplier" title="厂家" data-index="purchaseSupply.supplier" align="center"/>
         <a-table-column :width="100" key="model" title="型号" data-index="model" align="center"/>
         <a-table-column :width="60" key="unit" title="单位" data-index="unit" align="center"/>
         <a-table-column :width="80" key="number" title="数量" data-index="number" align="center"/>
-        <a-table-column :width="80" key="price" title="单价" data-index="price" align="center"/>
+        <a-table-column :width="80" key="purchaseSupply.price" title="单价" data-index="purchaseSupply.price" align="center"/>
         <a-table-column :width="80" key="totalPrice" title="总价" data-index="totalPrice" align="center"/>
-        <a-table-column  key="itemsParams" title="技术要求" data-index="itemsParams" align="center"/>
-        <a-table-column  key="supplyParams" title="实际参数" data-index="supplyParams" align="center"/>
+        <a-table-column  key="params" title="技术要求" data-index="params" align="center"/>
+        <a-table-column  key="purchaseSupply.params" title="实际参数" data-index="purchaseSupply.params" align="center"/>
         <a-table-column :width="100" key="remark" title="备注" data-index="remark" align="center"/>
-        <a-table-column :width="100" key="warranty" title="质保期" data-index="warranty" align="center"/>
-        <a-table-column :width="100" key="delivery" title="货期" data-index="delivery" align="center"/>
+        <a-table-column :width="100" key="purchaseSupply.warranty" title="质保期" data-index="purchaseSupply.warranty" align="center"/>
+        <a-table-column key="purchaseSupply.delivery" title="货期" data-index="purchaseSupply.delivery" align="center"/>
       </a-table>
     </el-card>
     <el-dialog :model="file" v-el-drag-dialog title="附件查看" :visible.sync="visible">
