@@ -11,6 +11,7 @@
       <el-date-picker
         v-model="searchForm.time"
         unlink-panels
+        style = "margin-left: 10px"
         value-format="timestamp"
         type="daterange"
         range-separator="至"
@@ -18,7 +19,7 @@
         start-placeholder="开始日期"
         end-placeholder="结束日期">
       </el-date-picker>
-      <el-button style="margin-right:6px" type="primary" icon="el-icon-search" size="small" @click="toSearch">查询</el-button>
+      <el-button style="margin-right:10px" type="primary" icon="el-icon-search" size="small" @click="toSearch">查询</el-button>
       <el-tooltip class="item" effect="dark" content="发起用章申请" placement="bottom-start">
         <el-button type="primary" size="small" icon="el-icon-plus" @click="toAdd">发起用章申请</el-button>
       </el-tooltip>
@@ -29,7 +30,7 @@
         :data-source="devices"
         size="large"
         row-key="id"
-        :scroll="{x:2500}"
+        :scroll="{x:2200}"
       >
         <a-table-column :width="100" key="id" data-index="id" title="id" v-if="false"/>
         <a-table-column :width="200" key="projectName" data-index="projectName" title="工程名" />
@@ -42,12 +43,15 @@
             <el-tag :type="scope.auditStatus===1? 'success':scope.auditStatus=== 2?'danger':'warning'">{{scope.auditStatus ===1 ?'审核通过':scope.auditStatus=== 2?'审核否决':'正在审核'}}</el-tag>
           </template>
         </a-table-column>
-        <a-table-column :width="100" prop="senderRemark" data-index="senderRemark" title="送审备注" />
         <a-table-column :width="100" key="auditRemark" data-index="auditRemark" title="审核备注" />
+        <a-table-column :width="180" key="auditTime" title="审核时间">
+          <template slot-scope="text, record">{{dateTimeFormat(record.auditTime)}}</template>
+        </a-table-column>
+        <a-table-column :width="100" prop="senderRemark" data-index="senderRemark" title="送审备注" />
         <a-table-column :width="200" key="senderTime" data-index="senderTime" title="送审时间" >
           <template slot-scope="text,scope">{{dateTimeFormat(scope.senderTime)}}</template>
         </a-table-column>
-        <a-table-column :width="500" key="mainContent" align="center" data-index="mainContent" title="主要内容" />
+        <a-table-column key="mainContent" align="center" data-index="mainContent" title="主要内容" />
         <a-table-column :width="100" key="price"  data-index="price" title="金额" />
         <a-table-column :width="100" key="firstParty" data-index="firstParty" title="甲方" />
         <a-table-column :width="100" key="secondParty" data-index="secondParty" title="乙方" />
@@ -175,7 +179,7 @@
         filemark:{},
         modify:{},
         fileUploadUrl,
-        searchForm: {time:'',auditStatus:''},
+        searchForm: {time:''},
         fileVisible:false,
         form: {projectName:'',contractName:'',contractNo:'',price:'',firstParty:'',secondParty:'',type:'',senderRemark:'',auditor:'',mainContent:''},
         rule: {
@@ -224,9 +228,7 @@
       }
     },
     created() {
-      this.loadProjects()
       this.init()
-
     },
     methods: {
       dateTimeFormat,
@@ -270,10 +272,11 @@
       },
 
       toSearch() {
+        this.devices = []
         request.request({
-          url: '/chapter/chapterAudit/findChapterAuditorInfos',
+          url: '/chapter/chapterAudit/findChapterAuditInfosByParams',
           method: 'get',
-          params: { proName: this.searchForm.proName, startTime: this.searchForm.time[0], overTime:this.searchForm.time[1],auditStatus:this.searchForm.auditStatus }
+          params: { proName: this.searchForm.proName, startTime: this.searchForm.time[0], overTime: this.searchForm.time[1], auditStatus: this.searchForm.auditStatus }
         })
           .then(response => {
             this.devices = response.data
@@ -287,18 +290,12 @@
         })
       },
       init() {
-        request.get('/chapter/chapterAudit/findChapterAuditorInfos')
+        request.get('/chapter/chapterAudit/findChapterAuditInfosByParams')
           .then(response => {
             this.devices = response.data
           })
           .finally(()=> {
             this.loading=false
-          })
-      },
-      async loadProjects() {
-        await request.get('/chapter/chapterAudit/findAllProjectName')
-          .then(response => {
-            this.projects = response.data
           })
       },
       cancelHandler() {
