@@ -27,7 +27,7 @@
         :data-source="contractChecks"
         :rowKey="record => record.id"
         :loading="contractChecksLoading"
-        :scroll="{ x: 1300}"
+        :scroll="{ x: 1600}"
         :pagination="false"
         style="margin-top:20px;"
       >
@@ -37,7 +37,6 @@
         <a-table-column :width="100" key="price" title="金额" data-index="price" align="center">
           <template slot-scope="text, record">
             <el-tag effect="plain" style="font-size: 13px;font-weight: 600">￥{{toThousandFilter(text)}}</el-tag>
-            <el-tag effect="plain">￥{{text}}</el-tag>
           </template>
         </a-table-column>
         <a-table-column :width="100" key="auditStatus" data-index="auditStatus" title="审核状态" aligwarningn="center" >
