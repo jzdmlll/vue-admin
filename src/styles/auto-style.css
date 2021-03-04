@@ -4,7 +4,9 @@
     辅：#72DCAD
     辅：#8EDCB9
  */
-
+.divider {
+  margin: 8px 0;
+}
 .el-dialog .el-col {
   padding: 0 4px
 }

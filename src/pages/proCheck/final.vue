@@ -64,7 +64,7 @@
             </div>
           </template>
         </a-table-column>
-        <a-table-column class="supplier" v-for="supplier in dynamicColumns.suppliers" :width="200" :key="supplier" align="center" :title="supplier" :dataIndex="supplier">
+        <a-table-column class="supplier" v-for="supplier in dynamicColumns.suppliers" :width="200" :key="supplier" align="center" :title="supplier.split('*')[0]?supplier.split('*')[0]:supplier" :dataIndex="supplier">
           <template slot-scope="text, record">
             <a-popover title="备注" trigger="click" placement="right" v-if="text
             && (text.finallyAudit === 1)">
@@ -622,6 +622,8 @@
         const id = row.compareId
         const name = row.name
         const supplier = row.supplier
+        const quoteId = row.id
+
         //console.log(row)
         if(id && name && supplier && veto == 0 && row.businessAudit == 1 && row.technicalAudit == 1) {
           //alert(id + '  ' + name + '  ' + supplier)
@@ -634,9 +636,11 @@
                 if(item[s]){
                   item[s].finallyAudit = 0
                   allCompareIds.push(item[s].compareId)
+                  if(item[s]['id'] == quoteId) {
+                    item[s].finallyAudit = 1
+                  }
                 }
               })
-              item[supplier].finallyAudit = 1
             }/*else{
             this.dynamicColumns.suppliers.map(s => {
               if(item[s]){

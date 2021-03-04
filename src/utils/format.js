@@ -37,3 +37,12 @@ export function nullToEmpty(obj) {
     }
   }
 }
+
+/**
+ * 10000 => "10,000"
+ * @param {number} num
+ */
+export function toThousandFilter(num) {
+  return (+num || 0).toFixed(2).replace(/\d{1,3}(?=(\d{3})+(\.\d*)?$)/g, '$&,')
+  // return (+num || 0).toString().replace(/^-?\d+/g, m => m.replace(/(?=(?!\b)(\d{3})+$)/g, ','))
+}

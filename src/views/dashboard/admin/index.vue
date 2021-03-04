@@ -6,11 +6,11 @@
       <line-chart :chart-data="lineChartData" />
     </el-row>
     <el-row style="position: relative;width: 100%;height: 400px;padding: 1em;background: #fff">
-      <el-col :sm="12" :lg="12" style="height: 100%">
-        <h3 style="padding: 1em">xxx项目</h3>
+      <el-col :sm="10" :lg="10" style="height: 100%">
+        <h3 style="padding: 1em">{{barChartData.proName}}</h3>
         <bar-chart height="80%" :chart-data="barChartData"/>
       </el-col>
-      <el-col :sm="12" :lg="12" style="height: 100%">
+      <el-col :sm="14" :lg="14" style="height: 100%">
         <h3 style="padding: 1em">项目完成进度</h3>
         <a-list>
           <RecycleScroller
@@ -23,12 +23,21 @@
             :infinite-scroll-distance="15"
           >
             <a-list-item slot-scope="{ item }">
-              <!--<a-list-item-meta :description="item.name">
-              </a-list-item-meta>-->
-              <div style="padding:0 8px;width: 100vw;height: 60px;line-height: 60px">
+              <div @click="proItemClick(item)" :class="barChartData.id == item.id?'is-checked':''" class="list-item my-transition">
+                <div style="height: 28px; position: relative; line-height: 28px">
                 <a-tooltip :destroyTooltipOnHide="true" placement="topLeft" :title="item.name">
-                  <el-tag style="max-width: 150px;text-overflow:ellipsis;overflow: hidden;white-space: nowrap" effect="plain">{{item.name}}</el-tag>
+                  <el-tag style="top:0;position: absolute;max-width: 60%;text-overflow:ellipsis;overflow: hidden;white-space: nowrap" effect="plain">{{item.name}}</el-tag>
                 </a-tooltip>
+                  <a-progress
+                    style="max-width: 39%; float: right; height: 28px; padding: 3.6px 0"
+                    :stroke-color="{
+                      from: '#108ee9',
+                      to: '#87d068',
+                    }"
+                    :percent="item.completion"
+                    status="active"
+                  />
+                </div>
                 <el-divider />
               </div>
             </a-list-item>
@@ -209,6 +218,8 @@ export default {
       status: ['未审核', '通过', '拒绝'],
       lineChartData: [],
       barChartData: {
+        id: null,
+        proName: 'xxx项目',
         xAxis: ['询价', '报价', '技审', '商审', '比价', '终审'],
         finishedData: [200, 192, 120, 144, 160, 130],
         unfinishedData: [180, 160, 151, 106, 145, 150]
@@ -229,6 +240,9 @@ export default {
       hasNextPage: [false, false, false, false],
       currentPage: [1, 1, 1, 1],
       maxPage: [],
+
+      proCurrentPage: 1,
+      proHasNextPage: true,
     }
   },
   beforeMount() {
@@ -240,6 +254,9 @@ export default {
     this.init()
     this.fetchData(res => {
       this.data = res.list.map((item, index) => ({ ...item, index }));
+      if (this.data.length>0) {
+        this.proItemClick(this.data[0])
+      }
     });
     this.lineChartData = this.allChartData.projects
   },
@@ -266,24 +283,44 @@ export default {
     })
   },
   methods: {
+    proItemClick(item) {
+      getAction('/index/findProProcess',{
+        proId: item.id
+      }).then(resp => {
+        console.log(resp.data)
+        let project = resp.data[0]
+        this.barChartData = {
+          id: item.id,
+          proName: project.proName,
+          xAxis: ['询价', '报价', '技审', '商审', '比价', '终审'],
+          finishedData: [project['iNum'], project['qNum'], project['tNum'], project['bNum'], project['cNum'], project['fNum']],
+          unfinishedData: [0, 0, project['qNum']-project['tNum'], project['qNum']-project['bNum'], project['qNum']-project['cNum'], project['qNum']-project['fNum']]
+        }
+      })
+    },
     gotoOtherPage(url, record) {
       this.$router.push({ path: url, query: record})
     },
     fetchData(callback) {
-      getAction('/project/detail/findByAll', { pageFlag: 1 })
-        .then(response => {
-          callback(response.data)
+      getAction('/sysIndex/findProAndCompletion', {
+        pageNum: this.proCurrentPage
+      })
+        .then(resp => {
+          this.$set(this.projects, 'total', resp.data.total)
+          this.proCurrentPage = resp.data.nextPage
+          this.proHasNextPage = resp.data.hasNextPage
+          callback(resp.data)
         })
     },
     handleInfiniteOnLoad() {
       const data = this.projects.list;
       this.loading = true;
-      /*if (data.length > 100) {
-        this.$message.warning('Infinite List loaded all');
+      if (this.proHasNextPage == false) {
+        this.$message.warning('已到底部');
         this.busy = true;
         this.loading = false;
         return;
-      }*/
+      }
       this.fetchData(res => {
         this.projects.list = data.concat(res.list).map((item, index) => ({ ...item, index }));
         this.loading = false;
@@ -389,9 +426,31 @@ export default {
   padding: 0px;
   background-color: rgb(240, 242, 245);
   position: relative;
+  .ant-list-item {
+    padding: 0;
+  }
+  .list-item {
+    cursor: pointer;
+    padding:0 8px;
+    width: 100%;
+    height: 60px;
+    line-height: 60px;
+    position: relative;
+    padding: 16px 6px;
+    border-radius: 2px;
+  }
+
+  .list-item:hover {
+    background: #e5eff7;
+  }
+
+  .is-checked, .is-checked:hover {
+    background: #44cbcde3;
+  }
+
   /deep/.el-divider--horizontal {
     margin: 8px 0 0 0;
-    bottom: 16px;
+    bottom: 0px;
     position: absolute;
   }
   .github-corner {

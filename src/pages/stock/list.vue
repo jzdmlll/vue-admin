@@ -90,12 +90,32 @@
                 <a-table-column fixed="right" :width="70" align="center" key="number" title="总数量" data-index="number" />
                 <a-table-column fixed="right" :width="70" align="center" key="stockChecks" title="已签收" data-index="stockChecks" >
                   <template slot-scope="text, record">
-                    <el-tag size="small" type="success" effect="plain">{{record.checkNum}}</el-tag>
+                    <a-popover :destroyTooltipOnHide="true" title="已签收" trigger="click">
+                      <template slot="content">
+                        <div v-for="item in text" :key="item.id">
+                          <el-tag effect="plain">{{item.checkPerson}}</el-tag>
+                          <el-tag type="success" effect="plain">{{item.checkNumber}}</el-tag>
+                          <el-tag effect="plain">{{dateTimeFormat(parseInt(item.checkTime))}}</el-tag>
+                          <el-divider class="divider"></el-divider>
+                        </div>
+                      </template>
+                      <el-tag style="cursor: pointer" size="small" type="success" effect="plain">{{record.checkNum}}</el-tag>
+                    </a-popover>
                   </template>
                 </a-table-column>
                 <a-table-column fixed="right" :width="70" align="center" key="stockEntries" title="已入库" data-index="stockEntries" >
                   <template slot-scope="text, record">
-                    <el-tag size="small" type="warning" effect="plain">{{record.entryNum}}</el-tag>
+                    <a-popover :destroyTooltipOnHide="true" title="已签收" trigger="click">
+                      <template slot="content">
+                        <div v-for="item in text" :key="item.id">
+                          <el-tag effect="plain">{{item.entryPerson}}</el-tag>
+                          <el-tag type="warning" effect="plain">{{item.entryNumber}}</el-tag>
+                          <el-tag effect="plain">{{dateTimeFormat(parseInt(item.entryTime))}}</el-tag>
+                          <el-divider class="divider"></el-divider>
+                        </div>
+                      </template>
+                      <el-tag style="cursor: pointer" size="small" type="warning" effect="plain">{{record.entryNum}}</el-tag>
+                    </a-popover>
                   </template>
                 </a-table-column>
                 <a-table-column fixed="right" :width="150" aligin="center" key="action" title="操作" data-index="action">
@@ -188,12 +208,13 @@
           <el-input-number v-model="stockDialog.form.number" :precision="2" :step="1"></el-input-number>
         </el-form-item>
         <el-form-item :label="stockDialog.title+'时间'" label-width="80px" size="small" prop="time">
+          {{stockDialog.form.time}}
           <el-date-picker
             v-model="stockDialog.form.time"
             value-format="timestamp"
             type="datetime"
             placeholder="选择日期时间"
-            default-time="12:00:00">
+            >
           </el-date-picker>
         </el-form-item>
         <el-form-item :label="stockDialog.title+'人'" label-width="80px" size="small" prop="operator">
@@ -324,7 +345,7 @@
             form.operator = getUser()
             postActionByQueryString(url, form)
               .then(resp => {
-                this.$message({ type: 'success', message: resp.data })
+                this.$message({ type: 'success', message: resp.message })
                 this.stockDialog.visible = false
                 this.toSearch()
               })
@@ -421,12 +442,15 @@
             }).then(resp => {
               this.actualAccounts = resp.data
             })
-
+            this.purchaseItemsLoading = true
             // 查询采购项清单信息
             getAction('/stock/purchaseItemStockEntryInvoice/findPurchaseItemStockEntryInvoiceByContractId', {
               contractId: contract.id
             }).then(resp => {
               this.purchaseItems = resp.data
+              this.purchaseItemsLoading = false
+            }).catch(()=> {
+              this.purchaseItemsLoading = false
             })
           }
           this.contractAttribute.contractName = contract.contractName
@@ -490,6 +514,9 @@
 <!--  css -->
 <style lang="scss" scoped>
 .equipment-list {
+  /deep/.el-divider--horizontal {
+    marign: 8px 0!important;
+  }
   /deep/.el-form-item__content{
     height:auto;
     line-height:32px;

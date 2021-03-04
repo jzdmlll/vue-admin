@@ -54,7 +54,7 @@
         <a-table-column :width="150" key="contractNo" title="合同编号" data-index="contractNo" align="center"/>
         <a-table-column :width="100" key="price" title="金额" data-index="price" align="center">
           <template slot-scope="text, record">
-            <el-tag effect="plain">￥{{text}}</el-tag>
+            <el-tag effect="plain" style="font-size: 13px;font-weight: 600">￥{{toThousandFilter(text)}}</el-tag>
           </template>
         </a-table-column>
         <a-table-column key="senderRemark" title="送审备注" data-index="senderRemark" align="center"/>
@@ -107,7 +107,7 @@
   import XLSX from 'xlsx'
   import { onFilterDropdownVisibleChange, onFilter, handleSearch, handleReset } from '@/utils/column-search'
   import elDragDialog from '@/directive/el-drag-dialog'
-  import {dateFormat} from '@/utils/format'
+  import {dateFormat, toThousandFilter} from '@/utils/format'
   import { dateTimeFormat } from '@/utils/format'
 
   export default {
@@ -236,6 +236,7 @@
             .then( resp => {
               this.contractChecks = resp.data
               this.visiblePublish=''
+              this.$message({ type: 'success', message: resp.message })
             })
         }
 
@@ -288,6 +289,7 @@
       checkContract(contract) {
         return contract[this.level[this.page]['audit']] == 0?false:true
       },
+      toThousandFilter
     }
   }
 </script>

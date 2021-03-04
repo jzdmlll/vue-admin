@@ -75,6 +75,7 @@
         <a-table-column align="center" :width="120" key="remark" title="备注" data-index="remark" />
         <a-table-column fixed="right" align="center" :width="234" key="action" title="操作">
           <template slot-scope="text, record, index">
+            <el-button @click.native.stop="editContract(record)" icon="el-icon-edit" type="success" size="mini" style="padding: 7px 10px;">修改</el-button>
             <el-button @click.native.stop="toCheck(record)" v-if="record.firstAudit==null && record.secondAudit==null && record.threeAudit==null" type="success" icon="el-icon-s-promotion" size="mini" style="padding: 7px 10px;">送审</el-button>
             <el-button @click.native.stop="setProp(record.id)" v-else-if="calculateProgress(record.firstAudit, record.secondAudit, record.threeAudit) == 100" size="mini" type="primary" icon="el-icon-setting" style="padding: 7px 10px;">属性</el-button>
             <el-button @click.native.stop="upload(record, index)" :loading="uploadLoading[index]" type="primary" size="mini" style="padding: 7px 10px;" icon="el-icon-upload">附件</el-button>
@@ -124,11 +125,11 @@
     <!-- 模态框 -->
     <el-dialog :title="title" :visible.sync="dialogVisible">
       <el-form ref="form" status-icon :model="form" :rules="rules">
-        <el-form-item label="采购项目" label-width="80px" prop="projectId">
+        <!--<el-form-item label="采购项目" label-width="80px" prop="projectId">
           <el-select v-model="form.projectId" clearable placeholder="请选择">
             <el-option v-for="p in purchasePros" :key="p.id" :label="p.projectName" :value="p.id" />
           </el-select>
-        </el-form-item>
+        </el-form-item>-->
         <el-form-item label="合同名" label-width="80px" prop="contractName">
           <el-input v-model="form.contractName" autocomplete="off" />
         </el-form-item>
@@ -285,7 +286,7 @@
           params: { contractNo: value }
         })
           .then(response => {
-            if (response.data > 0) {
+            if (response.data > 0 && value!=this.contractNo) {
               callback(new Error('合同编号已存在'))
             }else {
               callback()
@@ -294,6 +295,8 @@
       };
       return {
         fileUploadUrl,
+
+        contractNo: null,
 
         attrDialogVisible: false,
         attrDialogForm: {},
@@ -380,6 +383,13 @@
       };
     },
     methods: {
+      editContract(record) {
+        this.form = record
+        this.title = '修改'
+        this.contractNo = record.contractNo
+        console.log(record)
+        this.dialogVisible = true
+      },
       attrDialogHandler() {
         this.$refs['attrDialogForm'].validate((valid) => {
           if (valid) {
@@ -575,6 +585,7 @@
         }
       },
       toAdd() {
+        this.contractNo = null
         this.dialogVisible = true
         this.form = {}
         this.title = '新增采购合同'
