@@ -1,43 +1,24 @@
 <template>
   <!--用章审核-->
   <div class="chapter-check">
-    <!--
-    <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
-      <el-cascader
-        v-model="searchForm.contractId"
-        clearable
-        filterable
-        :props="props"
-        @change="handleChange">
-        <template slot-scope="{ node, data }">
-          <div v-if="!node.isLeaf">
-            <span>{{ data.label }}</span>
-          </div>
-          <div v-else>
-            <span>{{ data.label }}</span>
-            <el-tag
-              style="float: right;transform: translate(0px, 7px);"
-              :type="checkContract(data.item)?'success':'info'"
-              size="mini"
-              effect="plain">
-              {{ checkContract(data.item)?'已完成':'未完成' }}
-            </el-tag>
-          </div>
-        </template>
-      </el-cascader>
-      <el-button style="margin-right: 6px" type="primary" icon="el-icon-search" size="small" @click="toSearch">查询</el-button>
-    </div>
-    -->
     <el-card shadow="never" style="margin-top: 1em">
       <div slot="header" class="index-md-title">
-        <el-select v-model="searchForm.projectName" style="margin-right: 6px" filterable clearable placeholder="请选择项目" value-key="name">
-          <el-option v-for="item in projects" :key="item.id" :label="item.projectName" :value="item.projectName" />
+        <el-input v-model="searchForm.proName" placeholder="请输入工程名" style="width:200px;"></el-input>
+        <el-select v-model="searchForm.auditStatus">
+          <el-option value="0" label="审核中"/>
+          <el-option value="1" label="审核通过"/>
+          <el-option value="2" label="审核否决"/>
         </el-select>
-        <!--
-        <el-select v-model="searchForm.process" style="margin-right: 6px" filterable clearable placeholder="审核流程" value-key="process">
-        <el-option v-for="item in status" :key="item" :label="item.process" :value="item.value" />
-        </el-select>
-        -->
+        <el-date-picker
+          v-model="searchForm.time"
+          unlink-panels
+          value-format="timestamp"
+          type="daterange"
+          range-separator="至"
+          width="300px;"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期">
+        </el-date-picker>
         <el-button style="margin-right: 6px" type="primary" icon="el-icon-search" size="small" @click="toSearch">查询</el-button>
       </div>
       <a-table
@@ -51,10 +32,16 @@
         style="margin-top:20px;"
       >
         <a-table-column :width="100" key="id" title="id" data-index="id" align="center" v-if="false"/>
+        <a-table-column :width="200" key="projectName" title="项目名" data-index="projectName" align="center"/>
         <a-table-column :width="150" key="contractNo" title="合同编号" data-index="contractNo" align="center"/>
         <a-table-column :width="100" key="price" title="金额" data-index="price" align="center">
           <template slot-scope="text, record">
             <el-tag effect="plain">￥{{text}}</el-tag>
+          </template>
+        </a-table-column>
+        <a-table-column :width="100" key="auditStatus" data-index="auditStatus" title="审核状态" aligwarningn="center" >
+          <template slot-scope="text,scope">
+            <el-tag :type="scope.auditStatus===1? 'success':scope.auditStatus=== 2?'danger':'warning'">{{scope.auditStatus ===1 ?'审核通过':scope.auditStatus=== 2?'审核否决':'未审核'}}</el-tag>
           </template>
         </a-table-column>
         <a-table-column key="senderRemark" title="送审备注" data-index="senderRemark" align="center"/>
@@ -63,16 +50,16 @@
             {{userMap[text]?userMap[text]:text}}
           </template>
         </a-table-column>
-        <a-table-column :width="80" title="送审时间" align="center">
+        <a-table-column :width="180" title="送审时间" align="center">
           <template slot-scope="text,record">{{dateTimeFormat(record.senderTime)}}</template>
         </a-table-column>
-        <a-table-column :width="60" key="firstparty" title="甲方" data-index="firstParty" align="center"/>
+        <a-table-column :width="60" key="firstParty" title="甲方" data-index="firstParty" align="center"/>
         <a-table-column :width="80" key="secondParty" title="乙方" data-index="secondParty" align="center"/>
         <a-table-column :width="80" key="type" title="类别" data-index="type" align="center"/>
 
         <a-table-column key="mainContent" title="主要内容" data-index="mainContent" align="center"/>
 
-        <a-table-column :width="200" fixed="right" ellipsis="true" title="操作" align="center">
+        <a-table-column :width="250" fixed="right" ellipsis="true" title="操作" align="center">
           <template slot-scope="text, record">
             <el-button type="primary" size="mini" @click="judge(record.id)">通过</el-button>
             <el-button type="danger" size="mini" @click="deny(record.id)">否决</el-button>
@@ -164,7 +151,7 @@
         file:[],     //获取文件存放对象
         status: [{process:'未审核',value:0}, {process:'通过',value:1}, {process:'拒绝',value:2}],
         files:[],
-        searchForm: {},
+        searchForm: {time:''},
         visible:false,
         contractChecks: [],
         visiblePublish:'none',
@@ -197,10 +184,6 @@
       dateTimeFormat,
       judge(info)
       {
-        /*
-        if(Object.keys(this.searchForm).length == 0)
-        {
-        }*/
         if(this.searchForm.projectName==undefined)
         {
           this.$message({ type: 'warning', message: '请选择工程名'})
@@ -213,32 +196,27 @@
       },
       deny(info)
       {
-        if(this.searchForm.projectName==undefined)
+        if(this.searchForm.proId==undefined)
         {
           this.$message({ type: 'warning', message: '请选择工程名'})
         }
         else{
           this.judgeVisible=true
-          this.searchForm.id=info
+          this.searchForm.proId=info
           this.searchForm.judge='2'
         }
       },
       toSearch() {
-        if(this.searchForm.projectName==undefined)
-        {
-          this.$message({ type: 'warning', message: '请选择工程名'})
-        }
-        else{
-          let form={}
-          form['projectName']=this.searchForm.projectName
-
-          getAction('/chapter/chapterAudit/findChapterAuditInfosByProjectName', form)
-            .then( resp => {
-              this.contractChecks = resp.data
-              this.visiblePublish=''
-            })
-        }
-
+        this.contractChecks = []
+        request.request({
+          url: '/chapter/chapterAudit/findChapterAuditInfosByParams',
+          method: 'get',
+          params: { contractId: this.$route.query.contractId}
+        })
+       .then( resp => {
+          this.contractChecks = resp.data
+          this.visiblePublish=''
+        })
       },
       getFile(record)
       {
@@ -276,6 +254,7 @@
       init() {
         this.loadProjects()
         this.loadAllUser()
+        this.toSearch()
       },
       async loadProjects() {
         await request.get('/chapter/chapterAudit/findAllProjectName')

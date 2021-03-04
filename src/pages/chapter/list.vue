@@ -2,8 +2,8 @@
   <!-- 用章管理 -->
   <div class="chapter-list">
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
-      <el-input v-model="searchForm.name" placeholder="请输入工程名" style="width:200px;"></el-input>
-      <el-select v-model="searchForm.auditStatus">
+      <el-input v-model="searchForm.proName" placeholder="请输入工程名" style="width:200px;"></el-input>
+      <el-select v-model="searchForm.auditStatus" clearable>
         <el-option value="0" label="审核中"/>
         <el-option value="1" label="审核通过"/>
         <el-option value="2" label="审核否决"/>
@@ -32,11 +32,11 @@
         :scroll="{x:2500}"
       >
         <a-table-column :width="100" key="id" data-index="id" title="id" v-if="false"/>
-        <a-table-column :width="150" key="projectName" data-index="projectName" title="工程名" />
-        <a-table-column :width="100" key="contractName" data-index="contractName" title="合同名" />
+        <a-table-column :width="200" key="projectName" data-index="projectName" title="工程名" />
+        <a-table-column :width="200" key="contractName" data-index="contractName" title="合同名" />
         <a-table-column :width="100" key="sender" data-index="sender" title="送审人" />
         <a-table-column :width="100" key="auditor" data-index="auditor" title="审核人" />
-        <a-table-column :width="100" key="contractNo" data-index="contractNo" title="合同编号" />
+        <!--<a-table-column :width="200" key="contractNo" data-index="contractNo" title="合同编号" />-->
         <a-table-column :width="100" key="auditStatus" data-index="auditStatus" title="审核状态" aligwarningn="center" >
           <template slot-scope="text,scope">
             <el-tag :type="scope.auditStatus===1? 'success':scope.auditStatus=== 2?'danger':'warning'">{{scope.auditStatus ===1 ?'审核通过':scope.auditStatus=== 2?'审核否决':'正在审核'}}</el-tag>
@@ -52,7 +52,7 @@
         <a-table-column :width="100" key="firstParty" data-index="firstParty" title="甲方" />
         <a-table-column :width="100" key="secondParty" data-index="secondParty" title="乙方" />
         <a-table-column :width="100" key="type" data-index="type" title="类别" />
-        <a-table-column :width="100" title="操作">
+        <a-table-column title="操作">
           <template slot-scope="text,scope">
             <a-tooltip placement="topLeft" title="查看附件">
               <el-button type="primary" icon="el-icon-paperclip" size="small" @click="getFile(scope.id)"/>
@@ -171,10 +171,11 @@
 
       const fileUploadUrl = process.env.VUE_APP_BASE_API + 'file/uploadCache'
       return {
+        projects:[],
         filemark:{},
         modify:{},
         fileUploadUrl,
-        searchForm: {time:''},
+        searchForm: {time:'',auditStatus:''},
         fileVisible:false,
         form: {projectName:'',contractName:'',contractNo:'',price:'',firstParty:'',secondParty:'',type:'',senderRemark:'',auditor:'',mainContent:''},
         rule: {
@@ -272,7 +273,7 @@
         request.request({
           url: '/chapter/chapterAudit/findChapterAuditorInfos',
           method: 'get',
-          params: { projectName: this.searchForm.name, startTime: this.searchForm.time[0], overTime:this.searchForm.time[1],auditStatus:this.searchForm.auditStatus }
+          params: { proName: this.searchForm.proName, startTime: this.searchForm.time[0], overTime:this.searchForm.time[1],auditStatus:this.searchForm.auditStatus }
         })
           .then(response => {
             this.devices = response.data
@@ -292,6 +293,12 @@
           })
           .finally(()=> {
             this.loading=false
+          })
+      },
+      async loadProjects() {
+        await request.get('/chapter/chapterAudit/findAllProjectName')
+          .then(response => {
+            this.projects = response.data
           })
       },
       cancelHandler() {
