@@ -33,7 +33,7 @@
       >
         <a-table-column :width="100" key="id" title="id" data-index="id" align="center" v-if="false"/>
         <a-table-column :width="200" key="projectName" title="项目名" data-index="projectName" align="center"/>
-        <a-table-column :width="150" key="contractNo" title="合同编号" data-index="contractNo" align="center"/>
+        <a-table-column :width="170" key="contractNo" title="合同编号" data-index="contractNo" align="center"/>
         <a-table-column :width="100" key="price" title="金额" data-index="price" align="center">
           <template slot-scope="text, record">
             <el-tag effect="plain" style="font-size: 13px;font-weight: 600">￥{{toThousandFilter(text)}}</el-tag>
@@ -45,21 +45,15 @@
           </template>
         </a-table-column>
         <a-table-column key="senderRemark" title="送审备注" data-index="senderRemark" align="center"/>
-        <a-table-column :width="80" key="sender" title="送审人" data-index="sender" align="center">
-          <template slot-scope="text, record">
-            {{userMap[text]?userMap[text]:text}}
-          </template>
-        </a-table-column>
+        <a-table-column key="firstParty" title="甲方" data-index="firstParty" align="center"/>
+        <a-table-column key="secondParty" title="乙方" data-index="secondParty" align="center"/>
+        <a-table-column :width="80" key="type" title="类别" data-index="type" align="center"/>
+        <a-table-column key="mainContent" title="主要内容" data-index="mainContent" align="center"/>
+        <a-table-column :width="80" key="sender" title="送审人" data-index="sender" align="center"/>
         <a-table-column :width="180" title="送审时间" align="center">
           <template slot-scope="text,record">{{dateTimeFormat(record.senderTime)}}</template>
         </a-table-column>
-        <a-table-column :width="60" key="firstParty" title="甲方" data-index="firstParty" align="center"/>
-        <a-table-column :width="80" key="secondParty" title="乙方" data-index="secondParty" align="center"/>
-        <a-table-column :width="80" key="type" title="类别" data-index="type" align="center"/>
-
-        <a-table-column key="mainContent" title="主要内容" data-index="mainContent" align="center"/>
-
-        <a-table-column :width="250" fixed="right" ellipsis="true" title="操作" align="center">
+        <a-table-column :width="230" fixed="right" ellipsis="true" title="操作" align="center">
           <template slot-scope="text, record">
             <el-button type="primary" size="mini" @click="judge(record.id)">通过</el-button>
             <el-button type="danger" size="mini" @click="deny(record.id)">否决</el-button>
@@ -77,7 +71,7 @@
 
     <el-dialog :model="file" v-el-drag-dialog title="审核备注" :visible.sync="judgeVisible">
       <div>
-        <el-input v-model="searchForm.remark" placeholder="请输入备注"></el-input>
+        <el-input v-model="form.auditRemark" placeholder="请输入备注"></el-input>
         <br>
         <el-button style="margin-top: 6px;float:right;" type="primary"  size="small" @click="toJudge">提交</el-button>
         <br>
@@ -100,54 +94,9 @@
   export default {
     directives: { elDragDialog },
     data() {
-
-      const props = {
-        lazy: true,
-        lazyLoad(node, resolve) {
-          const { level } = node;
-          switch (level) {
-            case 0:
-              // 请求一级节点数据
-              getAction('/purchase/project/findAllLike', {})
-                .then( resp => {
-                  let nodes = []
-                  resp.data.map(item => {
-                    nodes.push({
-                      value: item.id,
-                      label: item.projectName,
-                      leaf: level >= 1
-                    })
-                  })
-                  // 通过调用resolve将子节点数据返回，通知组件数据加载完成
-                  resolve(nodes);
-                })
-              break
-            case 1:
-              // 请求二级节点数据
-              let nodes = []
-              const projectId = node.data.value
-              getAction('/purchase/contract/findByProjectId', {projectId: projectId})
-                .then( resp => {
-                  let nodes = []
-                  resp.data.map(item => {
-                    nodes.push({
-                      value: item.id,
-                      label: item.contractName,
-                      item: item,
-                      leaf: level >= 1
-                    })
-                  })
-                  // 通过调用resolve将子节点数据返回，通知组件数据加载完成
-                  resolve(nodes)
-                })
-              break
-          }
-        }
-      }
       return {
-
-        userMap: {},
-
+        //提交信息
+        form: {},
         file:[],     //获取文件存放对象
         status: [{process:'未审核',value:0}, {process:'通过',value:1}, {process:'拒绝',value:2}],
         files:[],
@@ -159,8 +108,6 @@
         projects:[],
 
         type: ['', 'success', 'info', 'danger', 'warning'],
-
-        props: props,
         judgeVisible:false,
         page: null,
         level: [
@@ -175,43 +122,25 @@
 
     },
     methods: {
-      loadAllUser() {
-        getAction("/user/findAllIdToName", {})
-          .then(resp => {
-            this.userMap = resp.data
-          })
-      },
       dateTimeFormat,
       judge(info)
       {
-        if(this.searchForm.projectName==undefined)
-        {
-          this.$message({ type: 'warning', message: '请选择工程名'})
-        }
-        else{
-          this.judgeVisible=true
-          this.searchForm.id=info
-          this.searchForm.judge='1'
-        }
+        this.judgeVisible = true
+        this.form.id = info
+        this.form.auditStatus='1'
       },
       deny(info)
       {
-        if(this.searchForm.proId==undefined)
-        {
-          this.$message({ type: 'warning', message: '请选择工程名'})
-        }
-        else{
-          this.judgeVisible=true
-          this.searchForm.proId=info
-          this.searchForm.judge='2'
-        }
+        this.judgeVisible = true
+        this.form.id = info
+        this.form.auditStatus='2'
       },
       toSearch() {
         this.contractChecks = []
         request.request({
           url: '/chapter/chapterAudit/findChapterAuditInfosByParams',
           method: 'get',
-          params: { contractId: this.$route.query.contractId}
+          params: { proName: this.searchForm.proName, startTime: this.searchForm.time[0], overTime: this.searchForm.time[1], auditStatus: this.searchForm.auditStatus }
         })
        .then( resp => {
           this.contractChecks = resp.data
@@ -228,40 +157,18 @@
       },
       toJudge()
       {
-        let form = {}
-        /*form[this.level[this.page]['audit']] =  record*/
-        form['id']=this.searchForm.id
-        form['auditStatus']=this.searchForm.judge
-        form['auditRemark']=this.searchForm.remark
-        postActionByJson('/chapter/chapterAudit/updateChapterAudit', form)
-          .then( resp => {
-
-            this.$message({ message: resp.message, type: 'success' })
-          })
-      },
-      todelete(info)
-      {
-        /*form[this.level[this.page]['audit']] =  record*/
-        let form = {}
-        form['id']=this.searchForm.id
-        getAction('/chapter/chapterAudit/deleteChapterAuditService', {id:info})
-          .then( resp => {
-            this.$message({ message: resp.message, type: 'success' })
-            this.toSearch()
-          })
-
+        this.form.auditor = getUser()
+        postActionByJson('/chapter/chapterAudit/updateChapterAudit', this.form)
+        .then( resp => {
+          this.$message({ message: resp.message, type: 'success' })
+          this.judgeVisible = false
+          this.toSearch()
+        })
       },
       init() {
-        this.loadProjects()
-        this.loadAllUser()
         this.toSearch()
       },
-      async loadProjects() {
-        await request.get('/chapter/chapterAudit/findAllProjectName')
-          .then(response => {
-            this.projects = response.data
-          })
-      },
+
       handleChange(value) {
       },
       checkContract(contract) {

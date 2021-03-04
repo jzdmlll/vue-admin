@@ -2,6 +2,8 @@
   <!--合同审核-->
   <div class="purchase-check">
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
+      <el-button type="primary" size="small" style="background: #1890ff;border-color: #1890ff" @click="back">返回</el-button>
+
       <el-cascader
         v-model="searchForm.contractId"
         clearable
@@ -24,7 +26,23 @@
           </div>
         </template>
       </el-cascader>
-      <el-button style="margin-right: 6px" type="primary" icon="el-icon-search" size="small" @click="toSearch">查询</el-button>
+      <el-select v-model="searchForm.auditStatus">
+        <el-option value="0" label="审核中"/>
+        <el-option value="1" label="审核通过"/>
+        <el-option value="2" label="审核否决"/>
+      </el-select>
+      <el-date-picker
+        v-model="searchForm.time"
+        style = "margin-left: 10px"
+        unlink-panels
+        value-format="timestamp"
+        type="daterange"
+        range-separator="至"
+        width="300px;"
+        start-placeholder="开始日期"
+        end-placeholder="结束日期">
+      </el-date-picker>
+      <el-button style="margin-left: 10px" type="primary" icon="el-icon-search" size="small" @click="toSearch">查询</el-button>
     </div>
     <el-card shadow="never" style="margin-top: 1em">
       <div slot="header" class="index-md-title">
@@ -44,6 +62,7 @@
         :pagination="false"
         style="margin-top:20px;"
       >
+        <!--
         <a-table-column :width="160" key="projectName" title="项目" data-index="projectName" align="center"/>
         <a-table-column :width="160" key="contractNo" title="合同编号" data-index="contractNo" align="center"/>
         <a-table-column :width="80" key="firstAudit" title="一级审核" data-index="firstAudit" align="center">
@@ -63,11 +82,11 @@
             <el-tag v-if="text" :type="status[text]['type']">{{status[text]['text']}}</el-tag>
             <el-tag v-else type="info">无需审核</el-tag>
           </template>
-        </a-table-column>
+        </a-table-column>-->
         <a-table-column :width="60" key="serialNumber" title="序号" data-index="serialNumber" align="center"/>
         <a-table-column :width="150" key="item" title="设备" data-index="item" align="center"/>
         <a-table-column :width="100" key="supplyBrand" title="品牌" data-index="supplyBrand" align="center"/>
-        <a-table-column :width="100" key="supplySupplier" title="厂家" data-index="supplySupplier" align="center"/>
+        <a-table-column :width="200" key="supplySupplier" title="厂家" data-index="supplySupplier" align="center"/>
         <a-table-column :width="100" key="supplyModel" title="型号" data-index="supplyModel" align="center"/>
         <a-table-column :width="60" key="unit" title="单位" data-index="unit" align="center"/>
         <a-table-column :width="80" key="number" title="数量" data-index="number" align="center"/>
@@ -88,8 +107,6 @@
       </div>
       <a-empty v-else/>
     </el-dialog>
-
-
   </div>
 </template>
 <script>
@@ -106,7 +123,7 @@
     data() {
 
       return {
-
+        contractId: [],
         status: [
           { type: 'warning', text: '未审核' },
           { type: 'success', text: '通过' },
@@ -183,16 +200,14 @@
       this.page = this.$route.name == '一级审核'?0:this.$route.name == '二级审核'?1:2
     },
     methods: {
-
+      back() {
+        this.$router.push("/dashboard")
+      },
       toSearch() {
         this.contractChecksLoading = true
-        var params;
-        if (this.searchForm.contractId) {
-          params = this.searchForm.contractId[1]
-        }else{
-          params = null
-        }
-        getAction('/purchase/contractManagement/findPurchaseMessageByContractId', { contractId: params})
+
+
+        getAction('/purchase/contractManagement/findPurchaseMessageByContractId', { contractId: this.contractId})
           .then( resp => {
             this.contractChecks = resp.data
             this.contractChecksLoading = false
@@ -202,7 +217,7 @@
       },
       getFile()
       {
-        getAction('/purchase/contractManagement/findContractFileByContractId',{contractId: this.searchForm.contractId[1]})
+        getAction('/purchase/contractManagement/findContractFileByContractId',{contractId: this.contractId})
           .then(resp=>{
             this.files=resp.data
             this.visible=true
@@ -220,6 +235,9 @@
           })
       },
       init() {
+        this.projectName = this.$route.query.proName
+        this.contractName = this.$route.query.contractNo
+        this.contractId = this.$route.query.contractId
         this.toSearch()
       },
       handleChange(value) {

@@ -280,7 +280,7 @@
               </a-table-column>
               <a-table-column key="action" title="操作" :width="100">
                 <template slot-scope="text, record">
-                  <el-button @click="gotoOtherPage('/purchase/check/three', record)" size="mini">前往 <a-icon type="double-right" /></el-button>
+                  <el-button @click="gotoOtherPage('/purchase/check/third', record)" size="mini">前往 <a-icon type="double-right" /></el-button>
                 </template>
               </a-table-column>
             </a-table>
@@ -373,7 +373,7 @@ export default {
       dataSource3:[],
       dataSource4:[],
       hasNextPage: [false, false, false, false],
-      currentPage: [1, 1, 1, 1],
+      currentPage: [1, 1, 1, 1, 1, 1, 1],
       maxPage: [],
 
       proCurrentPage: 1,
@@ -554,23 +554,23 @@ export default {
       request.get('/sysIndex/dataSourceFirst')
         .then(resp => {
           this.dataSourceFirst = resp.data.list
-          this.currentPage[0] = resp.data.nextPage
-          this.hasNextPage[0] = resp.data.hasNextPage
-          this.maxPage[0] = resp.data.total
+          this.currentPage[4] = resp.data.nextPage
+          this.hasNextPage[4] = resp.data.hasNextPage
+          this.maxPage[4] = resp.data.total
         })
       request.get('/sysIndex/dataSourceSecond')
         .then(resp => {
           this.dataSourceSecond = resp.data.list
-          this.currentPage[0] = resp.data.nextPage
-          this.hasNextPage[0] = resp.data.hasNextPage
-          this.maxPage[0] = resp.data.total
+          this.currentPage[5] = resp.data.nextPage
+          this.hasNextPage[5] = resp.data.hasNextPage
+          this.maxPage[5] = resp.data.total
         })
       request.get('/sysIndex/dataSourceThree')
         .then(resp => {
           this.dataSourceThree = resp.data.list
-          this.currentPage[0] = resp.data.nextPage
-          this.hasNextPage[0] = resp.data.hasNextPage
-          this.maxPage[0] = resp.data.total
+          this.currentPage[6] = resp.data.nextPage
+          this.hasNextPage[6] = resp.data.hasNextPage
+          this.maxPage[6] = resp.data.total
         })
 
     }
