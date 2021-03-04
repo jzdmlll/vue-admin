@@ -158,6 +158,135 @@
         </a-col>
 
       </a-row>
+      <a-row>
+        <a-col>
+          <el-card>
+            <div slot="header" class="index-md-title">
+              <span>一审待办【{{ maxPage[3] }}】</span>
+            </div>
+            <a-table
+              :dataSource="dataSourceFirst"
+              size="small"
+              id="compareLazyLoadTable"
+              :scroll="{ y: 166 }"
+              :pagination="false"
+              :rowKey="record => record.id"
+            >
+              <a-table-column ellipsis="true" key="proName" title="项目" data-index="proName"/>
+              <a-table-column ellipsis="true" key="contractNo" title="合同" data-index="contractNo"/>
+              <a-table-column ellipsis="true" key="firstAudit" title="一审" data-index="firstAudit">
+                <template slot-scope="text, record">
+                  <el-tag v-if="text" :type="status[text]['type']">{{status[text]['text']}}</el-tag>
+                  <el-tag v-else type="info">无需审核</el-tag>
+                </template>
+              </a-table-column>
+              <a-table-column ellipsis="true" key="secondAudit" title="二审" data-index="secondAudit">
+                <template slot-scope="text, record">
+                  <el-tag v-if="text" :type="status[text]['type']">{{status[text]['text']}}</el-tag>
+                  <el-tag v-else type="info">无需审核</el-tag>
+                </template>
+              </a-table-column>
+              <a-table-column ellipsis="true" key="threeAudit" title="三审" data-index="threeAudit">
+                <template slot-scope="text, record">
+                  <el-tag v-if="text" :type="status[text]['type']">{{status[text]['text']}}</el-tag>
+                  <el-tag v-else type="info">无需审核</el-tag>
+                </template>
+              </a-table-column>
+              <a-table-column key="action" title="操作" :width="100">
+                <template slot-scope="text, record">
+                  <el-button @click="gotoOtherPage('/purchase/check/first', record)" size="mini">前往 <a-icon type="double-right" /></el-button>
+                </template>
+              </a-table-column>
+            </a-table>
+          </el-card>
+        </a-col>
+      </a-row>
+      <a-row>
+        <a-col>
+          <el-card>
+            <div slot="header" class="index-md-title">
+              <span>二审待办【{{ maxPage[3] }}】</span>
+            </div>
+            <a-table
+              :dataSource="dataSourceSecond"
+              size="small"
+              id="compareLazyLoadTable"
+              :scroll="{ y: 166 }"
+              :pagination="false"
+              :rowKey="record => record.id"
+            >
+              <a-table-column ellipsis="true" key="proName" title="项目" data-index="proName"/>
+              <a-table-column ellipsis="true" key="contractNo" title="合同" data-index="contractNo"/>
+              <a-table-column ellipsis="true" key="firstAudit" title="一审" data-index="firstAudit">
+                <template slot-scope="text, record">
+                  <el-tag v-if="text" :type="status[text]['type']">{{status[text]['text']}}</el-tag>
+                  <el-tag v-else type="info">无需审核</el-tag>
+                </template>
+              </a-table-column>
+              <a-table-column ellipsis="true" key="secondAudit" title="二审" data-index="secondAudit">
+                <template slot-scope="text, record">
+                  <el-tag v-if="text" :type="status[text]['type']">{{status[text]['text']}}</el-tag>
+                  <el-tag v-else type="info">无需审核</el-tag>
+                </template>
+              </a-table-column>
+              <a-table-column ellipsis="true" key="threeAudit" title="三审" data-index="threeAudit">
+                <template slot-scope="text, record">
+                  <el-tag v-if="text" :type="status[text]['type']">{{status[text]['text']}}</el-tag>
+                  <el-tag v-else type="info">无需审核</el-tag>
+                </template>
+              </a-table-column>
+              <a-table-column key="action" title="操作" :width="100">
+                <template slot-scope="text, record">
+                  <el-button @click="gotoOtherPage('/purchase/check/second', record)" size="mini">前往 <a-icon type="double-right" /></el-button>
+                </template>
+              </a-table-column>
+            </a-table>
+          </el-card>
+        </a-col>
+      </a-row>
+      <a-row>
+        <a-col>
+          <el-card>
+            <div slot="header" class="index-md-title">
+              <span>三审待办【{{ maxPage[3] }}】</span>
+            </div>
+            <a-table
+              :dataSource="dataSourceThree"
+              size="small"
+              id="compareLazyLoadTable"
+              :scroll="{ y: 166 }"
+              :pagination="false"
+              :rowKey="record => record.id"
+            >
+              <a-table-column ellipsis="true" key="proName" title="项目" data-index="proName"/>
+              <a-table-column ellipsis="true" key="contractNo" title="合同" data-index="contractNo"/>
+              <a-table-column ellipsis="true" key="firstAudit" title="一审" data-index="firstAudit">
+                <template slot-scope="text, record">
+                  <el-tag v-if="text" :type="status[text]['type']">{{status[text]['text']}}</el-tag>
+                  <el-tag v-else type="info">无需审核</el-tag>
+                </template>
+              </a-table-column>
+              <a-table-column ellipsis="true" key="secondAudit" title="二审" data-index="secondAudit">
+                <template slot-scope="text, record">
+                  <el-tag v-if="text" :type="status[text]['type']">{{status[text]['text']}}</el-tag>
+                  <el-tag v-else type="info">无需审核</el-tag>
+                </template>
+              </a-table-column>
+              <a-table-column ellipsis="true" key="threeAudit" title="三审" data-index="threeAudit">
+                <template slot-scope="text, record">
+                  <el-tag v-if="text" :type="status[text]['type']">{{status[text]['text']}}</el-tag>
+                  <el-tag v-else type="info">无需审核</el-tag>
+                </template>
+              </a-table-column>
+              <a-table-column key="action" title="操作" :width="100">
+                <template slot-scope="text, record">
+                  <el-button @click="gotoOtherPage('/purchase/check/three', record)" size="mini">前往 <a-icon type="double-right" /></el-button>
+                </template>
+              </a-table-column>
+            </a-table>
+          </el-card>
+        </a-col>
+      </a-row>
     </div>
 
   </div>
@@ -209,13 +338,19 @@ export default {
   },
   data() {
     return {
-
+      dataSourceFirst: [],
+      dataSourceSecond: [],
+      dataSourceThree: [],
       loading: false,
       busy: false,
 
       projects: { list: []},
 
-      status: ['未审核', '通过', '拒绝'],
+      status: [
+        { type: 'warning', text: '未审核' },
+        { type: 'success', text: '通过' },
+        { type: 'danger', text: '否决' },
+      ],
       lineChartData: [],
       barChartData: {
         id: null,
@@ -416,6 +551,28 @@ export default {
           this.hasNextPage[0] = resp.data.hasNextPage
           this.maxPage[0] = resp.data.total
         })
+      request.get('/sysIndex/dataSourceFirst')
+        .then(resp => {
+          this.dataSourceFirst = resp.data.list
+          this.currentPage[0] = resp.data.nextPage
+          this.hasNextPage[0] = resp.data.hasNextPage
+          this.maxPage[0] = resp.data.total
+        })
+      request.get('/sysIndex/dataSourceSecond')
+        .then(resp => {
+          this.dataSourceSecond = resp.data.list
+          this.currentPage[0] = resp.data.nextPage
+          this.hasNextPage[0] = resp.data.hasNextPage
+          this.maxPage[0] = resp.data.total
+        })
+      request.get('/sysIndex/dataSourceThree')
+        .then(resp => {
+          this.dataSourceThree = resp.data.list
+          this.currentPage[0] = resp.data.nextPage
+          this.hasNextPage[0] = resp.data.hasNextPage
+          this.maxPage[0] = resp.data.total
+        })
+
     }
   }
 }

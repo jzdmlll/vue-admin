@@ -40,24 +40,45 @@
         :data-source="contractChecks"
         :rowKey="record => record.id"
         :loading="contractChecksLoading"
-        :scroll="contractChecks.length > 0 ?{ x: 1500}:{}"
+        :scroll="contractChecks.length > 0 ?{ x: 2400, y: 600 }:{}"
         :pagination="false"
         style="margin-top:20px;"
       >
+        <a-table-column :width="160" key="projectName" title="项目" data-index="projectName" align="center"/>
+        <a-table-column :width="160" key="contractNo" title="合同编号" data-index="contractNo" align="center"/>
+        <a-table-column :width="80" key="firstAudit" title="一级审核" data-index="firstAudit" align="center">
+          <template slot-scope="text, record">
+            <el-tag v-if="text" :type="status[text]['type']">{{status[text]['text']}}</el-tag>
+            <el-tag v-else type="info">无需审核</el-tag>
+          </template>
+        </a-table-column>
+        <a-table-column :width="80" key="secondAudit" title="二级审核" data-index="secondAudit" align="center">
+          <template slot-scope="text, record">
+            <el-tag v-if="text" :type="status[text]['type']">{{status[text]['text']}}</el-tag>
+            <el-tag v-else type="info">无需审核</el-tag>
+          </template>
+        </a-table-column>
+        <a-table-column :width="80" key="threeAudit" title="三级审核" data-index="threeAudit" align="center">
+          <template slot-scope="text, record">
+            <el-tag v-if="text" :type="status[text]['type']">{{status[text]['text']}}</el-tag>
+            <el-tag v-else type="info">无需审核</el-tag>
+          </template>
+        </a-table-column>
         <a-table-column :width="60" key="serialNumber" title="序号" data-index="serialNumber" align="center"/>
-        <a-table-column :width="100" key="item" title="设备" data-index="item" align="center"/>
-        <a-table-column :width="100" key="brand" title="品牌" data-index="brand" align="center"/>
-        <a-table-column :width="100" key="supplier" title="厂家" data-index="supplier" align="center"/>
-        <a-table-column :width="100" key="model" title="型号" data-index="model" align="center"/>
+        <a-table-column :width="150" key="item" title="设备" data-index="item" align="center"/>
+        <a-table-column :width="100" key="supplyBrand" title="品牌" data-index="supplyBrand" align="center"/>
+        <a-table-column :width="100" key="supplySupplier" title="厂家" data-index="supplySupplier" align="center"/>
+        <a-table-column :width="100" key="supplyModel" title="型号" data-index="supplyModel" align="center"/>
         <a-table-column :width="60" key="unit" title="单位" data-index="unit" align="center"/>
         <a-table-column :width="80" key="number" title="数量" data-index="number" align="center"/>
-        <a-table-column :width="80" key="price" title="单价" data-index="price" align="center"/>
+        <a-table-column :width="80" key="supplyPrice" title="单价" data-index="supplyPrice" align="center"/>
         <a-table-column :width="80" key="totalPrice" title="总价" data-index="totalPrice" align="center"/>
-        <a-table-column  key="itemsParams" title="技术要求" data-index="itemsParams" align="center"/>
+        <a-table-column  key="params" title="技术要求" data-index="params" align="center"/>
         <a-table-column  key="supplyParams" title="实际参数" data-index="supplyParams" align="center"/>
         <a-table-column :width="100" key="remark" title="备注" data-index="remark" align="center"/>
-        <a-table-column :width="100" key="warranty" title="质保期" data-index="warranty" align="center"/>
-        <a-table-column :width="100" key="delivery" title="货期" data-index="delivery" align="center"/>
+        <a-table-column :width="100" key="supplyWarranty" title="质保期" data-index="supplyWarranty" align="center"/>
+        <a-table-column key="supplyDelivery" title="货期" data-index="supplyDelivery" align="center"/>
+        <a-table-column key="supplyRemark" title="商家备注" data-index="supplyRemark" align="center"/>
       </a-table>
     </el-card>
     <el-dialog :model="file" v-el-drag-dialog title="附件查看" :visible.sync="visible">
@@ -85,6 +106,12 @@
     data() {
 
       return {
+
+        status: [
+          { type: 'warning', text: '未审核' },
+          { type: 'success', text: '通过' },
+          { type: 'danger', text: '否决' },
+        ],
 
         projectName: null,
         contractName: null,
@@ -159,17 +186,19 @@
 
       toSearch() {
         this.contractChecksLoading = true
+        var params;
         if (this.searchForm.contractId) {
-          getAction('/purchase/contractManagement/findPurchaseMessageByContractId', { contractId: this.searchForm.contractId[1]})
-            .then( resp => {
-              this.contractChecks = resp.data
-              this.contractChecksLoading = false
-            }).catch(()=> {
-            this.contractChecksLoading = false
-          })
-        }else {
-          this.$message({ type: 'warning', message: '请选择合同'})
+          params = this.searchForm.contractId[1]
+        }else{
+          params = null
         }
+        getAction('/purchase/contractManagement/findPurchaseMessageByContractId', { contractId: params})
+          .then( resp => {
+            this.contractChecks = resp.data
+            this.contractChecksLoading = false
+          }).catch(()=> {
+          this.contractChecksLoading = false
+        })
       },
       getFile()
       {
@@ -191,6 +220,7 @@
           })
       },
       init() {
+        this.toSearch()
       },
       handleChange(value) {
         this.projectName = this.projects.filter(item=>item.id==value[0])[0]['projectName']
