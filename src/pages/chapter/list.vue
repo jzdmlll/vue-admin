@@ -110,7 +110,7 @@
           <el-form-item label="审核人" label-width="80px" size="small" prop="auditor">
             <!-- <el-input v-model="form.auditor" clearable placeholder="请填写类别" value-key="name" size="small"/>  -->
             <el-select v-model="form.auditor" clearable placeholder="请填写审核人" value-key="auditor" size="small">
-              <el-option v-for="item in form1" :key="item.username" :label="item.username" :value="item.id" />
+              <el-option v-for="item in auditors" :key="item.username" :label="item.username" :value="item.id" />
             </el-select>
           </el-form-item>
           <el-form-item :width="500" label="送审备注" label-width="80px" size="small" prop="senderRemark">
@@ -224,7 +224,7 @@
         form1: {proDetailId: ''},
         fileList:[],
         files:[],
-        form1:[]
+        auditors:[]
       }
     },
     created() {
@@ -245,7 +245,7 @@
       async loadProjects() {
         await request.get('/chapter/chapterAudit/findAllChapterAuditor')
           .then(response => {
-            this.form1 = response.data
+            this.auditors = response.data
           })
       },
       uploadStatusChange(info) {
@@ -290,6 +290,7 @@
         })
       },
       init() {
+        this.loadProjects()
         request.get('/chapter/chapterAudit/findChapterAuditInfosByParams')
           .then(response => {
             this.devices = response.data
@@ -336,7 +337,6 @@
                   .then(response => {
                     this.submitLoading = false
                     this.visible = false
-
                     this.$message({message: response.message, type: 'success'})
                     this.fileList=[]
                     this.init()
