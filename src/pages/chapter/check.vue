@@ -159,9 +159,11 @@
       {
         this.form.auditor = getUser()
         postActionByJson('/chapter/chapterAudit/updateChapterAudit', this.form)
-          .then( resp => {
-            this.$message({ message: resp.message, type: 'success' })
-          })
+        .then( resp => {
+          this.$message({ message: resp.message, type: 'success' })
+          this.judgeVisible = false
+          this.toSearch()
+        })
       },
       init() {
         this.toSearch()
