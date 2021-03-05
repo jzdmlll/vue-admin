@@ -24,13 +24,22 @@ async function parseMenu(id) {
   routes.push({ path: '*', redirect: '/404', hidden: true })
   return routes
 }
-// let routes = parseMenu();z
+// let routes = parseMenu();
 // 递归解析路由菜单
 function recursionParseMenu(privilege) {
   if (privilege.children && privilege.children.length > 0) {
+    let component = null
+    if (privilege.type === 'parent') {
+      component = Layout
+    }else {
+      component = function component(resolve) {
+        require(['@/layout/components/AppMain.vue'
+        ], resolve)
+      }
+    }
     const route = {
       path: privilege.route,
-      component: Layout,
+      component: component,
       meta: { title: privilege.name, icon: privilege.icon, affix: true },
       children: []
     }

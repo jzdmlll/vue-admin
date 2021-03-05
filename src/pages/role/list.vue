@@ -73,7 +73,7 @@ export default {
       title: '添加角色',
       role: {}, // 当前角色
       roles: [], // 角色列表
-      props: { multiple: true, value: 'id', label: 'name', emitPath: false },
+      props: { multiple: true, value: 'id', label: 'name', emitPath: false, checkStrictly: true },
       options: [],
       loading: true
     }
@@ -118,8 +118,25 @@ export default {
     loadPrivileges() {
       request.get('/privilege/findPrivilegeTree')
         .then(response => {
+          response.data = this.deleteChildren(response.data)
           this.options = response.data
         })
+    },
+    deleteChildren(privileges) {
+      if (privileges.length > 0){
+        let arr = []
+        privileges.map(item => {
+          if(item.children && item.children.length == 0) {
+            this.$delete(item, 'children')
+          }else {
+            item.children = this.deleteChildren(item.children)
+          }
+          arr.push(item)
+        })
+        return arr
+      }else {
+        return
+      }
     },
     toAdd() {
       this.visible = true
@@ -156,6 +173,7 @@ export default {
       this.visible = true
       this.form = record
     }
+
   }
 }
 </script>

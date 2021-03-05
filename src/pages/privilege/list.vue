@@ -7,29 +7,27 @@
       </el-tooltip>
     </div>
     <div style="padding:1em;margin-bottom:1em;background:#fff">
-      <el-table
-        v-loading="loading"
-        :data="privileges"
+      <a-table
+        :loading="loading"
+        :data-source="privileges"
         size="small"
-        :lazy="true"
-        row-key="id"
-        :load="lazyLoadPrivilege"
-        :tree-props="{children: 'children', hasChildren: 'hasChildren'}"
+        :row-key="record=>record.id"
+        :scroll="privileges.length>0?{x:768}:{}"
       >
-        <el-table-column prop="name" label="名称" />
-        <el-table-column prop="route" label="路径" />
-        <el-table-column prop="type" label="类型" />
-        <el-table-column label="操作" align="center" width="180">
-          <template slot-scope="scope">
+        <a-table-column key="name" title="名称" data-index="name" />
+        <a-table-column key="route" title="路径" data-index="route" align="center"/>
+        <a-table-column key="type" title="类型" data-index="type" align="center"/>
+        <a-table-column key="action" title="操作" align="center" width="120" fixed="right">
+          <template slot-scope="text, record">
             <el-tooltip class="item" effect="dark" content="删除权限" placement="bottom-start">
-              <el-button type="danger" icon="el-icon-delete" size="mini" @click="deleteHandler(scope.row.id)" />
+              <el-button type="danger" icon="el-icon-delete" size="mini" @click="deleteHandler(record.id)" />
             </el-tooltip>
             <el-tooltip class="item" effect="dark" content="修改权限" placement="bottom-start">
-              <el-button type="success" icon="el-icon-edit" size="mini" @click="toEdit(scope.row)" />
+              <el-button type="success" icon="el-icon-edit" size="mini" @click="toEdit(record)" />
             </el-tooltip>
           </template>
-        </el-table-column>
-      </el-table>
+        </a-table-column>
+      </a-table>
     </div>
     <!-- 模态框 -->
     <el-dialog :title="title" :visible.sync="visible">
@@ -118,12 +116,26 @@ export default {
     loadprivileges() {
       request.get('/privilege/findByParentId')
         .then(response => {
-          response.data.forEach(item => {
-            item.hasChildren = !item.parentId
-          })
+          response.data = this.deleteChildren(response.data)
           this.privileges = response.data
           this.loading = false
         })
+    },
+    deleteChildren(privileges) {
+      if (privileges.length > 0){
+        let arr = []
+        privileges.map(item => {
+          if(item.children && item.children.length == 0) {
+            this.$delete(item, 'children')
+          }else {
+            item.children = this.deleteChildren(item.children)
+          }
+          arr.push(item)
+        })
+        return arr
+      }else {
+        return
+      }
     },
     deleteHandler(id) {
       this.$confirm('此操作将永久删除该权限, 是否继续?', '提示', {
