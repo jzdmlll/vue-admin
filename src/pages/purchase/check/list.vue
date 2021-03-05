@@ -26,13 +26,13 @@
           </div>
         </template>
       </el-cascader>
-      <el-select v-model="searchForm.auditStatus">
+      <el-select v-model="searchForm.auditStatus" clearable>
         <el-option value="0" label="审核中"/>
         <el-option value="1" label="审核通过"/>
         <el-option value="2" label="审核否决"/>
       </el-select>
       <el-date-picker
-        v-model="searchForm.time"
+        v-model="selectTime"
         style = "margin-left: 10px"
         unlink-panels
         value-format="timestamp"
@@ -62,7 +62,6 @@
         :pagination="false"
         style="margin-top:20px;"
       >
-        <!--
         <a-table-column :width="160" key="projectName" title="项目" data-index="projectName" align="center"/>
         <a-table-column :width="160" key="contractNo" title="合同编号" data-index="contractNo" align="center"/>
         <a-table-column :width="80" key="firstAudit" title="一级审核" data-index="firstAudit" align="center">
@@ -82,7 +81,7 @@
             <el-tag v-if="text" :type="status[text]['type']">{{status[text]['text']}}</el-tag>
             <el-tag v-else type="info">无需审核</el-tag>
           </template>
-        </a-table-column>-->
+        </a-table-column>
         <a-table-column :width="60" key="serialNumber" title="序号" data-index="serialNumber" align="center"/>
         <a-table-column :width="150" key="item" title="设备" data-index="item" align="center"/>
         <a-table-column :width="100" key="supplyBrand" title="品牌" data-index="supplyBrand" align="center"/>
@@ -123,6 +122,7 @@
     data() {
 
       return {
+        selectTime: [],
         contractId: [],
         status: [
           { type: 'warning', text: '未审核' },
@@ -189,25 +189,25 @@
         },
         page: null,
         level: [
-          { audit: 'firstAudit', title: '一级审核'},
-          { audit: 'secondAudit', title: '二级审核'},
-          { audit: 'threeAudit', title: '三级审核'}
+          { audit: 1, title: '一级审核'},
+          { audit: 2, title: '二级审核'},
+          { audit: 3, title: '三级审核'}
         ]
       }
     },
     created() {
-      this.init()
       this.page = this.$route.name == '一级审核'?0:this.$route.name == '二级审核'?1:2
+      this.init()
     },
     methods: {
       back() {
         this.$router.push("/dashboard")
       },
       toSearch() {
+
         this.contractChecksLoading = true
-
-
-        getAction('/purchase/contractManagement/findPurchaseMessageByContractId', { contractId: this.contractId})
+        getAction('/purchase/contractManagement/findPurchaseMessageByContractId', { contractId: this.contractId, startTime: this.selectTime[0],
+          overTime: this.selectTime[1], auditStatus: this.searchForm.auditStatus, auditLevel: this.level[this.page]['audit']})
           .then( resp => {
             this.contractChecks = resp.data
             this.contractChecksLoading = false
@@ -241,7 +241,11 @@
         this.toSearch()
       },
       handleChange(value) {
+        this.projectName = null
+        this.contractId = null
+        this.contractName = null
         this.projectName = this.projects.filter(item=>item.id==value[0])[0]['projectName']
+        this.contractId = this.contracts.filter(item=>item.id==value[1])[0]['id']
         this.contractName = this.contracts.filter(item=>item.id==value[1])[0]['contractName']
       },
       checkContract(contract) {
