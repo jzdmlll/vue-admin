@@ -4,9 +4,11 @@ import Cookies from 'js-cookie'
 
 import 'normalize.css/normalize.css' // a modern alternative to CSS resets
 
-import { Modal, Spin, List, Cascader, Descriptions,Tag,Button,Select,Layout,Skeleton, Table, Popconfirm, Input, Upload, Icon, Empty, Popover, Timeline, Tabs, Row, Col, InputNumber, Tooltip, Progress } from 'ant-design-vue'
+import { LocaleProvider, Modal, Spin, List, Cascader, Descriptions,Tag,Button,Select,Layout,Skeleton, Table, Popconfirm, Input, Upload, Icon, Empty, Popover, Timeline, Tabs, Row, Col, InputNumber, Tooltip, Progress } from 'ant-design-vue'
 import 'ant-design-vue/dist/antd.css'
-
+import { List as VanList, Card as VanCard, Search as VanSearch, Tab as VanTab, Tabs as VanTabs, NavBar as VanNavBar,
+  Cell as VanCell, CellGroup as VanCellGroup, Button as VanButton, Empty as VanEmpty, Dialog as VanDialog, Toast as VanToast,
+  Field as VanField} from 'vant'
 import Element from 'element-ui'
 import './styles/element-variables.scss'
 
@@ -34,6 +36,22 @@ import * as filters from './filters' // global filters
 // if (process.env.NODE_ENV === 'production') {
 //   mockXHR()
 // }
+
+Vue.use(VanList)
+Vue.use(VanCard)
+Vue.use(VanSearch)
+Vue.use(VanTab)
+Vue.use(VanTabs)
+Vue.use(VanNavBar)
+Vue.use(VanCell)
+Vue.use(VanCellGroup)
+Vue.use(VanButton)
+Vue.use(VanEmpty)
+Vue.use(VanDialog)
+Vue.use(VanToast)
+Vue.use(VanField)
+
+Vue.use(LocaleProvider)
 Vue.use(Cascader)
 Vue.use(Descriptions)
 Vue.use(Tag)

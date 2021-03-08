@@ -8,7 +8,7 @@
         <tags-view v-if="needTagsView" />
       </div>
       <div style="background:#edf1f1">
-        <app-main style="padding: 1em"/>
+        <app-main/>
       </div>
       <right-panel v-if="showSettings">
         <settings />

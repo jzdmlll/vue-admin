@@ -64,7 +64,7 @@ function recursionParseMenu(privilege) {
             require(['@/pages' + page + '.vue'], resolve)
           },
           name: p.name.replace(/\//g, '_'),
-          meta: { title: p.name, affix: true, noCache: false }
+          meta: { title: p.name, affix: !hidden, noCache: false }
         }
         route.children.push(son_route)
       }else {
