@@ -12,7 +12,8 @@
       <van-cell title="单价" >￥{{toThousandFilter(contract.price)}}</van-cell>
       <van-cell title="送审人" :value="contract.sender" />
       <van-cell title="备注" :value="contract.senderRemark" />
-      <van-cell title="送审时间">{{dateTimeFormat(parseInt(contract.senderTime))}}</van-cell>
+      <van-cell title="送审时间">{{dateTimeFormat(parseInt(contract.senderTime
+        ))}}</van-cell>
       <van-cell title="附件" :value="contract.file" />
       <van-cell title="类别" :value="contract.secondParty" />
       <van-cell title="主要内容" size="large" :value="contract.mainContent" />

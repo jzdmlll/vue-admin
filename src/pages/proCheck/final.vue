@@ -437,7 +437,7 @@
                 if (item[supplier]['finallyAudit'] == 1) {
                   finallySupplier = supplier
                 }
-              }else if(supplier=='比价结果') {
+              }else if(supplier=='比价结果'&&item[compareSupplier]) {
                 record[key] = item[compareSupplier][reKey]
               }else if(supplier=='最终报价') {
                 if (item['inquiry']['finallyPrice']&&item['inquiry']['number']) {
