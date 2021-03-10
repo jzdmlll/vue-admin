@@ -83,6 +83,11 @@
                 <span style="font-size: 12px">最低价</span>
               </i>
               <a-tooltip :destroyTooltipOnHide="true" placement="top" :title="text.suModel">
+                <p class="ellipsis"><el-tag size="mini" style="background: #ecf5ff;color: #409eff;" type="success">品牌</el-tag>
+                  <span style="margin-left: 4px;background: #6bca9f;padding: 2px 4px">{{text?nullFormat(text.suBrand):''}}</span>
+                </p>
+              </a-tooltip>
+              <a-tooltip :destroyTooltipOnHide="true" placement="top" :title="text.suModel">
                 <p class="ellipsis"><el-tag size="mini" style="background: #ecf5ff;color: #409eff;" type="success">型号</el-tag>
                   <span style="margin-left: 4px;background: #6bca9f;padding: 2px 4px">{{text?nullFormat(text.suModel):''}}</span>
                 </p>
@@ -119,6 +124,13 @@
                   <span style="float: right; width: calc(100% - 80px)" class="ellipsis">{{text.compareRemark}}</span>
                 </a-tooltip>
               </p>
+              <p>
+                <el-tag size="mini" style="background: #ecf5ff;color: #409eff;" type="success">终审</el-tag>
+                <el-tag size="mini" :type="statusType[text.finallyAudit]">{{status[text.finallyAudit]}}</el-tag>
+                <a-tooltip v-if="text.finallyRemark" :destroyTooltipOnHide="true" placement="top" :title="text.finallyRemark">
+                  <span style="float: right; width: calc(100% - 80px)" class="ellipsis">{{text.finallyRemark}}</span>
+                </a-tooltip>
+              </p>
             </div>
             </a-popover>
             <div v-else-if="text
@@ -128,6 +140,11 @@
               <i class="el-icon-medal-1" style="opacity: .7;font-size: 18px;color: #0568c3; float: right" v-if="text && text.minPrice === 1">
                 <span style="font-size: 12px">最低价</span>
               </i>
+              <a-tooltip :destroyTooltipOnHide="true" placement="top" :title="text.suBrand">
+                <p class="ellipsis"><el-tag size="mini" style="background: #ecf5ff;color: #409eff;" type="success">品牌</el-tag>
+                  <span style="margin-left: 4px;background: #f6fcff;padding: 2px 4px">{{text?nullFormat(text.suBrand):''}}</span>
+                </p>
+              </a-tooltip>
               <a-tooltip :destroyTooltipOnHide="true" placement="top" :title="text.suModel">
                 <p class="ellipsis"><el-tag size="mini" style="background: #ecf5ff;color: #409eff;" type="success">型号</el-tag>
                   <span style="margin-left: 4px;background: #f6fcff;padding: 2px 4px">{{text?nullFormat(text.suModel):''}}</span>
@@ -163,6 +180,13 @@
                 <el-tag size="mini" :type="statusType[text.compareStatus]">{{status[text.compareStatus]}}</el-tag>
                 <a-tooltip v-if="text.compareRemark" :destroyTooltipOnHide="true" placement="top" :title="text.compareRemark">
                   <span style="float: right; width: calc(100% - 80px)" class="ellipsis">{{text.compareRemark}}</span>
+                </a-tooltip>
+              </p>
+              <p>
+                <el-tag size="mini" style="background: #ecf5ff;color: #409eff;" type="success">终审</el-tag>
+                <el-tag size="mini" :type="statusType[text.finallyAudit]">{{status[text.finallyAudit]}}</el-tag>
+                <a-tooltip v-if="text.finallyRemark" :destroyTooltipOnHide="true" placement="top" :title="text.finallyRemark">
+                  <span style="float: right; width: calc(100% - 80px)" class="ellipsis">{{text.finallyRemark}}</span>
                 </a-tooltip>
               </p>
             </div>

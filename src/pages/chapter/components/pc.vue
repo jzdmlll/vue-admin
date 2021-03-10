@@ -34,6 +34,13 @@
         <a-table-column :width="100" key="id" title="id" data-index="id" align="center" v-if="false"/>
         <a-table-column :width="200" key="projectName" title="项目名" data-index="projectName" align="center"/>
         <a-table-column :width="170" key="contractNo" title="合同编号" data-index="contractNo" align="center"/>
+        <a-table-column :width="150" key="files" title="附件" data-index="files" align="center">
+          <template slot-scope="text, record">
+            <el-tag effect="plain" :type="type[Math.floor(Math.random() * 5)]">
+              <a v-for="file in text" style="display: block" class="ellipsis" :href="file.url" :key="file.url" target="_blank">{{file.name}}</a>
+            </el-tag>
+          </template>
+        </a-table-column>
         <a-table-column :width="100" key="price" title="金额" data-index="price" align="center">
           <template slot-scope="text, record">
             <el-tag effect="plain" style="font-size: 13px;font-weight: 600">￥{{toThousandFilter(text)}}</el-tag>
@@ -53,11 +60,10 @@
         <a-table-column :width="180" title="送审时间" align="center">
           <template slot-scope="text,record">{{dateTimeFormat(record.senderTime)}}</template>
         </a-table-column>
-        <a-table-column :width="230" fixed="right" ellipsis="true" title="操作" align="center">
+        <a-table-column :width="120" fixed="right" ellipsis="true" title="操作" align="center">
           <template slot-scope="text, record">
             <el-button type="primary" size="mini" @click="judge(record.id)">通过</el-button>
             <el-button type="danger" size="mini" @click="deny(record.id)">否决</el-button>
-            <el-button type="warning" icon="audit" size="mini" @click="getFile(record.id)">附件</el-button>
           </template>
         </a-table-column>
       </a-table>
@@ -203,6 +209,12 @@
 </script>
 <style lang="scss" scoped>
   .chapter-check {
-
+    .ellipsis {
+      overflow: hidden!important;
+      white-space: nowrap!important;
+      text-overflow: ellipsis!important;
+      font-size: 13px;
+      max-width: 100px;
+    }
   }
 </style>

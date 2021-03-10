@@ -76,6 +76,7 @@
     },
     methods: {
       toDetail(item) {
+        item.files = JSON.stringify(item.files)
         this.$router.push({ path: '/chapter/components/detail', query: item })
       },
       beforeTabsChange(index) {

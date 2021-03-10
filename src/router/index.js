@@ -153,12 +153,12 @@ export const constantRoutes = [
       }*/
     ]
   },
-  {
+  /*{
     path: '/websocket',
     component: () => import('@/pages/websocket/index'),
     name: 'websocket',
     meta: {title: 'websocket', icon: 'dashboard', affix: true, noCache: true},
-  },
+  },*/
   {
     path: '/profile',
     component: Layout,

@@ -8,7 +8,7 @@ import { LocaleProvider, Modal, Spin, List, Cascader, Descriptions,Tag,Button,Se
 import 'ant-design-vue/dist/antd.css'
 import { List as VanList, Card as VanCard, Search as VanSearch, Tab as VanTab, Tabs as VanTabs, NavBar as VanNavBar,
   Cell as VanCell, CellGroup as VanCellGroup, Button as VanButton, Empty as VanEmpty, Dialog as VanDialog, Toast as VanToast,
-  Field as VanField} from 'vant'
+  Field as VanField, Collapse as VanCollapse, CollapseItem as VanCollapseItem} from 'vant'
 import Element from 'element-ui'
 import './styles/element-variables.scss'
 
@@ -50,6 +50,9 @@ Vue.use(VanEmpty)
 Vue.use(VanDialog)
 Vue.use(VanToast)
 Vue.use(VanField)
+Vue.use(VanCollapse)
+Vue.use(VanCollapseItem)
+
 
 Vue.use(LocaleProvider)
 Vue.use(Cascader)

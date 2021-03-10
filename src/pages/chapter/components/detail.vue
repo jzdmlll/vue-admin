@@ -12,14 +12,20 @@
       <van-cell title="单价" >￥{{toThousandFilter(contract.price)}}</van-cell>
       <van-cell title="送审人" :value="contract.sender" />
       <van-cell title="备注" :value="contract.senderRemark" />
-      <van-cell title="送审时间">{{dateTimeFormat(parseInt(contract.senderTime
-        ))}}</van-cell>
-      <van-cell title="附件" :value="contract.file" />
+      <van-cell title="送审时间">{{dateTimeFormat(parseInt(contract.senderTime))}}</van-cell>
+
+      <van-collapse v-model="names">
+        <van-collapse-item title="附件" name="files" >
+          <van-cell v-for="file in contract.files" style="padding: 0">
+            <a :href="file.url" target="_blank" style="margin-left: 1em; color: #1890ff ">{{file.name}}</a>
+          </van-cell>
+        </van-collapse-item>
+      </van-collapse>
       <van-cell title="类别" :value="contract.secondParty" />
       <van-cell title="主要内容" size="large" :value="contract.mainContent" />
     </van-cell-group>
     <van-cell-group title="审核意见">
-      <van-field v-model="contract.auditRemark" label="意见" placeholder="请输入审核意见" />
+      <van-field type="textarea" v-model="contract.auditRemark" label="意见" rows="2" maxlength="100" autosize show-word-limit placeholder="请输入审核意见" />
     </van-cell-group>
     <div style="margin: 16px;">
       <van-button v-if="contract.auditStatus!==2" :disabled="contract.auditStatus!=0" @click="toCheck(1)" class="van-button" block type="primary" native-type="submit">{{contract.auditStatus==1?'已通过':'通过'}}</van-button>
@@ -36,12 +42,15 @@
 export default {
   data() {
     return {
-      contract: {}
+      contract: {},
+      names: ["files"]
     }
   },
   created() {
     if (this.$route.query) {
-      this.contract = this.$route.query
+      let item = this.$route.query
+      item.files = JSON.parse(item.files)
+      this.contract = item
     }
   },
   methods: {
