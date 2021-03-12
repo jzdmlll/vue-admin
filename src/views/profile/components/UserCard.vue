@@ -1,33 +1,35 @@
 <template>
   <el-card style="margin-bottom:20px;">
     <div slot="header" class="clearfix">
-      <span>About me</span>
+      <span>个人信息</span>
     </div>
 
     <div class="user-profile">
-      <div class="box-center">
+      <div class="box-center" >
         <pan-thumb :image="user.avatar" :height="'100px'" :width="'100px'" :hoverable="false">
           <div>Hello</div>
           {{ user.role }}
+          <el-tag style="cursor: pointer" effect="plain" size="medium" @click="imageCropperShow=true">
+            <span class="el-icon-upload"></span>
+          </el-tag>
         </pan-thumb>
       </div>
       <div class="box-center">
         <div class="user-name text-center">{{ user.name }}</div>
-        <div class="user-role text-center text-muted">{{ user.role | uppercaseFirst }}</div>
+        <div class="user-role text-center text-muted">{{ user.role }}</div>
       </div>
     </div>
 
     <div class="user-bio">
       <div class="user-education user-bio-section">
-        <div class="user-bio-section-header"><svg-icon icon-class="education" /><span>Education</span></div>
+        <div class="user-bio-section-header"><svg-icon icon-class="skill" /><span>简介</span></div>
         <div class="user-bio-section-body">
           <div class="text-muted">
-            JS in Computer Science from the University of Technology
           </div>
         </div>
       </div>
 
-      <div class="user-skills user-bio-section">
+      <!--<div class="user-skills user-bio-section">
         <div class="user-bio-section-header"><svg-icon icon-class="skill" /><span>Skills</span></div>
         <div class="user-bio-section-body">
           <div class="progress-item">
@@ -47,16 +49,28 @@
             <el-progress :percentage="100" status="success" />
           </div>
         </div>
-      </div>
+      </div>-->
     </div>
+    <image-cropper
+      v-show="imageCropperShow"
+      :key="imageCropperKey"
+      field="file"
+      :width="300"
+      :height="300"
+      :url="fileUploadUrl"
+      lang-type="zh"
+      @close="close"
+      @crop-upload-success="cropSuccess"
+    />
   </el-card>
 </template>
 
 <script>
 import PanThumb from '@/components/PanThumb'
+import ImageCropper from '@/components/ImageCropper'
 
 export default {
-  components: { PanThumb },
+  components: { PanThumb, ImageCropper },
   props: {
     user: {
       type: Object,
@@ -68,6 +82,27 @@ export default {
           roles: ''
         }
       }
+    }
+  },
+  data() {
+    const fileUploadUrl = process.env.VUE_APP_BASE_API + 'user/uploadAvatar'
+    return {
+      imageCropperShow: false,
+      imageCropperKey: 0,
+      fileUploadUrl
+    }
+  },
+  methods: {
+    cropSuccess(resData) {
+      this.imageCropperShow = false
+      this.imageCropperKey = this.imageCropperKey + 1
+      console.log(resData)
+      this.user.avatar = resData
+      this.$store.commit('user/SET_AVATAR', resData.data)
+      this.$message({ type: 'success', message: resData.message})
+    },
+    close() {
+      this.imageCropperShow = false
     }
   }
 }

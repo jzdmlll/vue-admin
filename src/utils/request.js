@@ -1,8 +1,8 @@
 import axios from 'axios'
 import { Message } from 'element-ui'
 import store from '@/store'
-import { getToken, setToken, removeToken } from '@/utils/auth'
-import router from '@/router'
+import { getToken, setToken, removeToken, removeUser } from '@/utils/auth'
+import router, { resetRouter } from '@/router'
 import qs from 'querystring'
 
 // create an axios instance
@@ -53,7 +53,7 @@ service.interceptors.response.use(
     // if the custom code is not 20000, it is judged as an error.
     if (res.status === 200) {
       if (response.headers.refresh === 'true') {
-        refleshToken()
+        refleshToken(response)
       }
       return res
     } else {
@@ -81,13 +81,18 @@ service.interceptors.response.use(
   }
 )
 // 退出
-async function logout() {
-  removeToken()
+export async function logout() {
+
   await store.dispatch('user/logout')
+  removeToken()
+  resetRouter()
+  removeUser()
   router.push('/login')
 }
 async function refleshToken(response) {
-  await getRefreshToken()
+  console.log(response)
+  setToken(response.headers["x-token"])
+  // await getRefreshToken()
 }
 function getRefreshToken() {
   return new Promise((resolve, reject) => {

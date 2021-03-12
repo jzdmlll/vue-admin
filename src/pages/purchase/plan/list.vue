@@ -230,7 +230,6 @@
       <el-form ref="importForm" :model="importForm" status-icon>
         <div>
           <div style="margin: 8px 0 26px 0;position: relative;">
-            {{importForm.template}}
             <el-select size="small" :disabled="currentTemplate.id?true:false" v-model="importForm.template" placeholder="请选择解析模板" value-key="name" style="margin:0 0 8px 1em">
               <el-option v-for="item in excelTemplates" :key="item.id" :label="item.name" :value="item" />
             </el-select>

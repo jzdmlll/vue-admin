@@ -16,7 +16,7 @@
     </div>
     <el-card shadow="never" style="margin-bottom: 1em">
       <div slot="header" class="index-md-title">
-        <span>招投标项目表</span>
+        <span>项目表</span>
       </div>
       <a-table
         class="status-table"
@@ -40,7 +40,11 @@
         <a-table-column :width="100" ellipsis="true" key="time" title="创建时间" data-index="time" align="center">
           <template slot-scope="text, record">{{dateTimeFormat(text)}}</template>
         </a-table-column>
-        <a-table-column :width="100" ellipsis="true" key="operator" title="创建者" data-index="operator" align="center"/>
+        <a-table-column :width="100" ellipsis="true" key="operator" title="创建者" data-index="operator" align="center">
+          <template slot-scope="text, record">
+            {{userMap[text]?userMap[text]:''}}
+          </template>
+        </a-table-column>
       </a-table>
     </el-card>
     <el-card shadow="never">
@@ -158,6 +162,9 @@
         customRender: 'customRender',
       }
       return {
+
+        userMap: {},
+
         filename: '',
         currentTemplate: {},
         searchForm: { time: []},
@@ -341,7 +348,10 @@
         }
       },
       init() {
-
+        getAction('/user/findAllIdToName', {})
+          .then(resp=>{
+            this.userMap = resp.data
+          })
       },
       onFilterDropdownVisibleChange,
       onFilter,
