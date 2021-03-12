@@ -34,74 +34,80 @@
 
       <div v-if="step == 2" class="vicp-step2">
         <div class="vicp-crop">
-          <div v-show="true" class="vicp-crop-left">
-            <div class="vicp-img-container">
-              <img
-                ref="img"
-                :src="sourceImgUrl"
-                :style="sourceImgStyle"
-                class="vicp-img"
-                draggable="false"
-                @drag="preventDefault"
-                @dragstart="preventDefault"
-                @dragend="preventDefault"
-                @dragleave="preventDefault"
-                @dragover="preventDefault"
-                @dragenter="preventDefault"
-                @drop="preventDefault"
-                @touchstart="imgStartMove"
-                @touchmove="imgMove"
-                @touchend="createImg"
-                @touchcancel="createImg"
-                @mousedown="imgStartMove"
-                @mousemove="imgMove"
-                @mouseup="createImg"
-                @mouseout="createImg"
-              >
-              <div :style="sourceImgShadeStyle" class="vicp-img-shade vicp-img-shade-1" />
-              <div :style="sourceImgShadeStyle" class="vicp-img-shade vicp-img-shade-2" />
-            </div>
+          <el-row :gutter="10">
+            <el-col :sm="24" :lg="12" style="position: relative;padding: 0 20px">
+              <div  v-show="true" class="vicp-crop-left">
+                <div class="vicp-img-container">
+                  <img
+                    ref="img"
+                    :src="sourceImgUrl"
+                    :style="sourceImgStyle"
+                    class="vicp-img"
+                    draggable="false"
+                    @drag="preventDefault"
+                    @dragstart="preventDefault"
+                    @dragend="preventDefault"
+                    @dragleave="preventDefault"
+                    @dragover="preventDefault"
+                    @dragenter="preventDefault"
+                    @drop="preventDefault"
+                    @touchstart="imgStartMove"
+                    @touchmove="imgMove"
+                    @touchend="createImg"
+                    @touchcancel="createImg"
+                    @mousedown="imgStartMove"
+                    @mousemove="imgMove"
+                    @mouseup="createImg"
+                    @mouseout="createImg"
+                  >
+                  <div :style="sourceImgShadeStyle" class="vicp-img-shade vicp-img-shade-1" />
+                  <div :style="sourceImgShadeStyle" class="vicp-img-shade vicp-img-shade-2" />
+                </div>
 
-            <div class="vicp-range">
-              <input
-                :value="scale.range"
-                type="range"
-                step="1"
-                min="0"
-                max="100"
-                @input="zoomChange"
-              >
-              <i
-                class="vicp-icon5"
-                @mousedown="startZoomSub"
-                @mouseout="endZoomSub"
-                @mouseup="endZoomSub"
-              />
-              <i
-                class="vicp-icon6"
-                @mousedown="startZoomAdd"
-                @mouseout="endZoomAdd"
-                @mouseup="endZoomAdd"
-              />
-            </div>
+                <div class="vicp-range">
+                  <input
+                    :value="scale.range"
+                    type="range"
+                    step="1"
+                    min="0"
+                    max="100"
+                    @input="zoomChange"
+                  >
+                  <i
+                    class="vicp-icon5"
+                    @mousedown="startZoomSub"
+                    @mouseout="endZoomSub"
+                    @mouseup="endZoomSub"
+                  />
+                  <i
+                    class="vicp-icon6"
+                    @mousedown="startZoomAdd"
+                    @mouseout="endZoomAdd"
+                    @mouseup="endZoomAdd"
+                  />
+                </div>
 
-            <div v-if="!noRotate" class="vicp-rotate">
-              <i @mousedown="startRotateLeft" @mouseout="endRotate" @mouseup="endRotate">↺</i>
-              <i @mousedown="startRotateRight" @mouseout="endRotate" @mouseup="endRotate">↻</i>
-            </div>
-          </div>
-          <div v-show="true" class="vicp-crop-right">
-            <div class="vicp-preview">
-              <div v-if="!noSquare" class="vicp-preview-item">
-                <img :src="createImgUrl" :style="previewStyle">
-                <span>{{ lang.preview }}</span>
+                <div v-if="!noRotate" class="vicp-rotate">
+                  <i @mousedown="startRotateLeft" @mouseout="endRotate" @mouseup="endRotate">↺</i>
+                  <i @mousedown="startRotateRight" @mouseout="endRotate" @mouseup="endRotate">↻</i>
+                </div>
               </div>
-              <div v-if="!noCircle" class="vicp-preview-item vicp-preview-item-circle">
-                <img :src="createImgUrl" :style="previewStyle">
-                <span>{{ lang.preview }}</span>
+            </el-col>
+            <el-col :sm="24" :lg="12" style="position: relative;padding: 0 20px">
+              <div  v-show="true" class="vicp-crop-right">
+                <div class="vicp-preview">
+                  <div v-if="!noSquare" class="vicp-preview-item">
+                    <img :src="createImgUrl" :style="previewStyle">
+                    <span>{{ lang.preview }}</span>
+                  </div>
+                  <div v-if="!noCircle" class="vicp-preview-item vicp-preview-item-circle">
+                    <img :src="createImgUrl" :style="previewStyle">
+                    <span>{{ lang.preview }}</span>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            </el-col>
+          </el-row>
         </div>
         <div class="vicp-operate">
           <a @click="setStep(1)" @mousedown="ripple">{{ lang.btn.back }}</a>
@@ -879,19 +885,20 @@ export default {
 .vue-image-crop-upload .vicp-wrap {
   -webkit-box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.23);
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.23);
-  position: fixed;
+  position: absolute;
   display: block;
   -webkit-box-sizing: border-box;
   box-sizing: border-box;
   z-index: 10000;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  margin: auto;
-  width: 600px;
-  height: 330px;
-  padding: 25px;
+  left: 50%;
+  top: 50%;
+  margin: 0;
+  transform: translate(calc(-50% - 10px), -50%);
+  width: auto;
+  min-width: 360px;
+  max-width: 680px;
+  height: auto;
+  padding: 50px 30px 75px 30px;
   background-color: #fff;
   border-radius: 2px;
   -webkit-animation: vicp 0.12s ease-in;
@@ -899,6 +906,7 @@ export default {
 }
 .vue-image-crop-upload .vicp-wrap .vicp-close {
   position: absolute;
+  height: auto;
   right: -30px;
   top: -30px;
 }
@@ -1033,6 +1041,18 @@ export default {
 }
 .vue-image-crop-upload .vicp-wrap .vicp-step2 .vicp-crop .vicp-crop-left {
   float: left;
+}
+@media screen and (max-width: 1200px) {
+  .vue-image-crop-upload .vicp-wrap .vicp-step2 .vicp-crop .vicp-crop-left {
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .vue-image-crop-upload .vicp-wrap .vicp-step2 .vicp-crop .vicp-crop-right {
+    position: relative;
+    left: 0;
+    transform: translateX(calc(-40% + 20px));
+  }
 }
 .vue-image-crop-upload
   .vicp-wrap

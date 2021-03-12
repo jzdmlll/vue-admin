@@ -97,7 +97,7 @@ export default {
       this.imageCropperShow = false
       this.imageCropperKey = this.imageCropperKey + 1
       console.log(resData)
-      this.user.avatar = resData
+      this.user.avatar = resData.data
       this.$store.commit('user/SET_AVATAR', resData.data)
       this.$message({ type: 'success', message: resData.message})
     },
