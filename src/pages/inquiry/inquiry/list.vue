@@ -32,7 +32,7 @@
               this.selectedId =  inquiryList.map(item=>{return item.id});
             },
         }]}"
-        :scroll="inquiryList.length > 0 ?{ x: 1200}:{}">
+        :scroll="inquiryList.length > 0 ?{ x: 1360}:{}">
         <a-table-column v-if="currentTemplate.tree == 1" :ellipsis="true" :width="100" align="center" key="parentId" title="大类" data-index="parentId"/>
         <a-table-column v-for="item in currentTemplate.tableColumn" ellipsis="true" :width="item.width" :align="item.align" :key="item.key" :title="item.title" :dataIndex="item.dataIndex">
           <template slot-scope="text, record">
@@ -43,6 +43,9 @@
               <span>{{record[item.key]}}</span>
             </a-tooltip>
           </template>
+        </a-table-column>
+        <a-table-column key="time" title="创建时间" data-index="time">
+          <template slot-scope="text, record">{{text?dateTimeFormat(parseInt(text)):''}}</template>
         </a-table-column>
         <a-table-column fixed="right" title="操作" key="action" align="center" :width="140">
           <template slot-scope="text, record">
@@ -147,7 +150,7 @@
   import '@/styles/auto-style.css'
   import request from '@/utils/request'
   import qs from 'querystring'
-  import { dateFormat,nullToEmpty } from '@/utils/format'
+  import { dateFormat,nullToEmpty,dateTimeFormat } from '@/utils/format'
   import { getUser } from '@/utils/auth'
   import { sortBykey } from '@/utils/sort'
   import { getAction, postActionByJson, postActionByQueryString } from '@/api/manage'
@@ -444,6 +447,7 @@
             })
         }
       },
+      dateTimeFormat
     }
   }
 </script>

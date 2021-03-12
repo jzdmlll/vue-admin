@@ -28,9 +28,10 @@
       <a-table
         v-loading="loading"
         :data-source="devices"
-        size="large"
+        :pagination="pagination"
+        size="small"
         row-key="id"
-        :scroll="{x:2200}"
+        :scroll="{x:2000}"
       >
         <a-table-column :width="100" key="id" data-index="id" title="id" v-if="false"/>
         <a-table-column :width="200" key="projectName" data-index="projectName" title="工程名" />
@@ -44,25 +45,29 @@
           </template>
         </a-table-column>
         <a-table-column :width="100" key="auditRemark" data-index="auditRemark" title="审核备注" />
-        <a-table-column :width="180" key="auditTime" title="审核时间">
+        <a-table-column :width="120" key="auditTime" title="审核时间">
           <template slot-scope="text, record">{{dateTimeFormat(record.auditTime)}}</template>
         </a-table-column>
         <a-table-column :width="100" prop="senderRemark" data-index="senderRemark" title="送审备注" />
-        <a-table-column :width="200" key="senderTime" data-index="senderTime" title="送审时间" >
+        <a-table-column :width="120" key="senderTime" data-index="senderTime" title="送审时间" >
           <template slot-scope="text,scope">{{dateTimeFormat(scope.senderTime)}}</template>
         </a-table-column>
-        <a-table-column key="mainContent" align="center" data-index="mainContent" title="主要内容" />
+        <a-table-column :width="160" key="files" title="附件" data-index="files" align="center">
+          <template slot-scope="text, record">
+            <el-tag effect="plain" type="primary">
+              <a v-for="file in text" style="display: block" class="ellipsis" :href="file.url" :key="file.url" target="_blank">{{file.name}}</a>
+            </el-tag>
+          </template>
+        </a-table-column>
+        <a-table-column :ellipsis="true" key="mainContent" align="center" data-index="mainContent" title="主要内容" />
         <a-table-column :width="100" key="price"  data-index="price" title="金额" />
         <a-table-column :width="100" key="firstParty" data-index="firstParty" title="甲方" />
         <a-table-column :width="100" key="secondParty" data-index="secondParty" title="乙方" />
         <a-table-column :width="100" key="type" data-index="type" title="类别" />
-        <a-table-column title="操作">
+        <a-table-column title="操作" align="center" :width="70" fixed="right">
           <template slot-scope="text,scope">
-            <a-tooltip placement="topLeft" title="查看附件">
-              <el-button type="primary" icon="el-icon-paperclip" size="small" @click="getFile(scope.id)"/>
-            </a-tooltip>
             <a-tooltip title="修改">
-              <el-button type="primary" icon="el-icon-edit" size="small" @click="modifyInfo(scope)"/>
+              <el-button type="primary" icon="el-icon-edit" size="mini" @click="modifyInfo(scope)"/>
             </a-tooltip>
           </template>
         </a-table-column>
@@ -175,6 +180,20 @@
 
       const fileUploadUrl = process.env.VUE_APP_BASE_API + 'file/uploadCache'
       return {
+
+        pagination: {
+          showQuickJumper: true,
+          showSizeChanger: true,
+          pageSizeOptions: ['10', '20', '50'],
+          current: 1,
+          pageSize: 10,
+          total: 0,
+          onChange: (item) => {
+            this.pagination.current = item
+            this.toSearch()
+          }
+        },
+
         projects:[],
         filemark:{},
         modify:{},
@@ -276,28 +295,27 @@
         request.request({
           url: '/chapter/chapterAudit/findChapterAuditInfosByParams',
           method: 'get',
-          params: { proName: this.searchForm.proName, startTime: this.searchForm.time[0], overTime: this.searchForm.time[1], auditStatus: this.searchForm.auditStatus }
+          params: {
+            proName: this.searchForm.proName,
+            startTime: this.searchForm.time[0],
+            overTime: this.searchForm.time[1],
+            auditStatus: this.searchForm.auditStatus,
+            pageNum: this.pagination.current,
+            pageSize: this.pagination.pageSize
+          }
         })
-          .then(response => {
-            this.devices = response.data
-            this.devices.forEach(item => {
-              item.hasChildren = !item.parentId
-              this.$set(this.devices, item, item)
-            })
+          .then(resp => {
+            this.devices = resp.data.list
+            this.pagination.current = resp.data.pageNum
+            this.pagination.pageSize = resp.data.pageSize
+            this.pagination.total = resp.data.total
             this.loading = false
           }).catch(()=>{
           this.loading = false
         })
       },
       init() {
-        this.loadProjects()
-        request.get('/chapter/chapterAudit/findChapterAuditInfosByParams')
-          .then(response => {
-            this.devices = response.data
-          })
-          .finally(()=> {
-            this.loading=false
-          })
+        this.toSearch()
       },
       cancelHandler() {
         if (this.active === 1) {
@@ -398,6 +416,13 @@
       height:auto;
       line-height:32px;
       margin-left:90px!important
+    }
+    .ellipsis {
+      overflow: hidden!important;
+      white-space: nowrap!important;
+      text-overflow: ellipsis!important;
+      font-size: 13px;
+      max-width: 110px;
     }
   }
 </style>

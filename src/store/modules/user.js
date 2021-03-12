@@ -7,10 +7,14 @@ const state = {
   name: '',
   avatar: '',
   introduction: '',
-  roles: []
+  roles: [],
+  email: ''
 }
 
 const mutations = {
+  SET_EMAIL: (state, email) => {
+    state.email = email
+  },
   SET_TOKEN: (state, token) => {
     state.token = token
   },
@@ -54,7 +58,7 @@ const actions = {
           reject('Verification failed, please Login again.')
         }
         setUser(data.id)
-        const { username: name, avatar: avatar, introduction } = data
+        const { email: email, username: name, avatar: avatar, introduction } = data
         // [{id:1,name:"编辑"},{id:2,name:"管理员"}]
         const roles = data.roles.map(item => item)
         // roles must be a non-empty array
@@ -64,6 +68,7 @@ const actions = {
 
         commit('SET_ROLES', roles)
         commit('SET_NAME', name)
+        commit('SET_EMAIL', email)
         commit('SET_AVATAR', avatar)
         commit('SET_INTRODUCTION', introduction)
         resolve(data)
@@ -84,7 +89,7 @@ const actions = {
         removeUser()
         // reset visited views and cached views
         // to fixed https://github.com/PanJiaChen/vue-element-admin/issues/2485
-        dispatch('tagsView/delAllViews', null, { root: true })
+        //dispatch('tagsView/delAllViews', null, { root: true })
 
         resolve()
       }).catch(error => {

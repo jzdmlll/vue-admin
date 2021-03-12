@@ -58,9 +58,8 @@
         :data-source="contractChecks"
         :rowKey="record => record.id"
         :loading="contractChecksLoading"
-        :scroll="contractChecks.length > 0 ?{ x: 2400, y: 600 }:{}"
+        :scroll="contractChecks.length > 0 ?{ x: 2600, y: fullHeight-310 }:{}"
         :pagination="false"
-        style="margin-top:20px;"
       >
         <a-table-column :width="160" key="projectName" title="项目" data-index="projectName" align="center"/>
         <a-table-column :width="160" key="contractNo" title="合同编号" data-index="contractNo" align="center"/>
@@ -122,6 +121,9 @@
     data() {
 
       return {
+
+        fullHeight: document.documentElement.clientHeight,
+
         selectTime: [],
         contractId: [],
         status: [
@@ -201,7 +203,7 @@
     },
     methods: {
       back() {
-        this.$router.push("/dashboard")
+        this.$router.go(-1)
       },
       toSearch() {
 

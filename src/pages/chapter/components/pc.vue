@@ -27,7 +27,7 @@
         :data-source="contractChecks"
         :rowKey="record => record.id"
         :loading="contractChecksLoading"
-        :scroll="{ x: 1600}"
+        :scroll="{ x: 1800}"
         :pagination="pagination"
         style="margin-top:20px;"
       >
@@ -41,7 +41,7 @@
             </el-tag>
           </template>
         </a-table-column>
-        <a-table-column :width="100" key="price" title="金额" data-index="price" align="center">
+        <a-table-column :width="150" key="price" title="金额" data-index="price" align="center">
           <template slot-scope="text, record">
             <el-tag effect="plain" style="font-size: 13px;font-weight: 600">￥{{toThousandFilter(text)}}</el-tag>
           </template>
