@@ -29,7 +29,7 @@
             {{index+1}}
           </template>
         </a-table-column>
-        <a-table-column align="center" :width="120" key="contractName" title="合同名" data-index="contractName" />
+        <a-table-column align="center" :width="140" key="contractName" title="合同名" data-index="contractName" />
         <a-table-column align="center" :width="160" key="contractNo" title="合同编号" data-index="contractNo" />
         <a-table-column align="center" :width="160"  key="time" title="生成时间" data-index="time">
           <template slot-scope="text, record, index">
@@ -73,7 +73,7 @@
           </template>
         </a-table-column>
         <a-table-column align="center" :width="120" key="remark" title="备注" data-index="remark" />
-        <a-table-column fixed="right" align="center" :width="234" key="action" title="操作">
+        <a-table-column fixed="right" align="center" :width="400" key="action" title="操作">
           <template slot-scope="text, record, index">
             <el-button @click.native.stop="editContract(record)" icon="el-icon-edit" type="success" size="mini" style="padding: 7px 10px;">修改</el-button>
             <el-button @click.native.stop="toCheck(record)" v-if="record.firstAudit==null && record.secondAudit==null && record.threeAudit==null" type="success" icon="el-icon-s-promotion" size="mini" style="padding: 7px 10px;">送审</el-button>
@@ -105,15 +105,15 @@
         <a-table-column :width="70" key="purchaseSupply.price" title="单价" data-index="purchaseSupply.price" align="center"/>
         <a-table-column :width="80" title="总价" align="center">
           <template slot-scope="text, record">
-            {{record.purchaseSupply.price*record.purchaseSupply.number}}
+            {{record.purchaseSupply.price*record.number}}
           </template>
         </a-table-column>
         <a-table-column :width="50" key="unit" title="单位" data-index="unit" align="center"/>
         <a-table-column :width="70" key="number" title="数量" data-index="number" align="center"/>
-        <a-table-column :width="100" ellipsis="true" key="itemsParams" title="技术要求" data-index="itemsParams" align="center"/>
-        <a-table-column :width="100" ellipsis="true" key="supplyParams" title="实际参数" data-index="supplyParams" align="center"/>
-        <a-table-column :width="100" ellipsis="true" key="warranty" title="货期" data-index="warranty" align="center"/>
-        <a-table-column :width="100" ellipsis="true" key="remark" title="备注" data-index="remark" align="center"/>
+        <a-table-column :width="100" ellipsis="true" key="params" title="技术要求" data-index="params" align="center"/>
+        <a-table-column :width="100" ellipsis="true" key="purchaseSupply.params" title="实际参数" data-index="purchaseSupply.params" align="center"/>
+        <a-table-column :width="100" ellipsis="true" key="purchaseSupply.warranty" title="货期" data-index="purchaseSupply.warranty" align="center"/>
+        <a-table-column :width="100" ellipsis="true" key="purchaseSupply.remark" title="商家备注" data-index="purchaseSupply.remark" align="center"/>
         <!--<a-table-column :width="120" fixed="right" key="action" title="操作" align="center">
           <template slot-scope="text, record">
             <el-button @click="editPrice('供货价', record.purchaseSupply)" type="success" icon="el-icon-edit" size="mini" style="padding: 7px 10px;">供货价</el-button>
@@ -500,7 +500,7 @@
           on: {
             click: () => {
               this.contractSuppliesLoading = true
-              getAction('/purchase/contractManagement/findPurchaseMessageByContractId', {contractId: row.id})
+              getAction('/purchase/contractManagement/findSupplyByContractId', {contractId: row.id})
                 .then( resp => {
                   this.contractSupplies = resp.data
                   this.contractSuppliesLoading = false
