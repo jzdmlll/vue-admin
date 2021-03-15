@@ -4,7 +4,7 @@ import Cookies from 'js-cookie'
 
 import 'normalize.css/normalize.css' // a modern alternative to CSS resets
 
-import { LocaleProvider, Modal, Spin, List, Cascader, Descriptions,Tag,Button,Select,Layout,Skeleton, Table, Popconfirm, Input, Upload, Icon, Empty, Popover, Timeline, Tabs, Row, Col, InputNumber, Tooltip, Progress } from 'ant-design-vue'
+import { Badge, Card, Divider, LocaleProvider, Modal, Spin, List, Cascader, Descriptions,Tag,Button,Select,Layout,Skeleton, Table, Popconfirm, Input, Upload, Icon, Empty, Popover, Timeline, Tabs, Row, Col, InputNumber, Tooltip, Progress } from 'ant-design-vue'
 import 'ant-design-vue/dist/antd.css'
 import { List as VanList, Card as VanCard, Search as VanSearch, Tab as VanTab, Tabs as VanTabs, NavBar as VanNavBar,
   Cell as VanCell, CellGroup as VanCellGroup, Button as VanButton, Empty as VanEmpty, Dialog as VanDialog, Toast as VanToast,
@@ -54,6 +54,7 @@ Vue.use(VanCollapse)
 Vue.use(VanCollapseItem)
 
 
+
 Vue.use(LocaleProvider)
 Vue.use(Cascader)
 Vue.use(Descriptions)
@@ -66,6 +67,9 @@ Vue.use(Progress)
 Vue.use(List)
 Vue.use(Spin)
 Vue.use(Modal)
+Vue.use(Divider)
+Vue.use(Card)
+Vue.use(Badge)
 Vue.use(Element, {
   size: Cookies.get('size') || 'medium' // set element-ui default size
 })

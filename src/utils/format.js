@@ -9,6 +9,13 @@ export function dateFormat(cjsj) {
   return Y + M + D
 }
 
+
+export function GetTime(date) {
+  var datee = new Date(date).toJSON();
+  return new Date(+new Date(datee) + 8 * 3600 * 1000).toISOString().
+  replace(/T/g, ' ').replace(/\.[\d]{3}Z/, '')
+}
+
 export function dateTimeFormat(cjsj) {
   if(cjsj == null || isNaN(cjsj)) {
     return ''

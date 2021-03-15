@@ -711,13 +711,16 @@
           cancelButtonText: '取消',
           type: 'warning'
         }).then(() => {
+          this.selectedRowKeys = []
           let purchaseItems = this.sendInquiryItem
           let operator = getUser()
           postActionByJson('/purchase/purchasePlan/insertInquiryInfo', {purchaseItemsList: purchaseItems, sysProDetailWithBLOBs: {operator: operator, purchaseProId: this.searchForm.purchaseProId}})
             .then(resp => {
               this.$message({ type: 'success', message: resp.message })
               this.toSearch()
-            })
+            }).finally(() => {
+            this.sendInquiryItem = []
+          })
         })
       },
       onSelectChange(selectedRowKeys, selectedRows) {

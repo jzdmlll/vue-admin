@@ -261,8 +261,8 @@
       {
         this.fileVisible=true
       },
-      async loadProjects() {
-        await request.get('/chapter/chapterAudit/findAllChapterAuditor')
+      loadAuditors() {
+        request.get('/chapter/chapterAudit/findAllChapterAuditor')
           .then(response => {
             this.auditors = response.data
           })
@@ -315,6 +315,7 @@
         })
       },
       init() {
+        this.loadAuditors()
         this.toSearch()
       },
       cancelHandler() {

@@ -36,7 +36,7 @@
         <a-table-column :width="170" key="contractNo" title="合同编号" data-index="contractNo" align="center"/>
         <a-table-column :width="150" key="files" title="附件" data-index="files" align="center">
           <template slot-scope="text, record">
-            <el-tag effect="plain" :type="type[Math.floor(Math.random() * 5)]">
+            <el-tag v-if="text&&text.length > 0" effect="plain" :type="type[Math.floor(Math.random() * 5)]">
               <a v-for="file in text" style="display: block" class="ellipsis" :href="file.url" :key="file.url" target="_blank">{{file.name}}</a>
             </el-tag>
           </template>
