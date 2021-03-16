@@ -105,7 +105,7 @@
               </span>
                   <span v-else>
                   <el-button type="primary" icon="el-icon-upload" size="mini" @click="toEdit(record)" />
-                <el-tooltip v-if="record.technicalAudit==0 && record.businessAudit==0" class="item" effect="dark" content="行内编辑" placement="bottom-start">
+                <el-tooltip v-if="record.technicalAudit==0" class="item" effect="dark" content="行内编辑" placement="bottom-start">
                   <el-button type="primary" icon="el-icon-edit" size="mini" @click="edit(record)" />
                 </el-tooltip>
                 <el-tooltip v-if="record.technicalAudit==2 || record.businessAudit==2" class="item" effect="dark" content="新增报价" placement="bottom-start">
