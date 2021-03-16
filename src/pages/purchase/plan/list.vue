@@ -485,7 +485,7 @@
             form.templateId = form.currentTemplate.id
             let url = ''
             if (form.id) {
-              url = '/purchase/purchasePlan/updatePurchaseItem'
+              url = '/purchase/purchasePlan/updatePurchaseItems'
             }else {
               url = '/purchase/purchasePlan/addPurchaseItem'
             }
