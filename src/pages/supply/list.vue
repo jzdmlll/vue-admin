@@ -16,7 +16,44 @@
         :scroll="suppliers.length>0?{x: 700}:{}"
       >
         <a-table-column :width="100" key="id" data-index="id" title="编号" align="center" :ellipsis="true" />
-        <a-table-column :width="120" key="supplier" title="供应商" data-index="supplier" :ellipsis="true" align="center" />
+        <a-table-column
+          :width="150"
+          key="supplier"
+          title="供应商"
+          data-index="supplier"
+          align="center"
+          ellipsis="true"
+          :sorter="(a, b) => a.supplier.localeCompare(b.supplier)"
+          :scopedSlots="scopedSlots"
+          @filterDropdownVisibleChange="onFilterDropdownVisibleChange"
+          @filter="onFilter"
+        >
+          <template
+            slot="filterDropdown"
+            slot-scope="{ setSelectedKeys, selectedKeys, confirm, clearFilters, column }"
+            style="padding: 8px">
+            <a-input
+              v-ant-ref="c => (searchInput = c)"
+              :placeholder="`查找项目名`"
+              :value="selectedKeys[0]"
+              style="width: 188px; margin-bottom: 8px; display: block;"
+              @change="e => setSelectedKeys(e.target.value ? [e.target.value] : [])"
+              @pressEnter="() => handleSearch(selectedKeys, confirm, column.dataIndex)"
+            />
+            <el-button
+              type="primary"
+              icon="el-icon-search"
+              size="small"
+              style="width: 90px; margin-right: 8px"
+              @click="() => handleSearch(selectedKeys, confirm, column.dataIndex)"
+            >
+              查找
+            </el-button>
+            <el-button size="small" style="width: 90px" @click="() => handleReset(clearFilters)">
+              重置
+            </el-button>
+          </template>
+        </a-table-column>
         <a-table-column :width="120" key="telephone" title="联系方式" data-index="telephone" :ellipsis="true" align="center" />
         <a-table-column :width="120" key="address" title="地址" data-index="address" :ellipsis="true" align="center" />
         <a-table-column :width="120" key="remark" title="备注" data-index="remark" :ellipsis="true" align="center" />
@@ -78,10 +115,16 @@
   import { dateTimeFormat } from '@/utils/format'
   import { getAction, postActionByJson, postActionByQueryString } from '@/api/manage'
   import elDragDialog from '@/directive/el-drag-dialog'
+  import { onFilterDropdownVisibleChange, onFilter, handleReset, handleSearch} from '@/utils/column-search'
 
   export default {
     directives: { elDragDialog },
     data() {
+      const scopedSlots = {
+        filterDropdown: 'filterDropdown',
+        filterIcon: 'filterIcon',
+        customRender: 'customRender',
+      }
       return {
         suppliers: [],
         suppliersLoading: false,
@@ -97,8 +140,9 @@
           supplier: [
             { required: true, message: '不能为空', trigger: 'blur'}
           ],
-        }
+        },
 
+        scopedSlots,
       }
     },
     created() {
@@ -151,6 +195,10 @@
         })
       },
       dateTimeFormat,
+      onFilterDropdownVisibleChange,
+      onFilter,
+      handleReset,
+      handleSearch,
     }
   }
 </script>

@@ -360,6 +360,10 @@
                     this.fileList=[]
                     this.init()
                   })
+                  .catch(()=>{
+                    this.submitLoading = false
+                    this.visible = false
+                  })
                 break
             }
           }

@@ -220,6 +220,7 @@
       websocketOnmessage: function (e) {
         console.log("-----接收消息-------",e.data);
         var data = eval("(" + e.data + ")"); //解析对象
+        const h = this.$createElement;
         if(data.cmd == "topic"){
             //系统通知
           this.loadData();
