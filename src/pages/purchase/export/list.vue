@@ -4,7 +4,7 @@
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
       <el-button v-if="selectedRowKeys.length>0"  type="primary" icon="el-icon-document" size="small" :loading="downloadLoading" @click="handleDownload">导出Excel</el-button>
       <el-button v-if="selectedRowKeys.length>0"  type="primary" icon="el-icon-document" size="small" @click="addContract">生成采购合同</el-button>
-      <el-select multiple v-model="searchForm.proDetailIds" style="margin-right: 6px" filterable clearable placeholder="请选择项目" value-key="name">
+      <el-select v-model="searchForm.proDetailIds" style="margin-right: 6px" multiple filterable clearable placeholder="请选择项目" value-key="name">
         <el-option v-for="item in projects" :key="item.id" :label="item.projectName" :value="item.id" />
       </el-select>
       <el-input type="text" size="small" v-model="searchForm.name"></el-input>

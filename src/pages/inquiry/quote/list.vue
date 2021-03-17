@@ -24,8 +24,10 @@
                 </a-tooltip>
               </template>
             </a-table-column>
-            <a-table-column>
-
+            <a-table-column :width="100" align="center" key="quoteNum" title="报价商家数量" data-index="quoteNum">
+              <template slot-scope="text, record">
+                <el-tag>{{text}}</el-tag>
+              </template>
             </a-table-column>
             <a-table-column
               key="operation"
@@ -35,7 +37,7 @@
               :width="230">
               <template slot-scope="text, record, index">
                 <el-button type="success" icon="el-icon-star-on" size="mini" style="padding: 7px 10px;background: #faad14;border-color:#faad14" @click="poolChoose(record)">产品池</el-button>
-                <el-button type="success" size="mini" style="padding: 7px 10px;" @click="toCheck(record)">送审</el-button>
+                <el-button :loading="toCheckLoading" type="success" size="mini" style="padding: 7px 10px;" @click="toCheck(record)">送审</el-button>
                 <el-button type="success" size="mini" style="padding: 7px 10px;" @click="toCompare(record)">比价</el-button>
               </template>
             </a-table-column>
@@ -71,7 +73,6 @@
                       :value="text"
                       @change="e => handleChange(e.target.value, record, col)"
                     />
-
                     <template v-if="!record.editable" >
                       <span @click="handleCopy(text, $event)">{{ text }}</span>
                     </template>
@@ -344,6 +345,42 @@
         <el-button type="primary" size="small" @click="addQuoteSubmit">提交</el-button>
       </div>
     </el-dialog>
+    <!--送审模态框 begin-->
+    <el-dialog v-el-drag-dialog title="送审" :visible.sync="sendCheckDialog.visible">
+      <el-form :model="sendCheckDialog.form" :rules="sendCheckDialog.rules" ref="sendCheckDialogForm" status-icon>
+        <el-form-item label="审核人" label-width="80px" prop="checkUsers">
+          <el-select
+            v-model="sendCheckDialog.form.checkUsers"
+            value-key="id"
+            placeholder="请选择审核人"
+            multiple
+            filterable
+            clearable>
+            <el-option v-for="user in checkUsers" :key="user.id" :label="user.username" :value="user.id"/>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="审核时间段" label-width="80px" prop="time">
+          <el-date-picker
+            v-model="sendCheckDialog.form.time"
+            unlink-panels
+            style="max-width: 300px"
+            value-format="timestamp"
+            type="daterange"
+            range-separator="至"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期">
+          </el-date-picker>
+        </el-form-item>
+        <el-form-item label="送审备注" label-width="80px" prop="remark">
+          <el-input v-model="sendCheckDialog.form.remark" type="textarea"></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button size="small" @click="sendCheckDialog.visible = false">取消</el-button>
+        <el-button type="primary" size="small" @click="sendCheckSubmit">提交</el-button>
+      </div>
+    </el-dialog>
+    <!--送审模态框 end-->
   </div>
 </template>
 <script>
@@ -400,6 +437,19 @@
     data() {
       const fileUploadUrl = process.env.VUE_APP_BASE_API + 'file/uploadCache'
       return {
+        toCheckLoading: false,
+
+        checkUsers: [],
+
+        sendCheckDialog: {
+          visible: false,
+          form: {},
+          rules: {
+            checkUsers: [
+              { required: true, message: '不能为空', trigger: 'blur' }
+            ],
+          }
+        },
 
         uploadKey: true,
         suppliers: [],
@@ -512,6 +562,45 @@
       })
     },
     methods: {
+      sendCheckSubmit() {
+        this.$refs['sendCheckDialogForm'].validate((valid) => {
+          if (valid) {
+            let form = this.sendCheckDialog.form
+            if (this.sendCheckDialog.form.time&&this.sendCheckDialog.form.time.length>0) {
+              form.startTime = this.sendCheckDialog.form.time[0]
+              form.endTime = this.sendCheckDialog.form.time[1]
+            }
+            if (form.checkUsers&&form.checkUsers.length>1) {
+              var checkUsers = ''
+              form.checkUsers.map((user, index) => {
+                checkUsers += index===0?""+user:"-"+user
+              })
+              form.checkUsers = checkUsers
+            }
+            this.projects.map(item => {
+              if(item.id == this.searchForm.proDetailId) {
+                form.msgContent = "项目【"+item.name+"】下的询价【"+form.name+"】需审核"
+              }
+            })
+            postActionByJson('/quote/initiateAudit', form).then(resp=>{
+              this.$message({ message: resp.message, type: 'success' })
+              this.sendCheckDialog.visible = false
+            })
+          }else {
+            console.log('error commit')
+            return false
+          }
+        })
+        /*request.get('/quote/initiateAudit?inquiryId='+row.id)
+          .then(resp=>{
+            this.$message({ message: resp.message, type: 'success' })
+          })*/
+      },
+      loadCheckUsers() {
+        getAction('/chapter/chapterAudit/findAllChapterAuditor', {}).then(resp=>{
+          this.checkUsers = resp.data
+        })
+      },
       loadSuppliers() {
         getAction('/supply/supplier/findSupplierByParams', {})
           .then(resp => {
@@ -593,11 +682,14 @@
             this.$message({ message: resp.message, type: 'success' })
           })
       },
-      toCheck(row) {
-        request.get('/quote/initiateAudit?inquiryId='+row.id)
-          .then(resp=>{
-            this.$message({ message: resp.message, type: 'success' })
-          })
+      async toCheck(row) {
+        this.sendCheckDialog.form={}
+        this.toCheckLoading = true
+        await this.loadCheckUsers()
+        this.toCheckLoading = false
+        this.sendCheckDialog.visible = true
+        this.sendCheckDialog.form.id = row.id+""
+        this.sendCheckDialog.form.name = row.name
       },
       handleCopy(text, event) {
         clip(text, event)
@@ -635,6 +727,7 @@
         }
       },
       poolChoose(row) {
+        this.poolChooseSearchForm = {}
         this.poolChooseVisible = true
         this.poolChooseForm.inquiryId = row.id
         this.loadPool(row.name, row.model)
@@ -1181,7 +1274,7 @@
   }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
   .pro_quote_list {
     /deep/.el-form-item__content{
       height:auto;
