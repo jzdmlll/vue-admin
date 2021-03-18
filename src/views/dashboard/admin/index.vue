@@ -16,7 +16,7 @@
           <RecycleScroller
             v-infinite-scroll="handleInfiniteOnLoad"
             style="height: 280px;border-top: 1px solid #ebebeb;border-bottom: 1px solid #ebebeb"
-            :items="projects.list"
+            :items="projects.records"
             :item-size="60"
             key-field="id"
             :infinite-scroll-disabled="busy"
@@ -344,7 +344,7 @@ export default {
       loading: false,
       busy: false,
 
-      projects: { list: []},
+      projects: { records: []},
 
       status: [
         { type: 'warning', text: '未审核' },
@@ -382,13 +382,13 @@ export default {
   },
   beforeMount() {
     this.fetchData(res => {
-      this.data = res.list.map((item, index) => ({ ...item, index }));
+      this.data = res.records.map((item, index) => ({ ...item, index }));
     });
   },
   created() {
     this.init()
     this.fetchData(res => {
-      this.data = res.list.map((item, index) => ({ ...item, index }));
+      this.data = res.records.map((item, index) => ({ ...item, index }));
       if (this.data.length>0) {
         this.proItemClick(this.data[0])
       }
@@ -422,7 +422,7 @@ export default {
       getAction('/index/findProProcess',{
         proId: item.id
       }).then(resp => {
-        console.log(resp.data)
+        //console.log(resp.data)
         let project = resp.data[0]
         this.barChartData = {
           id: item.id,
@@ -442,13 +442,13 @@ export default {
       })
         .then(resp => {
           this.$set(this.projects, 'total', resp.data.total)
-          this.proCurrentPage = resp.data.nextPage
-          this.proHasNextPage = resp.data.hasNextPage
+          this.proCurrentPage  = resp.data.current + 1
+          this.proHasNextPage = resp.data.pages > resp.data.current?true:false
           callback(resp.data)
         })
     },
     handleInfiniteOnLoad() {
-      const data = this.projects.list;
+      const data = this.projects.records;
       this.loading = true;
       if (this.proHasNextPage == false) {
         this.$message.warning('已到底部');
@@ -457,7 +457,7 @@ export default {
         return;
       }
       this.fetchData(res => {
-        this.projects.list = data.concat(res.list).map((item, index) => ({ ...item, index }));
+        this.projects.records = data.concat(res.records).map((item, index) => ({ ...item, index }));
         this.loading = false;
       });
     },
@@ -479,13 +479,13 @@ export default {
           }).then( response => {
             //将请求回来的数据和当前展示的数据合并在一起
             switch (index) {
-              case 0: this.dataSource1 = this.dataSource1.concat(response.data.list); break
-              case 1: this.dataSource2 = this.dataSource2.concat(response.data.list); break
-              case 2: this.dataSource3 = this.dataSource3.concat(response.data.list); break
-              case 3: this.dataSource4 = this.dataSource4.concat(response.data.list); break
+              case 0: this.dataSource1 = this.dataSource1.concat(response.data.records); break
+              case 1: this.dataSource2 = this.dataSource2.concat(response.data.records); break
+              case 2: this.dataSource3 = this.dataSource3.concat(response.data.records); break
+              case 3: this.dataSource4 = this.dataSource4.concat(response.data.records); break
             }
-            this.currentPage[index] = response.data.nextPage
-            this.hasNextPage[index] = response.data.hasNextPage
+            this.currentPage[index] = response.data.current + 1
+            this.hasNextPage[index] = response.data.pages > response.data.current?true:false
             this.loading = false
           }).catch(()=>{
             this.loading = false
@@ -525,51 +525,51 @@ export default {
     loadToDoList() {
       request.get('/sysIndex/findCompareAuditDeal')
         .then(resp => {
-          this.dataSource4 = resp.data.list
-          this.currentPage[3] = resp.data.nextPage
-          this.hasNextPage[3] = resp.data.hasNextPage
+          this.dataSource4 = resp.data.records
+          this.currentPage[3] = resp.data.current + 1
+          this.hasNextPage[3] = resp.data.pages > resp.data.current?true:false
           this.maxPage[3] = resp.data.total
         })
       request.get('/sysIndex/findTechnicalAuditDeal')
         .then(resp => {
-          this.dataSource2 = resp.data.list
-          this.currentPage[1] = resp.data.nextPage
-          this.hasNextPage[1] = resp.data.hasNextPage
+          this.dataSource2 = resp.data.records
+          this.currentPage[1] = resp.data.current + 1
+          this.hasNextPage[1] = resp.data.pages > resp.data.current?true:false
           this.maxPage[1] = resp.data.total
         })
       request.get('/sysIndex/findBusinessAuditDeal')
         .then(resp => {
-          this.dataSource3 = resp.data.list
-          this.currentPage[2] = resp.data.nextPage
-          this.hasNextPage[2] = resp.data.hasNextPage
+          this.dataSource3 = resp.data.records
+          this.currentPage[2] = resp.data.current + 1
+          this.hasNextPage[2] = resp.data.pages > resp.data.current?true:false
           this.maxPage[2] = resp.data.total
         })
       request.get('/sysIndex/findFinallyAuditDeal')
         .then(resp => {
-          this.dataSource1 = resp.data.list
-          this.currentPage[0] = resp.data.nextPage
-          this.hasNextPage[0] = resp.data.hasNextPage
+          this.dataSource1 = resp.data.records
+          this.currentPage[0] = resp.data.current + 1
+          this.hasNextPage[0] = resp.data.pages > resp.data.current?true:false
           this.maxPage[0] = resp.data.total
         })
       request.get('/sysIndex/dataSourceFirst')
         .then(resp => {
-          this.dataSourceFirst = resp.data.list
-          this.currentPage[4] = resp.data.nextPage
-          this.hasNextPage[4] = resp.data.hasNextPage
+          this.dataSourceFirst = resp.data.records
+          this.currentPage[4] = resp.data.current + 1
+          this.hasNextPage[4] = resp.data.pages > resp.data.current?true:false
           this.maxPage[4] = resp.data.total
         })
       request.get('/sysIndex/dataSourceSecond')
         .then(resp => {
-          this.dataSourceSecond = resp.data.list
-          this.currentPage[5] = resp.data.nextPage
-          this.hasNextPage[5] = resp.data.hasNextPage
+          this.dataSourceSecond = resp.data.records
+          this.currentPage[5] = resp.data.current + 1
+          this.hasNextPage[5] = resp.data.pages > resp.data.current?true:false
           this.maxPage[5] = resp.data.total
         })
       request.get('/sysIndex/dataSourceThree')
         .then(resp => {
-          this.dataSourceThree = resp.data.list
-          this.currentPage[6] = resp.data.nextPage
-          this.hasNextPage[6] = resp.data.hasNextPage
+          this.dataSourceThree = resp.data.records
+          this.currentPage[6] = resp.data.current + 1
+          this.hasNextPage[6] = resp.data.pages > resp.data.current?true:false
           this.maxPage[6] = resp.data.total
         })
 

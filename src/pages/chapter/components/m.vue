@@ -83,6 +83,7 @@
         return new Promise((resolve) => {
           // 在 resolve 函数中返回 true 或 false
           this.active = index
+          this.currentPage = 1
           this.hasNextPage = true
           this.finishedText = ''
           this.onLoad()
@@ -95,10 +96,10 @@
             auditStatus: this.active,
             pageNum: this.currentPage
           }).then(resp => {
-            this.list = resp.data.list
-            this.currentPage = resp.data.nextPage
-            this.hasNextPage = resp.data.hasNextPage
-            if (resp.data.list.length>0&&!this.hasNextPage) {
+            this.list = resp.data.records
+            this.currentPage = resp.data.current+1
+            this.hasNextPage = resp.data.pages > resp.data.current?true:false
+            if (resp.data.records.length>0&&!this.hasNextPage) {
               this.finishedText = '已到底部'
             }
             this.loading = false

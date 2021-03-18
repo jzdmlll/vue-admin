@@ -146,11 +146,10 @@
         try {
           // 获取系统消息
           getAction(this.url.listCementByUser).then((res) => {
-
-              this.announcement1 = res.data.announcement.list;
+              this.announcement1 = res.data.announcement.records;
               this.msg1Count = res.data.announcement.total;
               this.msg1Title = "通知(" + res.data.announcement.total + ")";
-              this.announcement2 = res.data.sysAnnouncement.list;
+              this.announcement2 = res.data.sysAnnouncement.records;
               this.msg2Count = res.data.sysAnnouncement.total;
               this.msg2Title = "系统消息(" + res.data.sysAnnouncement.total + ")";
           }).catch(error => {

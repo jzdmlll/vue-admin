@@ -168,8 +168,8 @@
           }
         })
           .then( resp => {
-            this.contractChecks = resp.data.list
-            this.pagination.current = resp.data.pageNum
+            this.contractChecks = resp.data.records
+            this.pagination.current = resp.data.current
             this.pagination.pageSize = resp.data.pageSize
             this.pagination.total = resp.data.total
 

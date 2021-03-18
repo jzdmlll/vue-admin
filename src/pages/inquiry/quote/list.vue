@@ -46,18 +46,18 @@
               slot-scope="scope"
               class="childTable"
               :class="scope.detailList.length > 0 ? { noData: false}:{noData: true}"
-              :scroll="{x: 1580}"
+              :scroll="{x: 1780}"
               :columns="innerColumns"
               :data-source="scope.detailList"
               :pagination="false"
               :loading="childLoading[scope.id]"
               :row-class-name="tableRowClassName2"
             >
-              <span slot="technicalAudit" slot-scope="text, record, index">
-                <el-tag :type="text!=null?(text === 0 ? 'info':(text === 1? 'success':'danger')):'warning'">{{ statu(text) }}</el-tag>
+              <span class="ellipsis" slot="technicalAudit" slot-scope="text, record, index">
+                <el-tag size="small" :type="text!=null?(text === 0 ? 'info':(text === 1? 'success':'danger')):'warning'">{{ statu(text) }}</el-tag>
               </span>
-              <span slot="businessAudit" slot-scope="text, record, index">
-                <el-tag :type="text!=null?(text === 0 ? 'info':(text === 1? 'success':'danger')):'warning'">{{ statu(text) }}</el-tag>
+              <span class="ellipsis" slot="businessAudit" slot-scope="text, record, index">
+                <el-tag size="small" :type="text!=null?(text === 0 ? 'info':(text === 1? 'success':'danger')):'warning'">{{ statu(text) }}</el-tag>
               </span>
               <template
                 v-for="col in ['supplier','suBrand','suParams','suModel','brand','suPrice','suTotalPrice','suDelivery',
@@ -68,13 +68,13 @@
                 <a-tooltip placement="topLeft" :title="text+''">
                   <div :key="col">
                     <a-input
-                      v-if="record.editable"
+                      v-if="record.editable&&col!='supplier'"
                       style="margin: -5px 0"
                       :value="text"
                       @change="e => handleChange(e.target.value, record, col)"
                     />
-                    <template v-if="!record.editable" >
-                      <span @click="handleCopy(text, $event)">{{ text }}</span>
+                    <template v-if="!record.editable||col=='supplier'" >
+                      <span class="ellipsis" @click="handleCopy(text, $event)">{{ text }}</span>
                     </template>
                   </div>
                 </a-tooltip>
@@ -425,7 +425,7 @@
       title: '操作',
       dataIndex: 'operation',
       scopedSlots: { customRender: 'operation' },
-      width: 170,
+      width: 200,
       fixed: 'right',
       align: 'center'
     }
@@ -460,7 +460,7 @@
         quoteForm: {},
         quoteVisible: false,
         status: ['未审核', '通过', '拒绝'],
-        hasNextPage: false,
+        hasNextPage: true,
         currentPage: 1,
         tableHeight: document.documentElement.clientHeight-83-220,
         selectedId: [],
@@ -550,9 +550,9 @@
               params: {proId: proId, supplier: supplier}
             }).then( response => {
               //将请求回来的数据和当前展示的数据合并在一起
-              that.quoteList = that.quoteList.concat(response.data.list)
-              that.currentPage = response.data.nextPage
-              that.hasNextPage = response.data.hasNextPage
+              that.quoteList = that.quoteList.concat(response.data.records)
+              that.currentPage = response.data.current + 1
+              that.hasNextPage = response.data.pages > response.data.current?true:false
             })
               .finally(() => {
                 that.quoteLoading = false
@@ -570,7 +570,7 @@
               form.startTime = this.sendCheckDialog.form.time[0]
               form.endTime = this.sendCheckDialog.form.time[1]
             }
-            if (form.checkUsers&&form.checkUsers.length>1) {
+            if (form.checkUsers&&form.checkUsers.length>0) {
               var checkUsers = ''
               form.checkUsers.map((user, index) => {
                 checkUsers += index===0?""+user:"-"+user
@@ -858,9 +858,9 @@
           method: 'get',
           params: {proId: proId, supplier: supplier}
         }).then( response => {
-          this.quoteList = response.data.list
-          this.currentPage = response.data.nextPage
-          this.hasNextPage = response.data.hasNextPage
+          this.quoteList = response.data.records
+          this.currentPage = response.data.current + 1
+          this.hasNextPage = response.data.pages > response.data.current?true:false
           this.quoteLoading = false
         })
       },
@@ -1296,7 +1296,8 @@
       overflow-x: auto !important;
     }
     .childTable{
-      th, td, .ant-table-column-sorters {
+      th, td, .ant-table-column-sorters, .ellipsis {
+        display: block;
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;

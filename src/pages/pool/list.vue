@@ -1,6 +1,6 @@
 <template>
   <!-- 产品池管理 -->
-  <div class="pro_pool_list">
+  <div class="pro_pool_response.data.records">
     <div class="btns" style="padding:1em;margin-bottom:1em;background:#fff">
       <el-button style="margin-right: 6px" type="primary" icon="el-icon-plus" size="small" @click="add">新增</el-button>
       <el-input v-model="form.proName" placeholder="请输入项目名"></el-input>
@@ -112,7 +112,7 @@
         form1: {},
         title: '',
         visible: false,
-        hasNextPage: false,
+        hasNextPage: true,
         currentPage: 1,
         tableHeight: document.documentElement.clientHeight-83-150,
         projects: [],
@@ -143,9 +143,9 @@
               params: {name: name, brand: brand, proName: proName, model: model}
             }).then( response => {
               //将请求回来的数据和当前展示的数据合并在一起
-              that.pools = that.pools.concat(response.data.list)
-              that.currentPage = response.data.nextPage
-              that.hasNextPage = response.data.hasNextPage
+              that.pools = that.pools.concat(response.data.records)
+              that.currentPage = response.data.current + 1
+              that.hasNextPage = response.data.pages > resp.data.current?true:false
               that.loading = false
             }).catch(()=>{
               that.loading = false
@@ -182,9 +182,9 @@
           params: {'name': this.form.name, 'brand': this.form.brand, 'model': this.form.model, 'proName': this.form.proName}
         })
         .then(response => {
-          this.pools = response.data.list
-          this.currentPage = response.data.nextPage
-          this.hasNextPage = response.data.hasNextPage
+          this.pools = response.data.records
+          this.currentPage = response.data.current + 1
+          this.hasNextPage = response.data.pages > resp.data.current?true:false
           this.loading = false
         })
         .catch(() => {
@@ -195,9 +195,9 @@
       loadPools() {
         request.get('/pool/findByParams')
         .then(response => {
-          this.pools = response.data.list
-          this.currentPage = response.data.nextPage
-          this.hasNextPage = response.data.hasNextPage
+          this.pools = response.data.records
+          this.currentPage = response.data.current + 1
+          this.hasNextPage = response.data.pages > resp.data.current?true:false
           this.loading = false
         })
         .catch(() => {
