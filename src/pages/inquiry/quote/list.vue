@@ -74,7 +74,7 @@
                       @change="e => handleChange(e.target.value, record, col)"
                     />
                     <template v-if="!record.editable" >
-                      <span @click="handleCopy(text, $event)">{{ text }}</span>
+                      <span class="ellipsis" @click="handleCopy(text, $event)">{{ text }}</span>
                     </template>
                   </div>
                 </a-tooltip>
@@ -1296,11 +1296,12 @@
       overflow-x: auto !important;
     }
     .childTable{
-      th, td, .ant-table-column-sorters {
+      th, td, .ant-table-column-sorters, .ellipsis {
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
         cursor: pointer;
+        display: block;
         max-width: 110px!important;
         font-size: 12px;
         span, div {
